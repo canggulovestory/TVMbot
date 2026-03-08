@@ -275,15 +275,137 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ══════════════════════════════════════════════
+     MOBILE / iPHONE RESPONSIVE LAYOUT
+  ══════════════════════════════════════════════ */
+
+  /* Tablet */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 220px 1fr; }
+    .sidebar-right { display: none; }
+    .main-header .tag { display: none; }
+  }
+
+  /* Mobile (iPhone and similar) */
+  @media (max-width: 640px) {
+    nav {
+      padding: 0 14px;
+      height: 52px;
+    }
+    .nav-logo span { font-size: 1.1rem; }
+    .nav-owner, .nav-time { display: none; }
+    .status-pill { padding: 5px 10px; font-size: .72rem; }
+    .layout {
+      grid-template-columns: 1fr;
+      height: calc(100vh - 52px);
+      position: relative;
+    }
+    .sidebar-left {
+      position: fixed;
+      top: 52px; left: 0;
+      width: 280px;
+      height: calc(100vh - 52px);
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+      box-shadow: 4px 0 20px rgba(0,0,0,.15);
+    }
+    .sidebar-left.open { transform: translateX(0); }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 199;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.show { display: block; }
+    .main {
+      height: calc(100vh - 52px);
+    }
+    .main-header {
+      padding: 10px 14px 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .main-header h2 { font-size: .9rem; }
+    .main-header p { font-size: .72rem; }
+    .main-header .tag { font-size: .66rem; padding: 2px 8px; }
+
+    /* Hamburger menu button */
+    .hamburger-btn {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Chat messages — bigger bubbles, easy to read */
+    .chat-messages { padding: 12px; gap: 12px; }
+    .msg { max-width: 92%; }
+    .bubble { font-size: .88rem; padding: 12px 14px; line-height: 1.55; }
+    .bubble.user { border-radius: 18px 18px 4px 18px; }
+    .bubble.bot  { border-radius: 18px 18px 18px 4px; }
+    .avatar { width: 28px; height: 28px; font-size: .7rem; flex-shrink: 0; }
+
+    /* Welcome card */
+    .welcome-card { padding: 20px 16px; }
+    .welcome-card h3 { font-size: 1rem; }
+    .welcome-card p { font-size: .82rem; }
+    .welcome-chips { gap: 6px; margin-top: 12px; }
+    .chip { font-size: .78rem; padding: 7px 12px; }
+
+    /* Input area — big thumbs-friendly */
+    .chat-input-area { padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    .chat-input {
+      font-size: .9rem;
+      padding: 12px 14px;
+      border-radius: 16px;
+      min-height: 46px;
+    }
+    .send-btn {
+      width: 46px; height: 46px;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .send-btn span:first-child { display: none; }
+
+    /* Sidebar quick actions — large tap targets */
+    .qa-btn { padding: 13px 14px; font-size: .88rem; border-radius: 10px; }
+    .qa-btn .icon { font-size: 1.1rem; }
+    .sidebar-label { font-size: .7rem; margin-bottom: 8px; padding: 0 4px; }
+  }
+
+  /* Hamburger hidden on desktop */
+  .hamburger-btn { display: none; }
+
+  /* Safe area for iPhone notch/home indicator */
+  @supports (padding: max(0px)) {
+    .chat-input-area {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+  }
 </style>
 </head>
 <body>
 
 <!-- ── NAV ── -->
 <nav>
-  <div class="nav-logo">
-    <span>TVM<b>bot</b></span>
-    <span class="version">PEMS v2.0</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div class="nav-logo">
+      <span>TVM<b>bot</b></span>
+      <span class="version">PEMS v2.0</span>
+    </div>
   </div>
   <div class="nav-right">
     <span class="nav-owner">Owner: <b id="nav-owner">Loading...</b></span>
@@ -295,6 +417,9 @@
     </div>
   </div>
 </nav>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <!-- ── MAIN LAYOUT ── -->
 <div class="layout">
@@ -329,18 +454,39 @@
     <div class="divider"></div>
 
     <div class="sidebar-section">
-      <div class="sidebar-label">Create</div>
-      <button class="qa-btn" onclick="promptContract()">
-        <span class="icon">📄</span> New Contract
+      <div class="sidebar-label">💰 Finance</div>
+      <button class="qa-btn" onclick="quickAction('Show me the financial summary for this month — total income, expenses, and net profit')">
+        <span class="icon">📊</span> Monthly Summary
       </button>
-      <button class="qa-btn" onclick="quickAction('Generate an Instagram caption for our villa. Make it aspirational, include hashtags.')">
-        <span class="icon">📸</span> Instagram Caption
+      <button class="qa-btn" onclick="quickAction('Show me all bank account balances — BCA, WISE, PERMATA, MANDIRI, CASH')">
+        <span class="icon">🏦</span> Bank Balances
       </button>
-      <button class="qa-btn" onclick="quickAction('Write an Airbnb listing description for our villa with key amenities and unique features.')">
-        <span class="icon">🏡</span> Airbnb Description
+      <button class="qa-btn" onclick="quickAction('Show me recent transactions — last 20 income and expense entries')">
+        <span class="icon">📋</span> Recent Transactions
       </button>
-      <button class="qa-btn" onclick="quickAction('Create a new Google Doc with a welcome letter template for arriving guests')">
-        <span class="icon">✉️</span> Welcome Letter
+      <button class="qa-btn" onclick="quickAction('Are there any outstanding or unpaid invoices?')">
+        <span class="icon">⏳</span> Outstanding Bills
+      </button>
+      <button class="qa-btn" onclick="quickAction('Generate a full P&L report for this year')">
+        <span class="icon">📈</span> Yearly P&L
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">🔧 Maintenance</div>
+      <button class="qa-btn" onclick="quickAction('Show all open maintenance tasks across all villas')">
+        <span class="icon">🛠️</span> Open Tasks
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show urgent maintenance tasks that need immediate attention')">
+        <span class="icon">🚨</span> Urgent Issues
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show completed maintenance tasks from this month')">
+        <span class="icon">✅</span> Completed
+      </button>
+      <button class="qa-btn" onclick="quickAction('What maintenance is scheduled for this week?')">
+        <span class="icon">📅</span> This Week
       </button>
     </div>
 
@@ -397,14 +543,14 @@
 
     <div class="chat-messages" id="chat-messages">
       <div class="welcome-card">
-        <h3>👋 Welcome to TVMbot PEMS v2.0</h3>
-        <p>I'm your autonomous AI agent. I can read your emails, manage bookings, create contracts, search Drive files, write to Sheets, generate cleaning schedules, and much more — all in one conversation.</p>
+        <h3>👋 Halo, Afni!</h3>
+        <p>TVMbot siap membantu — tanya soal keuangan, maintenance, email, atau villa kapan saja.</p>
         <div class="welcome-chips">
-          <span class="chip" onclick="quickAction('What can you do for me today?')">What can you do?</span>
-          <span class="chip" onclick="quickAction('Check my latest emails')">Check emails</span>
-          <span class="chip" onclick="quickAction('Show upcoming bookings')">Upcoming bookings</span>
-          <span class="chip" onclick="promptContract()">Create contract</span>
-          <span class="chip" onclick="quickAction('Generate an Instagram caption for my villa')">Instagram caption</span>
+          <span class="chip" onclick="quickAction('Berapa total saldo bank kita sekarang — BCA, WISE, PERMATA, MANDIRI, CASH?')">💰 Saldo Bank</span>
+          <span class="chip" onclick="quickAction('Tampilkan ringkasan keuangan bulan ini — pemasukan, pengeluaran, dan laba bersih')">📊 Keuangan Bulan Ini</span>
+          <span class="chip" onclick="quickAction('Show all open maintenance tasks')">🔧 Maintenance</span>
+          <span class="chip" onclick="quickAction('Check my latest emails and summarize')">📧 Email</span>
+          <span class="chip" onclick="quickAction('Show upcoming bookings this week')">📅 Booking</span>
         </div>
       </div>
     </div>
@@ -618,6 +764,21 @@ const SESSION_ID = 'tvm_' + Math.random().toString(36).slice(2);
 let currentStep = 1;
 let isTyping = false;
 
+// ── Mobile Sidebar Toggle ───────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar-left');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+// Auto-close sidebar when a quick action is triggered on mobile
+function closeSidebarOnMobile() {
+  if (window.innerWidth <= 640) {
+    document.querySelector('.sidebar-left').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+}
+
 // ── Clock ──────────────────────────────────────────────────────────────────────
 function updateClock() {
   document.getElementById('nav-time').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -809,6 +970,7 @@ async function sendMessage() {
 }
 
 function quickAction(msg) {
+  closeSidebarOnMobile();
   document.getElementById('chat-input').value = msg;
   sendMessage();
 }

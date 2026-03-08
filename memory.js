@@ -153,6 +153,26 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS maintenance_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    villa_name TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    category TEXT DEFAULT 'general' CHECK(category IN ('plumbing','electrical','AC','pool','garden','cleaning','furniture','appliance','structural','pest','internet','security','general')),
+    priority TEXT DEFAULT 'medium' CHECK(priority IN ('urgent','high','medium','low')),
+    status TEXT DEFAULT 'open' CHECK(status IN ('open','in_progress','waiting_parts','completed','cancelled')),
+    reported_by TEXT,
+    assigned_to TEXT,
+    estimated_cost REAL,
+    actual_cost REAL,
+    cost_account TEXT,
+    due_date TEXT,
+    completed_date TEXT,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // ─── Business Facts ────────────────────────────────────────────────────────────
@@ -512,6 +532,60 @@ function buildContextSummary() {
   return context.trim();
 }
 
+// ─── Maintenance Tasks ─────────────────────────────────────────────────────────
+function addMaintenanceTask(task) {
+  const stmt = db.prepare(`
+    INSERT INTO maintenance_tasks
+      (villa_name, title, description, category, priority, status, reported_by, assigned_to, estimated_cost, due_date, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const info = stmt.run(
+    task.villa_name, task.title, task.description || null,
+    task.category || 'general', task.priority || 'medium',
+    task.status || 'open', task.reported_by || null,
+    task.assigned_to || null, task.estimated_cost || null,
+    task.due_date || null, task.notes || null
+  );
+  return info.lastInsertRowid;
+}
+
+function updateMaintenanceTask(id, fields) {
+  const allowed = ['title','description','category','priority','status','assigned_to','estimated_cost','actual_cost','cost_account','due_date','completed_date','notes','reported_by'];
+  const sets = allowed.filter(k => fields[k] !== undefined).map(k => `${k}=?`);
+  const vals = allowed.filter(k => fields[k] !== undefined).map(k => fields[k]);
+  if (sets.length === 0) return false;
+  sets.push('updated_at=datetime(\'now\')');
+  db.prepare(`UPDATE maintenance_tasks SET ${sets.join(',')} WHERE id=?`).run(...vals, id);
+  return true;
+}
+
+function getMaintenanceTasks(filter = {}) {
+  let q = 'SELECT * FROM maintenance_tasks WHERE 1=1';
+  const params = [];
+  if (filter.villa_name) { q += ' AND LOWER(villa_name) LIKE LOWER(?)'; params.push(`%${filter.villa_name}%`); }
+  if (filter.status)     { q += ' AND status=?'; params.push(filter.status); }
+  if (filter.priority)   { q += ' AND priority=?'; params.push(filter.priority); }
+  if (filter.category)   { q += ' AND category=?'; params.push(filter.category); }
+  q += ' ORDER BY CASE priority WHEN \'urgent\' THEN 1 WHEN \'high\' THEN 2 WHEN \'medium\' THEN 3 ELSE 4 END, created_at DESC';
+  if (filter.limit) { q += ` LIMIT ${parseInt(filter.limit)}`; }
+  return db.prepare(q).all(...params);
+}
+
+function getMaintenanceSummary() {
+  const rows = db.prepare(`
+    SELECT villa_name,
+      COUNT(*) as total,
+      SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) as open,
+      SUM(CASE WHEN status='in_progress' THEN 1 ELSE 0 END) as in_progress,
+      SUM(CASE WHEN status='urgent' OR priority='urgent' THEN 1 ELSE 0 END) as urgent,
+      SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed,
+      SUM(COALESCE(actual_cost, estimated_cost, 0)) as total_cost
+    FROM maintenance_tasks
+    GROUP BY villa_name
+  `).all();
+  return rows;
+}
+
 module.exports = {
   // Facts
   setFact, getFact, getFactsByCategory, getAllFacts,
@@ -533,6 +607,8 @@ module.exports = {
   upsertBankAccount, updateBankBalance, getAllBankAccounts, getTotalBankBalance,
   // Finance — Invoices
   generateInvoiceNumber, saveInvoice, updateInvoiceStatus, getInvoices,
+  // Maintenance
+  addMaintenanceTask, updateMaintenanceTask, getMaintenanceTasks, getMaintenanceSummary,
   // Context
   buildContextSummary,
   // DB

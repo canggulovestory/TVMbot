@@ -439,6 +439,73 @@ const TOOLS = [
       },
       required: ["databaseId"]
     }
+  },
+
+  // ── Maintenance Tools ───────────────────────────────────────────────────────
+  {
+    name: "maintenance_add_task",
+    description: "Add a new maintenance task or issue report for a villa. Use when a tenant, owner, or inspection reveals something that needs fixing, servicing, or attention. Categories: plumbing, electrical, AC, pool, garden, cleaning, furniture, appliance, structural, pest, internet, security, general.",
+    input_schema: {
+      type: "object",
+      properties: {
+        villa_name: { type: "string", description: "Which villa has the issue (ANN, DIANE, LOUNA, NISSA, LYMA, or other)" },
+        title: { type: "string", description: "Short title e.g. 'AC not cooling in bedroom 2'" },
+        description: { type: "string", description: "Full description of the issue" },
+        category: {
+          type: "string",
+          enum: ["plumbing","electrical","AC","pool","garden","cleaning","furniture","appliance","structural","pest","internet","security","general"],
+          description: "Maintenance category"
+        },
+        priority: {
+          type: "string",
+          enum: ["urgent","high","medium","low"],
+          description: "Urgency: urgent (same day), high (this week), medium (this month), low (whenever)"
+        },
+        reported_by: { type: "string", description: "Who reported this — guest name, tenant, or staff" },
+        assigned_to: { type: "string", description: "Who will handle this — technician or company name" },
+        estimated_cost: { type: "number", description: "Estimated cost in IDR" },
+        due_date: { type: "string", description: "When it should be done YYYY-MM-DD" },
+        notes: { type: "string", description: "Any additional notes" }
+      },
+      required: ["villa_name", "title"]
+    }
+  },
+  {
+    name: "maintenance_update_task",
+    description: "Update an existing maintenance task — change status (open/in_progress/waiting_parts/completed/cancelled), assign someone, add actual cost, mark as done with completion date, or add notes.",
+    input_schema: {
+      type: "object",
+      properties: {
+        task_id: { type: "number", description: "Maintenance task ID (from maintenance_get_tasks result)" },
+        status: { type: "string", enum: ["open","in_progress","waiting_parts","completed","cancelled"], description: "New status" },
+        assigned_to: { type: "string", description: "Who is assigned to fix this" },
+        actual_cost: { type: "number", description: "Actual cost paid in IDR" },
+        cost_account: { type: "string", enum: ["BCA","WISE","PERMATA","MANDIRI","CASH"], description: "Which account was used to pay" },
+        completed_date: { type: "string", description: "Date completed YYYY-MM-DD (set when marking done)" },
+        notes: { type: "string", description: "Update notes or resolution summary" },
+        priority: { type: "string", enum: ["urgent","high","medium","low"], description: "Change priority" }
+      },
+      required: ["task_id"]
+    }
+  },
+  {
+    name: "maintenance_get_tasks",
+    description: "Get maintenance tasks/issues. Filter by villa, status, or priority. Returns tasks sorted by priority (urgent first). Use this to see all open issues, pending repairs, or completed work.",
+    input_schema: {
+      type: "object",
+      properties: {
+        villa_name: { type: "string", description: "Filter by villa name (optional — omit for all villas)" },
+        status: { type: "string", enum: ["open","in_progress","waiting_parts","completed","cancelled"], description: "Filter by status (omit for all)" },
+        priority: { type: "string", enum: ["urgent","high","medium","low"], description: "Filter by priority (optional)" },
+        category: { type: "string", description: "Filter by category e.g. AC, plumbing (optional)" },
+        limit: { type: "number", description: "Max tasks to return (default 30)" }
+      }
+    }
+  },
+  {
+    name: "maintenance_get_summary",
+    description: "Get a summary of maintenance tasks per villa — shows open, in-progress, urgent counts and total costs. Good for a quick overview of which villas need the most attention.",
+    input_schema: { type: "object", properties: {} }
   }
 ];
 

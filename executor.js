@@ -687,6 +687,103 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
         break;
       }
 
+      // ── Maintenance ────────────────────────────────────────────────────────
+      case 'maintenance_add_task': {
+        const taskId = memory.addMaintenanceTask({
+          villa_name: toolInput.villa_name,
+          title: toolInput.title,
+          description: toolInput.description || null,
+          category: toolInput.category || 'general',
+          priority: toolInput.priority || 'medium',
+          reported_by: toolInput.reported_by || null,
+          assigned_to: toolInput.assigned_to || null,
+          estimated_cost: toolInput.estimated_cost || null,
+          due_date: toolInput.due_date || null,
+          notes: toolInput.notes || null
+        });
+        result = {
+          success: true,
+          task_id: taskId,
+          message: `Maintenance task #${taskId} added for ${toolInput.villa_name}: "${toolInput.title}" [${toolInput.priority || 'medium'} priority]`
+        };
+        break;
+      }
+
+      case 'maintenance_update_task': {
+        const updated = memory.updateMaintenanceTask(toolInput.task_id, {
+          status: toolInput.status,
+          assigned_to: toolInput.assigned_to,
+          actual_cost: toolInput.actual_cost,
+          cost_account: toolInput.cost_account,
+          completed_date: toolInput.completed_date || (toolInput.status === 'completed' ? new Date().toISOString().slice(0, 10) : undefined),
+          notes: toolInput.notes,
+          priority: toolInput.priority
+        });
+        // If completed with actual cost, also log the expense
+        if (toolInput.status === 'completed' && toolInput.actual_cost) {
+          const tasks = memory.getMaintenanceTasks({ limit: 1 });
+          const task = memory.db.prepare('SELECT * FROM maintenance_tasks WHERE id=?').get(toolInput.task_id);
+          if (task) {
+            memory.logTransaction({
+              type: 'expense',
+              category: 'maintenance',
+              description: `Maintenance: ${task.title} — ${task.villa_name}`,
+              amount: toolInput.actual_cost,
+              currency: 'IDR',
+              villa_name: task.villa_name,
+              payment_method: toolInput.cost_account || null,
+              status: 'paid',
+              date: toolInput.completed_date || new Date().toISOString().slice(0, 10)
+            });
+            // Log to Sheets too
+            const profileMaint = memory.getOwnerProfile();
+            if (profileMaint.sheets_booking_id && finance) {
+              await finance.logTransactionToSheets(profileMaint.sheets_booking_id, {
+                date: toolInput.completed_date || new Date().toISOString().slice(0, 10),
+                type: 'expense',
+                category: 'Villa Expense',
+                amount: toolInput.actual_cost,
+                account: toolInput.cost_account || '',
+                note: `Maintenance: ${task.title} — ${task.villa_name}`
+              });
+            }
+          }
+        }
+        result = { success: updated, task_id: toolInput.task_id, message: updated ? `Task #${toolInput.task_id} updated` : 'Task not found' };
+        break;
+      }
+
+      case 'maintenance_get_tasks': {
+        const tasks = memory.getMaintenanceTasks({
+          villa_name: toolInput.villa_name,
+          status: toolInput.status,
+          priority: toolInput.priority,
+          category: toolInput.category,
+          limit: toolInput.limit || 30
+        });
+        result = {
+          count: tasks.length,
+          tasks,
+          open_count: tasks.filter(t => t.status === 'open').length,
+          urgent_count: tasks.filter(t => t.priority === 'urgent').length,
+          total_estimated_cost: tasks.reduce((s, t) => s + (t.estimated_cost || 0), 0)
+        };
+        break;
+      }
+
+      case 'maintenance_get_summary': {
+        const summary = memory.getMaintenanceSummary();
+        const allOpen = memory.getMaintenanceTasks({ status: 'open' });
+        const allUrgent = memory.getMaintenanceTasks({ priority: 'urgent' });
+        result = {
+          by_villa: summary,
+          total_open: allOpen.length,
+          total_urgent: allUrgent.length,
+          urgent_tasks: allUrgent.slice(0, 5)
+        };
+        break;
+      }
+
       default:
         result = { error: `Unknown tool: ${toolName}` };
         status = 'ERROR';
