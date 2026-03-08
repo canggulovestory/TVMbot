@@ -7,6 +7,7 @@ const express = require('express');
 const path = require('path');
 const cron = require('node-cron');
 const Anthropic = require('@anthropic-ai/sdk');
+const session  = require('express-session');
 
 // ─── PEMS Modules ──────────────────────────────────────────────────────────────
 const memory = require('./memory');
@@ -26,6 +27,46 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+// ─── Session & Auth ────────────────────────────────────────────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'tvmbot_secret_key_2026',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+}));
+
+// Auth middleware — protects everything except /auth/* and /login.html
+function requireAuth(req, res, next) {
+  const open = ['/auth/login', '/auth/logout', '/login.html'];
+  if (open.includes(req.path)) return next();
+  if (req.session && req.session.loggedIn) return next();
+  if (req.path.startsWith('/api') || req.method === 'POST') {
+    return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+  }
+  res.redirect('/login.html');
+}
+app.use(requireAuth);
+
+// Login route
+app.post('/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  const validUser = process.env.LOGIN_USER || 'admin';
+  const validPass = process.env.LOGIN_PASSWORD || 'tvmbot2026';
+  if (username === validUser && password === validPass) {
+    req.session.loggedIn = true;
+    req.session.username = username;
+    return res.json({ success: true });
+  }
+  res.status(401).json({ success: false, message: 'Invalid username or password.' });
+});
+
+// Logout route
+app.get('/auth/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login.html');
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Session Store (in-memory, upgrade to Redis for prod) ─────────────────────

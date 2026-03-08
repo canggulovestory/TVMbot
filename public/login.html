@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVMbot — Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f1f5f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bg-pattern {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(22,163,74,.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(34,197,94,.06) 0%, transparent 50%),
+      #f1f5f9;
+  }
+
+  .card {
+    position: relative; z-index: 1;
+    background: #fff;
+    border-radius: 20px;
+    padding: 44px 40px;
+    width: 420px;
+    max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,.1), 0 4px 16px rgba(0,0,0,.06);
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .logo .icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; margin-bottom: 14px;
+    box-shadow: 0 8px 20px rgba(22,163,74,.3);
+  }
+  .logo h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.5px; }
+  .logo h1 b { color: #16a34a; }
+  .logo p { font-size: .82rem; color: #64748b; margin-top: 4px; }
+
+  .badge {
+    display: inline-block; background: #dcfce7; color: #14532d;
+    padding: 3px 10px; border-radius: 20px; font-size: .7rem; font-weight: 700;
+    margin-top: 6px; letter-spacing: .04em;
+  }
+
+  .divider { height: 1px; background: #e2e8f0; margin: 28px 0; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: .78rem; font-weight: 600;
+    color: #374151; margin-bottom: 6px;
+  }
+  .input-wrap { position: relative; }
+  .input-wrap .icon-left {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: .95rem; pointer-events: none;
+  }
+  .form-group input {
+    width: 100%; padding: 11px 14px 11px 38px;
+    border: 1.5px solid #e2e8f0; border-radius: 10px;
+    font-size: .88rem; color: #0f172a; background: #f8fafc;
+    font-family: inherit; transition: all .15s;
+  }
+  .form-group input:focus {
+    outline: none; border-color: #16a34a;
+    background: #fff; box-shadow: 0 0 0 3px rgba(22,163,74,.1);
+  }
+  .show-pw {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: .8rem;
+    color: #94a3b8; padding: 4px;
+  }
+  .show-pw:hover { color: #16a34a; }
+
+  .error-msg {
+    background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+    padding: 10px 14px; border-radius: 8px; font-size: .82rem;
+    margin-bottom: 16px; display: none; align-items: center; gap: 8px;
+  }
+  .error-msg.show { display: flex; }
+
+  .btn-login {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff; border: none; border-radius: 10px;
+    font-size: .95rem; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: all .2s;
+    box-shadow: 0 4px 12px rgba(22,163,74,.3);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(22,163,74,.35); }
+  .btn-login:active { transform: translateY(0); }
+  .btn-login:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .footer { text-align: center; margin-top: 24px; font-size: .75rem; color: #94a3b8; }
+  .footer span { color: #16a34a; font-weight: 600; }
+
+  /* Shake animation for wrong password */
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
+  .shake { animation: shake .4s ease; }
+</style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<div class="card" id="card">
+  <div class="logo">
+    <div class="icon">🏝️</div>
+    <h1>TVM<b>bot</b></h1>
+    <p>Villa Management AI</p>
+    <span class="badge">PEMS v2.0 · Private Access</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="error-msg" id="error-msg">
+    <span>🔒</span>
+    <span id="error-text">Invalid username or password.</span>
+  </div>
+
+  <form id="login-form" onsubmit="doLogin(event)">
+    <div class="form-group">
+      <label>Username</label>
+      <div class="input-wrap">
+        <span class="icon-left">👤</span>
+        <input type="text" id="username" placeholder="Enter your username" autocomplete="username" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span class="icon-left">🔑</span>
+        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required>
+        <button type="button" class="show-pw" onclick="togglePw()">👁</button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-login" id="login-btn">
+      <div class="spinner" id="spinner"></div>
+      <span id="btn-text">Sign In to TVMbot</span>
+    </button>
+  </form>
+
+  <div class="footer">
+    Secured · <span>thevillamanagers.cloud</span> · Private
+  </div>
+</div>
+
+<script>
+  // Auto-focus username field
+  document.getElementById('username').focus();
+
+  function togglePw() {
+    const pw = document.getElementById('password');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btn-text');
+    const errorMsg = document.getElementById('error-msg');
+
+    // Loading state
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Signing in...';
+    errorMsg.classList.remove('show');
+
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const d = await res.json();
+
+      if (d.success) {
+        btnText.textContent = '✓ Redirecting...';
+        window.location.href = '/';
+      } else {
+        // Error state
+        document.getElementById('error-text').textContent = d.message || 'Invalid username or password.';
+        errorMsg.classList.add('show');
+        document.getElementById('card').classList.add('shake');
+        setTimeout(() => document.getElementById('card').classList.remove('shake'), 400);
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    } catch(err) {
+      document.getElementById('error-text').textContent = 'Cannot reach server. Check your connection.';
+      errorMsg.classList.add('show');
+    }
+
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = 'Sign In to TVMbot';
+  }
+
+  // Check for ?error param in URL (e.g. after failed redirect)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('error')) {
+    document.getElementById('error-text').textContent = 'Please log in to access TVMbot.';
+    document.getElementById('error-msg').classList.add('show');
+  }
+</script>
+</body>
+</html>
