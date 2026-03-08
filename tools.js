@@ -1,0 +1,281 @@
+// tools.js — Anthropic Tool Definitions for TVMbot
+// 25 tools covering Gmail, Calendar, Drive, Docs, Sheets, Cleaning, Marketing, Memory
+
+const TOOLS = [
+  {
+    name: "gmail_list_messages",
+    description: "List recent emails from Gmail. Can filter by search query.",
+    input_schema: {
+      type: "object",
+      properties: {
+        maxResults: { type: "number", description: "Max emails to return (default 10)" },
+        query: { type: "string", description: "Gmail search query e.g. 'from:guest@email.com' or 'subject:booking'" }
+      }
+    }
+  },
+  {
+    name: "gmail_read_message",
+    description: "Read the full content of a specific email by its message ID.",
+    input_schema: {
+      type: "object",
+      properties: {
+        messageId: { type: "string", description: "Gmail message ID from gmail_list_messages" }
+      },
+      required: ["messageId"]
+    }
+  },
+  {
+    name: "gmail_send_message",
+    description: "Send an email via Gmail. Use for booking confirmations, guest communication, owner reports.",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "Recipient email address" },
+        subject: { type: "string", description: "Email subject line" },
+        body: { type: "string", description: "Email body text (plain text or HTML)" }
+      },
+      required: ["to", "subject", "body"]
+    }
+  },
+  {
+    name: "gmail_get_flagged",
+    description: "Get starred or important emails that need attention.",
+    input_schema: { type: "object", properties: {} }
+  },
+  {
+    name: "calendar_get_events",
+    description: "List upcoming calendar events. Filter by date range.",
+    input_schema: {
+      type: "object",
+      properties: {
+        maxResults: { type: "number", description: "Max events to return (default 10)" },
+        timeMin: { type: "string", description: "Start date-time ISO 8601 e.g. 2024-01-01T00:00:00Z" },
+        timeMax: { type: "string", description: "End date-time ISO 8601" }
+      }
+    }
+  },
+  {
+    name: "calendar_check_availability",
+    description: "Check if a time slot is available (no overlapping events).",
+    input_schema: {
+      type: "object",
+      properties: {
+        startTime: { type: "string", description: "Check-in date-time ISO 8601" },
+        endTime: { type: "string", description: "Check-out date-time ISO 8601" }
+      },
+      required: ["startTime", "endTime"]
+    }
+  },
+  {
+    name: "calendar_create_event",
+    description: "Create a new calendar event for villa bookings, cleaning, inspections.",
+    input_schema: {
+      type: "object",
+      properties: {
+        summary: { type: "string", description: "Event title e.g. 'John Smith @ Villa Canggu'" },
+        startTime: { type: "string", description: "Start ISO 8601 datetime" },
+        endTime: { type: "string", description: "End ISO 8601 datetime" },
+        description: { type: "string", description: "Event description/notes" },
+        attendees: { type: "array", items: { type: "string" }, description: "List of email addresses to invite" }
+      },
+      required: ["summary", "startTime", "endTime"]
+    }
+  },
+  {
+    name: "drive_search_files",
+    description: "Search for files in Google Drive by name or keyword.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Search query e.g. 'passport' or 'contract'" },
+        maxResults: { type: "number", description: "Max files to return (default 10)" }
+      }
+    }
+  },
+  {
+    name: "drive_find_passport",
+    description: "Find passport or ID documents for a specific guest in Google Drive.",
+    input_schema: {
+      type: "object",
+      properties: {
+        guestName: { type: "string", description: "Guest full name to search for" }
+      },
+      required: ["guestName"]
+    }
+  },
+  {
+    name: "drive_get_recent",
+    description: "List recently modified files in Google Drive.",
+    input_schema: {
+      type: "object",
+      properties: {
+        maxResults: { type: "number", description: "Number of recent files (default 10)" }
+      }
+    }
+  },
+  {
+    name: "drive_create_folder",
+    description: "Create a new folder in Google Drive for organizing guest files, contracts, etc.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Folder name" },
+        parentId: { type: "string", description: "Parent folder ID (optional)" }
+      },
+      required: ["name"]
+    }
+  },
+  {
+    name: "docs_create_document",
+    description: "Create a new Google Doc with specified content.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Document title" },
+        content: { type: "string", description: "Document content/body text" }
+      },
+      required: ["title"]
+    }
+  },
+  {
+    name: "docs_read_document",
+    description: "Read the content of an existing Google Doc.",
+    input_schema: {
+      type: "object",
+      properties: {
+        documentId: { type: "string", description: "Google Doc ID from URL" }
+      },
+      required: ["documentId"]
+    }
+  },
+  {
+    name: "docs_update_document",
+    description: "Update/append content to an existing Google Doc.",
+    input_schema: {
+      type: "object",
+      properties: {
+        documentId: { type: "string", description: "Google Doc ID" },
+        content: { type: "string", description: "New content to insert/append" }
+      },
+      required: ["documentId", "content"]
+    }
+  },
+  {
+    name: "docs_create_contract",
+    description: "Generate a complete villa rental contract as a Google Doc. Creates the doc, fills in all guest and villa details, and returns a link.",
+    input_schema: {
+      type: "object",
+      properties: {
+        guestName: { type: "string", description: "Guest full name" },
+        villaName: { type: "string", description: "Villa name" },
+        checkIn: { type: "string", description: "Check-in date YYYY-MM-DD" },
+        checkOut: { type: "string", description: "Check-out date YYYY-MM-DD" },
+        price: { type: "number", description: "Total rental price in USD" },
+        extras: { type: "string", description: "Extra services included (airport transfer, breakfast, etc.)" },
+        guestEmail: { type: "string", description: "Guest email address" }
+      },
+      required: ["guestName", "villaName", "checkIn", "checkOut", "price"]
+    }
+  },
+  {
+    name: "sheets_read_data",
+    description: "Read data from a Google Spreadsheet. Returns rows and columns.",
+    input_schema: {
+      type: "object",
+      properties: {
+        spreadsheetId: { type: "string", description: "Google Sheets ID from URL" },
+        range: { type: "string", description: "Cell range e.g. 'Sheet1' or 'Sheet1!A1:E20'" }
+      },
+      required: ["spreadsheetId"]
+    }
+  },
+  {
+    name: "sheets_write_data",
+    description: "Write/overwrite data to specific cells in a Google Spreadsheet.",
+    input_schema: {
+      type: "object",
+      properties: {
+        spreadsheetId: { type: "string", description: "Google Sheets ID" },
+        range: { type: "string", description: "Cell range e.g. 'Sheet1!A1'" },
+        values: { type: "array", description: "2D array of values [[row1col1, row1col2], [row2col1,...]]" }
+      },
+      required: ["spreadsheetId", "range", "values"]
+    }
+  },
+  {
+    name: "sheets_append_row",
+    description: "Append a new row to the end of a Google Spreadsheet sheet.",
+    input_schema: {
+      type: "object",
+      properties: {
+        spreadsheetId: { type: "string", description: "Google Sheets ID" },
+        sheetName: { type: "string", description: "Sheet/tab name (default Sheet1)" },
+        values: { type: "array", description: "Array of values for the new row [col1, col2, col3...]" }
+      },
+      required: ["spreadsheetId", "values"]
+    }
+  },
+  {
+    name: "cleaning_generate_schedule",
+    description: "Generate a weekly cleaning and housekeeping schedule based on check-ins and check-outs.",
+    input_schema: {
+      type: "object",
+      properties: {
+        checkIns: { type: "array", items: { type: "string" }, description: "List of check-in dates YYYY-MM-DD" },
+        checkOuts: { type: "array", items: { type: "string" }, description: "List of check-out dates YYYY-MM-DD" },
+        villaName: { type: "string", description: "Villa name" }
+      }
+    }
+  },
+  {
+    name: "marketing_generate_content",
+    description: "Generate marketing content for villa promotion: Instagram captions, Airbnb descriptions, email promotions, welcome letters.",
+    input_schema: {
+      type: "object",
+      properties: {
+        villaName: { type: "string", description: "Villa name" },
+        contentType: { type: "string", enum: ["instagram", "facebook", "airbnb", "email_promo", "welcome_letter", "review_request"], description: "Type of content to generate" },
+        details: { type: "object", description: "Additional details: location, features, special offer, guest name, etc." }
+      },
+      required: ["villaName", "contentType"]
+    }
+  },
+  {
+    name: "get_owner_profile",
+    description: "Retrieve the owner profile, villa details, and upcoming bookings from memory.",
+    input_schema: { type: "object", properties: {} }
+  },
+  {
+    name: "save_note",
+    description: "Save an important note or business information to agent memory for future reference.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Note title/subject" },
+        body: { type: "string", description: "Note content" },
+        tags: { type: "string", description: "Comma-separated tags e.g. 'guest,booking,important'" }
+      },
+      required: ["title", "body"]
+    }
+  },
+  {
+    name: "notion_get_pages",
+    description: "Get pages from Notion workspace (if Notion is connected).",
+    input_schema: { type: "object", properties: {} }
+  },
+  {
+    name: "notion_create_page",
+    description: "Create a new page in a Notion database.",
+    input_schema: {
+      type: "object",
+      properties: {
+        databaseId: { type: "string", description: "Notion database ID" },
+        properties: { type: "object", description: "Page properties as key-value pairs" },
+        content: { type: "string", description: "Page body content" }
+      },
+      required: ["databaseId"]
+    }
+  }
+];
+
+module.exports = TOOLS;
