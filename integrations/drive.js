@@ -77,4 +77,48 @@ async function getRecentFiles(maxResults = 10) {
   } catch (err) { console.error('Drive recent error:', err.message); return []; }
 }
 
-module.exports = { searchFiles, findPassports, listFolder, createFolder, getRecentFiles };
+// ─── File Reading Helpers ──────────────────────────────────────────────────────
+
+async function getFileMeta(fileId) {
+  const drive = google.drive({ version: 'v3', auth: getAuth() });
+  const res = await drive.files.get({
+    fileId,
+    fields: 'id, name, mimeType, size, modifiedTime, webViewLink'
+  });
+  return res.data;
+}
+
+async function downloadFile(fileId) {
+  const drive = google.drive({ version: 'v3', auth: getAuth() });
+  const res = await drive.files.get(
+    { fileId, alt: 'media' },
+    { responseType: 'arraybuffer' }
+  );
+  return Buffer.from(res.data);
+}
+
+async function exportAsText(fileId) {
+  const drive = google.drive({ version: 'v3', auth: getAuth() });
+  const res = await drive.files.export(
+    { fileId, mimeType: 'text/plain' },
+    { responseType: 'arraybuffer' }
+  );
+  return Buffer.from(res.data);
+}
+
+async function listFolderFiles(folderId, maxFiles = 10, extraQuery = '') {
+  const drive = google.drive({ version: 'v3', auth: getAuth() });
+  const q = `'${folderId}' in parents and trashed = false${extraQuery ? ' and ' + extraQuery.replace(/^and\s+/, '') : ''}`;
+  const res = await drive.files.list({
+    q,
+    pageSize: Math.min(maxFiles, 20),
+    fields: 'files(id, name, mimeType, webViewLink, modifiedTime, size)',
+    orderBy: 'modifiedTime desc'
+  });
+  return res.data.files || [];
+}
+
+module.exports = {
+  searchFiles, findPassports, listFolder, createFolder, getRecentFiles,
+  getFileMeta, downloadFile, exportAsText, listFolderFiles
+};

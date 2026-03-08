@@ -259,6 +259,31 @@ const TOOLS = [
     }
   },
   {
+    name: "drive_read_contract",
+    description: "Read and extract the full text content of a PDF or DOCX contract file stored in Google Drive. Also works with Google Docs. Use this to analyse contract terms, find dates, extract guest details, check clauses, compare documents, or answer questions about any file.",
+    input_schema: {
+      type: "object",
+      properties: {
+        fileId: { type: "string", description: "Google Drive file ID (from URL or drive_search_files result)" },
+        fileName: { type: "string", description: "Optional file name for display purposes" }
+      },
+      required: ["fileId"]
+    }
+  },
+  {
+    name: "drive_scan_folder",
+    description: "Scan an entire Google Drive folder and read all PDF and DOCX contract files found inside it. Returns extracted text from every file. Use this to audit all contracts, find expiring leases, extract all guest names/dates, or do bulk analysis across many documents.",
+    input_schema: {
+      type: "object",
+      properties: {
+        folderId: { type: "string", description: "Google Drive folder ID to scan" },
+        maxFiles: { type: "number", description: "Max files to read (default 10, max 20)" },
+        fileTypes: { type: "string", description: "Filter by type: 'pdf', 'docx', or 'all' (default 'all')" }
+      },
+      required: ["folderId"]
+    }
+  },
+  {
     name: "notion_get_pages",
     description: "Get pages from Notion workspace (if Notion is connected).",
     input_schema: { type: "object", properties: {} }

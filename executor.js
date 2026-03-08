@@ -2,8 +2,64 @@
 // Dispatches all tool calls from Planner/Claude to actual Google API integrations
 
 const path = require('path');
+const fs = require('fs');
 const audit = require('./audit');
 const memory = require('./memory');
+
+// ─── PDF / DOCX Parsers ────────────────────────────────────────────────────────
+let pdfParse, mammoth;
+try { pdfParse = require('pdf-parse'); } catch(e) { console.warn('[Executor] pdf-parse not available'); }
+try { mammoth  = require('mammoth');   } catch(e) { console.warn('[Executor] mammoth not available'); }
+
+// Helper: download a Drive file as a Buffer and detect its type
+async function driveDownloadBuffer(fileId) {
+  if (!drive) throw new Error('Drive integration not loaded');
+
+  // Get file metadata first to know mimeType
+  const meta = await drive.getFileMeta(fileId);
+  const mimeType = meta.mimeType || '';
+
+  let buffer;
+
+  if (mimeType === 'application/vnd.google-apps.document') {
+    // Google Doc → export as plain text
+    buffer = await drive.exportAsText(fileId);
+    return { buffer, mimeType: 'text/plain', name: meta.name };
+  } else {
+    buffer = await drive.downloadFile(fileId);
+    return { buffer, mimeType, name: meta.name };
+  }
+}
+
+// Helper: extract text from Buffer based on mimeType
+async function extractText(buffer, mimeType, fileName = '') {
+  const name = (fileName || '').toLowerCase();
+
+  if (mimeType === 'text/plain') {
+    return buffer.toString('utf8');
+  }
+
+  if (mimeType === 'application/pdf' || name.endsWith('.pdf')) {
+    if (!pdfParse) throw new Error('pdf-parse not installed');
+    const data = await pdfParse(buffer);
+    return data.text;
+  }
+
+  if (
+    mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    name.endsWith('.docx')
+  ) {
+    if (!mammoth) throw new Error('mammoth not installed');
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value;
+  }
+
+  if (mimeType === 'application/msword' || name.endsWith('.doc')) {
+    throw new Error('.doc (old Word format) is not supported — please convert to .docx or PDF first');
+  }
+
+  throw new Error(`Unsupported file type: ${mimeType || name}. Supported: PDF, DOCX, Google Docs`);
+}
 
 // ─── Integration Imports ───────────────────────────────────────────────────────
 let gmail, calendar, drive, docs, sheets, cleaning, notion;
@@ -145,6 +201,61 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
         if (!drive) throw new Error('Drive integration not loaded');
         const folder = await drive.createFolder(toolInput.name, toolInput.parentId);
         result = { success: true, folderId: folder.id, name: toolInput.name, link: folder.webViewLink };
+        break;
+      }
+
+      case 'drive_read_contract': {
+        if (!drive) throw new Error('Drive integration not loaded');
+        const { buffer, mimeType, name } = await driveDownloadBuffer(toolInput.fileId);
+        const displayName = toolInput.fileName || name || toolInput.fileId;
+        const text = await extractText(buffer, mimeType, name);
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        result = {
+          fileId: toolInput.fileId,
+          fileName: displayName,
+          mimeType,
+          wordCount,
+          // Truncate at 15 000 chars to stay inside Claude's context comfortably
+          text: text.length > 15000 ? text.slice(0, 15000) + '\n\n[...document truncated at 15 000 chars...]' : text
+        };
+        break;
+      }
+
+      case 'drive_scan_folder': {
+        if (!drive) throw new Error('Drive integration not loaded');
+        const maxFiles = Math.min(toolInput.maxFiles || 10, 20);
+        const typeFilter = (toolInput.fileTypes || 'all').toLowerCase();
+
+        // List files in folder
+        let mimeQuery = "trashed = false";
+        if (typeFilter === 'pdf') {
+          mimeQuery += " and mimeType = 'application/pdf'";
+        } else if (typeFilter === 'docx') {
+          mimeQuery += " and mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'";
+        } else {
+          mimeQuery += " and (mimeType = 'application/pdf' or mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType = 'application/vnd.google-apps.document')";
+        }
+
+        const files = await drive.listFolderFiles(toolInput.folderId, maxFiles, mimeQuery);
+        const results = [];
+
+        for (const file of files) {
+          try {
+            const { buffer, mimeType, name } = await driveDownloadBuffer(file.id);
+            const text = await extractText(buffer, mimeType, name);
+            results.push({
+              fileId: file.id,
+              fileName: file.name,
+              mimeType,
+              wordCount: text.split(/\s+/).filter(Boolean).length,
+              text: text.length > 6000 ? text.slice(0, 6000) + '\n[truncated]' : text
+            });
+          } catch (parseErr) {
+            results.push({ fileId: file.id, fileName: file.name, error: parseErr.message });
+          }
+        }
+
+        result = { folderId: toolInput.folderId, totalFiles: results.length, documents: results };
         break;
       }
 
