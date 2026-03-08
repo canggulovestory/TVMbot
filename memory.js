@@ -103,6 +103,56 @@ db.exec(`
     template TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL CHECK(type IN ('income','expense')),
+    category TEXT NOT NULL,
+    description TEXT NOT NULL,
+    amount REAL NOT NULL,
+    currency TEXT DEFAULT 'USD',
+    villa_name TEXT,
+    guest_name TEXT,
+    booking_id INTEGER,
+    payment_method TEXT,
+    reference TEXT,
+    status TEXT DEFAULT 'paid' CHECK(status IN ('paid','pending','partial','refunded')),
+    date TEXT NOT NULL DEFAULT (date('now')),
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS bank_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    bank TEXT,
+    account_number TEXT,
+    currency TEXT DEFAULT 'USD',
+    balance REAL DEFAULT 0,
+    notes TEXT,
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_number TEXT NOT NULL UNIQUE,
+    guest_name TEXT NOT NULL,
+    guest_email TEXT,
+    villa_name TEXT,
+    booking_id INTEGER,
+    line_items TEXT,
+    subtotal REAL,
+    tax_rate REAL DEFAULT 0,
+    tax_amount REAL DEFAULT 0,
+    total REAL,
+    currency TEXT DEFAULT 'USD',
+    status TEXT DEFAULT 'draft' CHECK(status IN ('draft','sent','paid','overdue','cancelled')),
+    due_date TEXT,
+    paid_date TEXT,
+    file_path TEXT,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // ─── Business Facts ────────────────────────────────────────────────────────────
@@ -273,6 +323,138 @@ function getAllNotes() {
   return db.prepare('SELECT * FROM agent_notes ORDER BY updated_at DESC').all();
 }
 
+// ─── Transactions ──────────────────────────────────────────────────────────────
+function logTransaction(data) {
+  const stmt = db.prepare(`
+    INSERT INTO transactions (type, category, description, amount, currency, villa_name, guest_name, booking_id, payment_method, reference, status, date)
+    VALUES (@type, @category, @description, @amount, @currency, @villa_name, @guest_name, @booking_id, @payment_method, @reference, @status, @date)
+  `);
+  const res = stmt.run({
+    type: data.type,
+    category: data.category || (data.type === 'income' ? 'booking' : 'operations'),
+    description: data.description,
+    amount: parseFloat(data.amount),
+    currency: data.currency || 'USD',
+    villa_name: data.villa_name || null,
+    guest_name: data.guest_name || null,
+    booking_id: data.booking_id || null,
+    payment_method: data.payment_method || null,
+    reference: data.reference || null,
+    status: data.status || 'paid',
+    date: data.date || new Date().toISOString().slice(0, 10)
+  });
+  return res.lastInsertRowid;
+}
+
+function getTransactions(filter = {}) {
+  if (filter.type) return db.prepare('SELECT * FROM transactions WHERE type = ? ORDER BY date DESC LIMIT 50').all(filter.type);
+  if (filter.villa) return db.prepare('SELECT * FROM transactions WHERE villa_name = ? ORDER BY date DESC LIMIT 50').all(filter.villa);
+  if (filter.month) return db.prepare("SELECT * FROM transactions WHERE strftime('%Y-%m', date) = ? ORDER BY date DESC").all(filter.month);
+  return db.prepare('SELECT * FROM transactions ORDER BY date DESC LIMIT 50').all();
+}
+
+function getPLReport(startDate, endDate) {
+  const rows = db.prepare(
+    "SELECT type, category, SUM(amount) as total FROM transactions WHERE date >= ? AND date <= ? AND status != 'refunded' GROUP BY type, category ORDER BY type, total DESC"
+  ).all(startDate, endDate);
+
+  const income = rows.filter(r => r.type === 'income');
+  const expenses = rows.filter(r => r.type === 'expense');
+  const totalIncome = income.reduce((s, r) => s + r.total, 0);
+  const totalExpenses = expenses.reduce((s, r) => s + r.total, 0);
+
+  return {
+    period: { from: startDate, to: endDate },
+    income: { breakdown: income, total: totalIncome },
+    expenses: { breakdown: expenses, total: totalExpenses },
+    net_profit: totalIncome - totalExpenses,
+    profit_margin: totalIncome > 0 ? (((totalIncome - totalExpenses) / totalIncome) * 100).toFixed(1) + '%' : '0%'
+  };
+}
+
+function getOutstandingPayments() {
+  return db.prepare("SELECT * FROM transactions WHERE status IN ('pending','partial') ORDER BY date ASC").all();
+}
+
+// ─── Bank Accounts ─────────────────────────────────────────────────────────────
+function upsertBankAccount(data) {
+  db.prepare(`
+    INSERT INTO bank_accounts (name, bank, account_number, currency, balance, notes, updated_at)
+    VALUES (@name, @bank, @account_number, @currency, @balance, @notes, datetime('now'))
+    ON CONFLICT(name) DO UPDATE SET
+      bank=excluded.bank, account_number=excluded.account_number,
+      currency=excluded.currency, balance=excluded.balance,
+      notes=excluded.notes, updated_at=excluded.updated_at
+  `).run({
+    name: data.name,
+    bank: data.bank || null,
+    account_number: data.account_number || null,
+    currency: data.currency || 'USD',
+    balance: parseFloat(data.balance) || 0,
+    notes: data.notes || null
+  });
+}
+
+function updateBankBalance(name, balance) {
+  db.prepare("UPDATE bank_accounts SET balance = ?, updated_at = datetime('now') WHERE name = ?").run(parseFloat(balance), name);
+}
+
+function getAllBankAccounts() {
+  return db.prepare('SELECT * FROM bank_accounts ORDER BY name').all();
+}
+
+function getTotalBankBalance() {
+  return db.prepare("SELECT currency, SUM(balance) as total FROM bank_accounts GROUP BY currency").all();
+}
+
+// ─── Invoices ──────────────────────────────────────────────────────────────────
+function generateInvoiceNumber() {
+  const year = new Date().getFullYear();
+  const last = db.prepare("SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1").get();
+  if (!last) return `INV-${year}-001`;
+  const num = parseInt(last.invoice_number.split('-')[2] || 0) + 1;
+  return `INV-${year}-${String(num).padStart(3, '0')}`;
+}
+
+function saveInvoice(data) {
+  const invoiceNumber = data.invoice_number || generateInvoiceNumber();
+  const stmt = db.prepare(`
+    INSERT INTO invoices (invoice_number, guest_name, guest_email, villa_name, booking_id, line_items, subtotal, tax_rate, tax_amount, total, currency, status, due_date, notes)
+    VALUES (@invoice_number, @guest_name, @guest_email, @villa_name, @booking_id, @line_items, @subtotal, @tax_rate, @tax_amount, @total, @currency, @status, @due_date, @notes)
+  `);
+  const res = stmt.run({
+    invoice_number: invoiceNumber,
+    guest_name: data.guest_name,
+    guest_email: data.guest_email || null,
+    villa_name: data.villa_name || null,
+    booking_id: data.booking_id || null,
+    line_items: JSON.stringify(data.line_items || []),
+    subtotal: parseFloat(data.subtotal) || 0,
+    tax_rate: parseFloat(data.tax_rate) || 0,
+    tax_amount: parseFloat(data.tax_amount) || 0,
+    total: parseFloat(data.total) || 0,
+    currency: data.currency || 'USD',
+    status: data.status || 'draft',
+    due_date: data.due_date || null,
+    notes: data.notes || null
+  });
+  return { id: res.lastInsertRowid, invoice_number: invoiceNumber };
+}
+
+function updateInvoiceStatus(invoiceNumber, status, filePath = null) {
+  db.prepare(`
+    UPDATE invoices SET status = ?, file_path = COALESCE(?, file_path),
+    paid_date = CASE WHEN ? = 'paid' THEN date('now') ELSE paid_date END,
+    updated_at = datetime('now') WHERE invoice_number = ?
+  `).run(status, filePath, status, invoiceNumber);
+}
+
+function getInvoices(filter = {}) {
+  if (filter.status) return db.prepare("SELECT * FROM invoices WHERE status = ? ORDER BY created_at DESC").all(filter.status);
+  if (filter.guest_email) return db.prepare("SELECT * FROM invoices WHERE guest_email = ? ORDER BY created_at DESC").all(filter.guest_email);
+  return db.prepare('SELECT * FROM invoices ORDER BY created_at DESC LIMIT 20').all();
+}
+
 // ─── Context Builder (for injecting into LLM prompts) ──────────────────────────
 function buildContextSummary() {
   const profile = getOwnerProfile();
@@ -345,6 +527,12 @@ module.exports = {
   logDecision, getRecentDecisions,
   // Notes
   saveNote, searchNotes, getAllNotes,
+  // Finance — Transactions
+  logTransaction, getTransactions, getPLReport, getOutstandingPayments,
+  // Finance — Bank Accounts
+  upsertBankAccount, updateBankBalance, getAllBankAccounts, getTotalBankBalance,
+  // Finance — Invoices
+  generateInvoiceNumber, saveInvoice, updateInvoiceStatus, getInvoices,
   // Context
   buildContextSummary,
   // DB

@@ -62,7 +62,7 @@ async function extractText(buffer, mimeType, fileName = '') {
 }
 
 // ─── Integration Imports ───────────────────────────────────────────────────────
-let gmail, calendar, drive, docs, sheets, cleaning, notion;
+let gmail, calendar, drive, docs, sheets, cleaning, notion, finance;
 
 try { gmail    = require('./integrations/gmail');    } catch(e) { console.warn('[Executor] Gmail not available:', e.message); }
 try { calendar = require('./integrations/calendar'); } catch(e) { console.warn('[Executor] Calendar not available:', e.message); }
@@ -71,6 +71,7 @@ try { docs     = require('./integrations/docs');     } catch(e) { console.warn('
 try { sheets   = require('./integrations/sheets');   } catch(e) { console.warn('[Executor] Sheets not available:', e.message); }
 try { cleaning = require('./integrations/cleaning'); } catch(e) { console.warn('[Executor] Cleaning not available:', e.message); }
 try { notion   = require('./integrations/notion');   } catch(e) { console.warn('[Executor] Notion not available:', e.message); }
+try { finance  = require('./integrations/finance');  } catch(e) { console.warn('[Executor] Finance not available:', e.message); }
 
 // ─── Sensitive Tools (require supervisor approval) ─────────────────────────────
 const SENSITIVE_TOOLS = [
@@ -201,6 +202,244 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
         if (!drive) throw new Error('Drive integration not loaded');
         const folder = await drive.createFolder(toolInput.name, toolInput.parentId);
         result = { success: true, folderId: folder.id, name: toolInput.name, link: folder.webViewLink };
+        break;
+      }
+
+      // ── Finance ────────────────────────────────────────────────────────────
+      case 'finance_log_payment': {
+        const txId = memory.logTransaction({
+          type: 'income',
+          category: toolInput.category || 'booking',
+          description: toolInput.description,
+          amount: toolInput.amount,
+          currency: toolInput.currency || 'USD',
+          villa_name: toolInput.villa_name || null,
+          guest_name: toolInput.guest_name || null,
+          booking_id: toolInput.booking_id || null,
+          payment_method: toolInput.payment_method || null,
+          reference: toolInput.reference || null,
+          status: toolInput.status || 'paid',
+          date: toolInput.date || new Date().toISOString().slice(0, 10)
+        });
+        // Auto-log to Sheets if configured
+        const profile = memory.getOwnerProfile();
+        const sheetsId = profile.sheets_booking_id;
+        let sheetsResult = { skipped: true };
+        if (sheetsId && finance) {
+          await finance.ensureTransactionSheetHeaders(sheetsId);
+          sheetsResult = await finance.logTransactionToSheets(sheetsId, { ...toolInput, type: 'income' });
+        }
+        result = {
+          success: true, transactionId: txId,
+          message: `Payment of ${toolInput.currency || 'USD'} ${toolInput.amount} recorded`,
+          sheets: sheetsResult
+        };
+        break;
+      }
+
+      case 'finance_log_expense': {
+        const txId = memory.logTransaction({
+          type: 'expense',
+          category: toolInput.category || 'other',
+          description: toolInput.description,
+          amount: toolInput.amount,
+          currency: toolInput.currency || 'USD',
+          villa_name: toolInput.villa_name || null,
+          payment_method: toolInput.payment_method || null,
+          reference: toolInput.reference || null,
+          status: 'paid',
+          date: toolInput.date || new Date().toISOString().slice(0, 10)
+        });
+        const profile = memory.getOwnerProfile();
+        const sheetsId = profile.sheets_booking_id;
+        let sheetsResult = { skipped: true };
+        if (sheetsId && finance) {
+          await finance.ensureTransactionSheetHeaders(sheetsId);
+          sheetsResult = await finance.logTransactionToSheets(sheetsId, { ...toolInput, type: 'expense' });
+        }
+        result = {
+          success: true, transactionId: txId,
+          message: `Expense of ${toolInput.currency || 'USD'} ${toolInput.amount} recorded (${toolInput.category})`,
+          sheets: sheetsResult
+        };
+        break;
+      }
+
+      case 'finance_get_report': {
+        const today = new Date();
+        let startDate, endDate;
+        const pad = n => String(n).padStart(2, '0');
+        const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+
+        switch (toolInput.period) {
+          case 'this_month':
+            startDate = `${today.getFullYear()}-${pad(today.getMonth()+1)}-01`;
+            endDate   = todayStr; break;
+          case 'last_month': {
+            const lm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lme = new Date(today.getFullYear(), today.getMonth(), 0);
+            startDate = `${lm.getFullYear()}-${pad(lm.getMonth()+1)}-01`;
+            endDate   = `${lme.getFullYear()}-${pad(lme.getMonth()+1)}-${pad(lme.getDate())}`; break;
+          }
+          case 'this_year':
+            startDate = `${today.getFullYear()}-01-01`; endDate = todayStr; break;
+          case 'last_30_days': {
+            const d30 = new Date(today); d30.setDate(d30.getDate() - 30);
+            startDate = `${d30.getFullYear()}-${pad(d30.getMonth()+1)}-${pad(d30.getDate())}`;
+            endDate   = todayStr; break;
+          }
+          case 'last_90_days': {
+            const d90 = new Date(today); d90.setDate(d90.getDate() - 90);
+            startDate = `${d90.getFullYear()}-${pad(d90.getMonth()+1)}-${pad(d90.getDate())}`;
+            endDate   = todayStr; break;
+          }
+          default:
+            startDate = toolInput.start_date || todayStr;
+            endDate   = toolInput.end_date   || todayStr;
+        }
+
+        const report = memory.getPLReport(startDate, endDate);
+        result = report;
+        break;
+      }
+
+      case 'finance_get_outstanding': {
+        const outstanding = memory.getOutstandingPayments();
+        const unpaidInvoices = memory.getInvoices({ status: 'sent' });
+        result = {
+          outstanding_payments: outstanding,
+          unpaid_invoices: unpaidInvoices,
+          total_outstanding: outstanding.reduce((s, t) => s + (t.amount || 0), 0)
+        };
+        break;
+      }
+
+      case 'finance_generate_invoice': {
+        if (!finance) throw new Error('Finance integration not loaded');
+        const lineItems = toolInput.line_items || [];
+        const subtotal  = finance.calcLineItems(lineItems);
+        const taxRate   = parseFloat(toolInput.tax_rate || 0);
+        const taxAmount = subtotal * (taxRate / 100);
+        const total     = subtotal + taxAmount;
+
+        // Save invoice record
+        const { id: invoiceId, invoice_number } = memory.saveInvoice({
+          guest_name: toolInput.guest_name,
+          guest_email: toolInput.guest_email || null,
+          villa_name: toolInput.villa_name || null,
+          booking_id: toolInput.booking_id || null,
+          line_items: lineItems,
+          subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
+          currency: toolInput.currency || 'USD',
+          status: 'draft',
+          due_date: toolInput.due_date || null,
+          notes: toolInput.notes || null
+        });
+
+        const profile = memory.getOwnerProfile();
+        const invoiceData = {
+          invoice_number,
+          guest_name: toolInput.guest_name,
+          guest_email: toolInput.guest_email,
+          villa_name: toolInput.villa_name,
+          line_items: lineItems,
+          subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
+          currency: toolInput.currency || 'USD',
+          due_date: toolInput.due_date,
+          notes: toolInput.notes,
+          created_at: new Date().toISOString()
+        };
+
+        const { filePath, fileName } = await finance.generateInvoicePDF(invoiceData, profile);
+        memory.updateInvoiceStatus(invoice_number, 'draft', filePath);
+
+        result = {
+          success: true, invoice_number, invoiceId,
+          subtotal, tax_amount: taxAmount, total,
+          currency: toolInput.currency || 'USD',
+          pdf_path: filePath,
+          message: `Invoice ${invoice_number} generated for ${toolInput.guest_name} — ${toolInput.currency || 'USD'} ${total.toFixed(2)}`
+        };
+
+        // Send via email if requested
+        if (toolInput.send_email && toolInput.guest_email && gmail) {
+          const fs = require('fs');
+          const emailBody = `Dear ${toolInput.guest_name},\n\nPlease find your invoice ${invoice_number} attached.\n\nTotal: ${toolInput.currency || 'USD'} ${total.toFixed(2)}\nDue: ${toolInput.due_date || 'Upon receipt'}\n\n${toolInput.notes || ''}\n\nThank you,\n${profile.company || 'The Villa Managers'}`;
+          await gmail.sendEmail(toolInput.guest_email, `Invoice ${invoice_number} — ${toolInput.villa_name || profile.company || 'Villa Rental'}`, emailBody);
+          memory.updateInvoiceStatus(invoice_number, 'sent');
+          result.email_sent = true;
+          result.message += ' — emailed to ' + toolInput.guest_email;
+        }
+        break;
+      }
+
+      case 'finance_update_bank_balance': {
+        memory.upsertBankAccount({
+          name: toolInput.account_name,
+          bank: toolInput.bank || null,
+          account_number: toolInput.account_number || null,
+          currency: toolInput.currency || 'USD',
+          balance: toolInput.balance,
+          notes: toolInput.notes || null
+        });
+        result = {
+          success: true,
+          message: `Bank account "${toolInput.account_name}" updated — balance: ${toolInput.currency || 'USD'} ${parseFloat(toolInput.balance).toLocaleString()}`
+        };
+        break;
+      }
+
+      case 'finance_get_bank_balances': {
+        const accounts = memory.getAllBankAccounts();
+        const totals   = memory.getTotalBankBalance();
+        result = {
+          accounts,
+          totals_by_currency: totals,
+          count: accounts.length,
+          last_updated: accounts.map(a => a.updated_at).sort().pop() || null
+        };
+        break;
+      }
+
+      case 'finance_get_transactions': {
+        const filter = {};
+        if (toolInput.type && toolInput.type !== 'all') filter.type = toolInput.type;
+        if (toolInput.villa_name) filter.villa = toolInput.villa_name;
+        if (toolInput.month)      filter.month = toolInput.month;
+        const txs = memory.getTransactions(filter);
+        result = {
+          count: txs.length,
+          transactions: txs.slice(0, toolInput.limit || 20),
+          total_income:  txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+          total_expenses: txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+        };
+        break;
+      }
+
+      case 'finance_mark_invoice_paid': {
+        memory.updateInvoiceStatus(toolInput.invoice_number, 'paid');
+        // Also log the income transaction
+        const inv = memory.getInvoices({}).find(i => i.invoice_number === toolInput.invoice_number);
+        if (inv) {
+          memory.logTransaction({
+            type: 'income',
+            category: 'booking',
+            description: `Invoice ${toolInput.invoice_number} paid — ${inv.guest_name}`,
+            amount: inv.total,
+            currency: inv.currency || 'USD',
+            villa_name: inv.villa_name || null,
+            guest_name: inv.guest_name,
+            payment_method: toolInput.payment_method || null,
+            reference: toolInput.reference || null,
+            status: 'paid',
+            date: new Date().toISOString().slice(0, 10)
+          });
+        }
+        result = {
+          success: true,
+          message: `Invoice ${toolInput.invoice_number} marked as PAID`,
+          invoice_number: toolInput.invoice_number
+        };
         break;
       }
 

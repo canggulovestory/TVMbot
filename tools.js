@@ -258,6 +258,142 @@ const TOOLS = [
       required: ["title", "body"]
     }
   },
+  // ── Finance Tools ─────────────────────────────────────────────────────────
+  {
+    name: "finance_log_payment",
+    description: "Record a payment received from a guest (income). Logs to TVMbot memory and Google Sheets ledger. Use for booking deposits, full payments, balance payments.",
+    input_schema: {
+      type: "object",
+      properties: {
+        description: { type: "string", description: "What this payment is for e.g. 'Deposit for Villa Canggu — John Smith'" },
+        amount: { type: "number", description: "Payment amount" },
+        currency: { type: "string", description: "Currency code: USD, IDR, EUR, AUD (default USD)" },
+        guest_name: { type: "string", description: "Guest name" },
+        villa_name: { type: "string", description: "Villa name" },
+        payment_method: { type: "string", description: "How paid: bank_transfer, cash, credit_card, wise, paypal" },
+        status: { type: "string", enum: ["paid", "pending", "partial"], description: "Payment status" },
+        date: { type: "string", description: "Payment date YYYY-MM-DD (defaults to today)" },
+        booking_id: { type: "number", description: "Linked booking ID if available" },
+        reference: { type: "string", description: "Bank reference or transaction ID" }
+      },
+      required: ["description", "amount"]
+    }
+  },
+  {
+    name: "finance_log_expense",
+    description: "Record a business expense (cleaning, maintenance, staff, utilities, supplies, etc.). Logs to TVMbot memory and Google Sheets ledger.",
+    input_schema: {
+      type: "object",
+      properties: {
+        description: { type: "string", description: "What the expense is for e.g. 'Weekly cleaning — Villa Ubud'" },
+        amount: { type: "number", description: "Expense amount" },
+        currency: { type: "string", description: "Currency code" },
+        category: { type: "string", enum: ["cleaning", "maintenance", "staff", "utilities", "supplies", "marketing", "transport", "food", "commission", "tax", "insurance", "other"], description: "Expense category" },
+        villa_name: { type: "string", description: "Which villa this expense relates to" },
+        payment_method: { type: "string", description: "How paid" },
+        date: { type: "string", description: "Expense date YYYY-MM-DD" },
+        reference: { type: "string", description: "Receipt or reference number" }
+      },
+      required: ["description", "amount", "category"]
+    }
+  },
+  {
+    name: "finance_get_report",
+    description: "Generate a Profit & Loss (P&L) financial report for a given time period. Shows total income, total expenses, net profit, margin, and breakdown by category.",
+    input_schema: {
+      type: "object",
+      properties: {
+        period: { type: "string", enum: ["this_month", "last_month", "this_year", "last_30_days", "last_90_days", "custom"], description: "Report period" },
+        start_date: { type: "string", description: "Start date YYYY-MM-DD (required if period=custom)" },
+        end_date: { type: "string", description: "End date YYYY-MM-DD (required if period=custom)" },
+        villa_name: { type: "string", description: "Filter by specific villa (optional)" }
+      },
+      required: ["period"]
+    }
+  },
+  {
+    name: "finance_get_outstanding",
+    description: "List all unpaid or partially paid bookings/invoices. Shows who owes money, how much, and for which villa.",
+    input_schema: { type: "object", properties: {} }
+  },
+  {
+    name: "finance_generate_invoice",
+    description: "Generate a professional PDF invoice for a guest and optionally send it by email. Creates invoice with your company branding, line items, taxes, and totals.",
+    input_schema: {
+      type: "object",
+      properties: {
+        guest_name: { type: "string", description: "Guest full name" },
+        guest_email: { type: "string", description: "Guest email for sending" },
+        villa_name: { type: "string", description: "Villa name" },
+        line_items: {
+          type: "array",
+          description: "Invoice line items",
+          items: {
+            type: "object",
+            properties: {
+              description: { type: "string" },
+              quantity: { type: "number" },
+              unit_price: { type: "number" }
+            }
+          }
+        },
+        currency: { type: "string", description: "Currency code (default USD)" },
+        tax_rate: { type: "number", description: "Tax percentage e.g. 11 for 11% (default 0)" },
+        due_date: { type: "string", description: "Payment due date YYYY-MM-DD" },
+        notes: { type: "string", description: "Payment instructions or notes on invoice" },
+        send_email: { type: "boolean", description: "Whether to email the invoice to the guest" },
+        booking_id: { type: "number", description: "Link to booking ID" }
+      },
+      required: ["guest_name", "line_items"]
+    }
+  },
+  {
+    name: "finance_update_bank_balance",
+    description: "Update the current balance of a bank account. Use when you check your bank and want TVMbot to remember the current amounts. Can also add a new account.",
+    input_schema: {
+      type: "object",
+      properties: {
+        account_name: { type: "string", description: "Account nickname e.g. 'BCA Main', 'Wise USD', 'PayPal'" },
+        bank: { type: "string", description: "Bank name e.g. BCA, Mandiri, Wise, PayPal" },
+        balance: { type: "number", description: "Current balance amount" },
+        currency: { type: "string", description: "Account currency e.g. IDR, USD" },
+        account_number: { type: "string", description: "Last 4 digits or masked account number (optional)" },
+        notes: { type: "string", description: "Any notes about this account" }
+      },
+      required: ["account_name", "balance"]
+    }
+  },
+  {
+    name: "finance_get_bank_balances",
+    description: "Show the current balance of all bank accounts that have been registered with TVMbot. Also shows total across all accounts per currency.",
+    input_schema: { type: "object", properties: {} }
+  },
+  {
+    name: "finance_get_transactions",
+    description: "List recent financial transactions (income and expenses). Can filter by type, villa, or month.",
+    input_schema: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["income", "expense", "all"], description: "Filter by income or expense" },
+        villa_name: { type: "string", description: "Filter by villa name" },
+        month: { type: "string", description: "Filter by month YYYY-MM e.g. 2026-03" },
+        limit: { type: "number", description: "Number of records to return (default 20)" }
+      }
+    }
+  },
+  {
+    name: "finance_mark_invoice_paid",
+    description: "Mark an invoice as paid and optionally record the payment in the transactions ledger.",
+    input_schema: {
+      type: "object",
+      properties: {
+        invoice_number: { type: "string", description: "Invoice number e.g. INV-2026-001" },
+        payment_method: { type: "string", description: "How it was paid" },
+        reference: { type: "string", description: "Bank reference or transaction ID" }
+      },
+      required: ["invoice_number"]
+    }
+  },
   {
     name: "drive_read_contract",
     description: "Read and extract the full text content of a PDF or DOCX contract file stored in Google Drive. Also works with Google Docs. Use this to analyse contract terms, find dates, extract guest details, check clauses, compare documents, or answer questions about any file.",
