@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVMbot Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Montserrat',sans-serif; background:#ffffff; color:#111827; min-height:100vh; }
+.header { background:#ffffff; border-bottom:3px solid #16a34a; padding:20px 40px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.logo { font-size:1.8rem; font-weight:900; letter-spacing:-1px; color:#111827; }
+.logo span { color:#16a34a; }
+.status-badge { background:#16a34a; color:#ffffff; padding:6px 18px; border-radius:20px; font-size:.8rem; font-weight:700; }
+.container { max-width:1100px; margin:0 auto; padding:40px 20px; }
+.section-title { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:#16a34a; margin-bottom:24px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; }
+.card { background:#ffffff; border:1.5px solid #e5e7eb; border-radius:16px; padding:32px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.card-icon { font-size:2rem; margin-bottom:16px; }
+.card h2 { font-size:1.1rem; font-weight:700; color:#111827; margin-bottom:8px; }
+.card p { color:#6b7280; font-size:.875rem; line-height:1.6; margin-bottom:20px; }
+label { display:block; font-size:.75rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+input[type=email], textarea { width:100%; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:8px; font-family:'Montserrat',sans-serif; font-size:.875rem; color:#111827; background:#f9fafb; margin-bottom:12px; outline:none; }
+input[type=email]:focus, textarea:focus { border-color:#16a34a; background:#fff; }
+textarea { height:100px; resize:none; }
+button { width:100%; padding:12px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-family:'Montserrat',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; transition:background .2s; }
+button:hover { background:#15803d; }
+.result-box { margin-top:12px; padding:14px; border-radius:8px; font-size:.85rem; display:none; }
+.success { background:#f0fdf4; border:1.5px solid #86efac; color:#166534; }
+.error { background:#fef2f2; border:1.5px solid #fca5a5; color:#991b1b; }
+.chat-msg { padding:10px 14px; border-radius:8px; margin-bottom:8px; font-size:.85rem; line-height:1.5; }
+.chat-msg.user { background:#f0fdf4; border:1px solid #86efac; color:#166534; }
+.chat-msg.bot { background:#f9fafb; border:1px solid #e5e7eb; color:#374151; }
+#chat-history { max-height:180px; overflow-y:auto; margin-bottom:12px; }
+footer { text-align:center; padding:30px; color:#9ca3af; font-size:.8rem; border-top:1px solid #f3f4f6; margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">TVM<span>bot</span></div>
+  <div class="status-badge">● ONLINE</div>
+</div>
+<div class="container">
+  <p class="section-title">Bot Management Dashboard</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">🔧</div>
+      <h2>System Status</h2>
+      <p>Check if TVMbot server is running correctly.</p>
+      <button onclick="checkStatus()">Check Status</button>
+      <div id="health-result" class="result-box"></div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📋</div>
+      <h2>Owner Interview</h2>
+      <p>Configure TVMbot by answering 5 blocks of questions. Only needed once.</p>
+      <label>YOUR EMAIL</label>
+      <input type="email" id="interview-email" placeholder="you@example.com">
+      <button onclick="startInterview()">Start Interview</button>
+      <div id="interview-result" class="result-box"></div>
+    </div>
+    <div class="card">
+      <div class="card-icon">💬</div>
+      <h2>Chat with TVMbot</h2>
+      <p>Test your bot by sending messages and see how it responds.</p>
+      <label>EMAIL</label>
+      <input type="email" id="chat-email" placeholder="you@example.com">
+      <div id="chat-history"></div>
+      <textarea id="chat-msg" placeholder="Type a message..."></textarea>
+      <button onclick="sendMessage()">Send Message</button>
+    </div>
+  </div>
+</div>
+<footer>TVMbot &mdash; Powered by Claude AI &mdash; thevillamanagers.cloud &mdash; &copy; 2026</footer>
+<script>
+function show(id, msg, type) {
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  el.className = 'result-box ' + type;
+  el.innerHTML = msg;
+}
+async function checkStatus() {
+  try {
+    const d = await fetch('/api/health').then(r=>r.json());
+    show('health-result', '&#10003; TVMbot is ONLINE<br>Time: ' + new Date().toLocaleString(), 'success');
+  } catch(e) { show('health-result', '&#10007; TVMbot is offline.', 'error'); }
+}
+async function startInterview() {
+  const email = document.getElementById('interview-email').value;
+  if (!email) return show('interview-result','Please enter your email.','error');
+  show('interview-result','Interview started! Check the chat panel.','success');
+}
+async function sendMessage() {
+  const email = document.getElementById('chat-email').value;
+  const msg = document.getElementById('chat-msg').value;
+  if (!email || !msg) return;
+  const history = document.getElementById('chat-history');
+  history.innerHTML += '<div class="chat-msg user"><strong>You:</strong> ' + msg + '</div>';
+  document.getElementById('chat-msg').value = '';
+  try {
+    const d = await fetch('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,message:msg})}).then(r=>r.json());
+    history.innerHTML += '<div class="chat-msg bot"><strong>TVMbot:</strong> ' + d.reply + '</div>';
+    history.scrollTop = history.scrollHeight;
+  } catch(e) { history.innerHTML += '<div class="chat-msg bot">Error connecting to TVMbot.</div>'; }
+}
+</script>
+</body>
+</html>
