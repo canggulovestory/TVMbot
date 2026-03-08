@@ -86,7 +86,7 @@ Generate the execution plan as JSON.`;
 
   try {
     const response = await claude.messages.create({
-      model: 'claude-opus-4-5-20251101',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 1500,
       system: PLANNER_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userContent }]
@@ -146,7 +146,7 @@ Revise the plan to address the supervisor's concerns. Return updated JSON plan.`
 
   try {
     const response = await claude.messages.create({
-      model: 'claude-opus-4-5-20251101',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 1500,
       system: PLANNER_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userContent }]

@@ -217,7 +217,7 @@ Respond with JSON only:
 
   try {
     const response = await claude.messages.create({
-      model: 'claude-opus-4-5-20251101',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 800,
       messages: [{ role: 'user', content: prompt }]
     });

@@ -1,6 +1,6 @@
 // server.js — TVMbot PEMS Orchestration Server
 // Architecture: Memory → Planner → Executor → Supervisor → Memory Store → Response
-// Built on Anthropic Tool Use (claude-opus-4-5-20251101)
+// Built on Anthropic Tool Use (claude-sonnet-4-5-20250929)
 
 require('dotenv').config();
 const express = require('express');
@@ -171,7 +171,7 @@ async function runPEMSAgent(userMessage, sessionId, userEmail = 'unknown') {
     iterations++;
 
     const response = await claude.messages.create({
-      model: 'claude-opus-4-5-20251101',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 4096,
       system: systemPrompt,
       tools: TOOLS,
@@ -361,7 +361,7 @@ app.get('/status', (req, res) => {
     villas: villas.length,
     upcomingBookings: upcoming.length,
     activeSessions: sessions.size,
-    model: 'claude-opus-4-5-20251101',
+    model: 'claude-sonnet-4-5-20250929',
     uptime: process.uptime()
   });
 });
@@ -410,7 +410,7 @@ app.listen(PORT, () => {
 ║  Architecture: Planner → Executor → Memory → Supervisor  ║
 ╠══════════════════════════════════════════════════╣
 ║  Port:    ${PORT}                                       ║
-║  Model:   claude-opus-4-5-20251101                     ║
+║  Model:   claude-sonnet-4-5-20250929                     ║
 ║  Domain:  https://thevillamanagers.cloud               ║
 ╚══════════════════════════════════════════════════╝
   `);
