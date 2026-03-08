@@ -132,43 +132,66 @@ async function generateInvoicePDF(invoice, ownerProfile = {}) {
   });
 }
 
-// ─── Sheets Auto-Logger ────────────────────────────────────────────────────────
+// ─── Sheets Auto-Logger (matches your "Transaksi" tab format exactly) ────────
+// Your sheet columns: DATE | TRANSACTIONS | CATEGORY | TOTAL | ACCOUNT | NOTE
 async function logTransactionToSheets(spreadsheetId, transaction) {
   if (!spreadsheetId) return { skipped: true, reason: 'No spreadsheet ID configured' };
   try {
     const sheets = require('./sheets');
+
+    // Map to exact Transaksi tab column order
     const row = [
-      transaction.date || new Date().toISOString().slice(0, 10),
-      transaction.type?.toUpperCase() || '',
-      transaction.category || '',
-      transaction.description || '',
-      transaction.amount || 0,
-      transaction.currency || 'USD',
-      transaction.villa_name || '',
-      transaction.guest_name || '',
-      transaction.payment_method || '',
-      transaction.status || 'paid',
-      transaction.reference || ''
+      transaction.date || new Date().toISOString().slice(0, 10), // DATE
+      transaction.type === 'income' ? 'Income' : 'Expense',      // TRANSACTIONS
+      transaction.category || transaction.villa_name || '',       // CATEGORY (villa or expense type)
+      parseFloat(transaction.amount) || 0,                        // TOTAL
+      transaction.account || transaction.payment_method || '',    // ACCOUNT (BCA, WISE, CASH, etc.)
+      transaction.note || transaction.description || ''           // NOTE
     ];
-    await sheets.appendSheet(spreadsheetId, 'Transactions', row);
-    return { logged: true, spreadsheetId };
+
+    await sheets.appendSheet(spreadsheetId, 'Transaksi', row);
+    return { logged: true, spreadsheetId, tab: 'Transaksi' };
   } catch (err) {
     return { logged: false, error: err.message };
   }
 }
 
+// No need to write headers — your Transaksi tab already has them
 async function ensureTransactionSheetHeaders(spreadsheetId) {
-  if (!spreadsheetId) return;
+  // Headers are already in place in your existing Transaksi sheet
+  return;
+}
+
+// ─── Rekening (Bank Account) Sheet Updater ────────────────────────────────────
+// Matches your "Rekening" tab: ACCOUNT | CURRENT BALANCE | OPENING BALANCE |
+//   TOTAL DEPOSIT | TOTAL WITHDRAWALS | BALANCE +/- | TERAKHIR DIPERIKSA
+async function updateRekeningSheet(spreadsheetId, accounts) {
+  if (!spreadsheetId || !accounts?.length) return { skipped: true };
   try {
     const sheets = require('./sheets');
-    const existing = await sheets.readSheet(spreadsheetId, 'Transactions!A1:A1');
-    if (!existing || !existing[0] || !existing[0][0]) {
-      await sheets.writeSheet(spreadsheetId, 'Transactions!A1', [[
-        'Date', 'Type', 'Category', 'Description', 'Amount', 'Currency',
-        'Villa', 'Guest', 'Payment Method', 'Status', 'Reference'
-      ]]);
+    const today  = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // Read current Rekening data to find which rows to update
+    const data = await sheets.readSheet(spreadsheetId, 'Rekening');
+    const rows = data || [];
+
+    for (const acct of accounts) {
+      // Find the row with this account name (search col A or B)
+      const rowIdx = rows.findIndex(r =>
+        r.some(cell => String(cell).trim().toUpperCase() === acct.name.toUpperCase())
+      );
+      if (rowIdx >= 0) {
+        // Update CURRENT BALANCE (col C) and TERAKHIR DIPERIKSA (last col ~H)
+        // Row is 1-indexed in Sheets, +1 for header
+        const sheetRow = rowIdx + 1;
+        await sheets.writeSheet(spreadsheetId, `Rekening!C${sheetRow}`, [[parseFloat(acct.balance)]]);
+        await sheets.writeSheet(spreadsheetId, `Rekening!H${sheetRow}`, [[today]]);
+      }
     }
-  } catch (err) { /* sheet might not exist yet */ }
+    return { updated: true, accountsUpdated: accounts.length };
+  } catch (err) {
+    return { updated: false, error: err.message };
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

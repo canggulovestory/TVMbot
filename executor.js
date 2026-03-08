@@ -209,14 +209,14 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
       case 'finance_log_payment': {
         const txId = memory.logTransaction({
           type: 'income',
-          category: toolInput.category || 'booking',
+          category: toolInput.category || toolInput.villa_name || 'booking',
           description: toolInput.description,
           amount: toolInput.amount,
-          currency: toolInput.currency || 'USD',
+          currency: toolInput.currency || 'IDR',
           villa_name: toolInput.villa_name || null,
           guest_name: toolInput.guest_name || null,
           booking_id: toolInput.booking_id || null,
-          payment_method: toolInput.payment_method || null,
+          payment_method: toolInput.payment_method || toolInput.account || null,
           reference: toolInput.reference || null,
           status: toolInput.status || 'paid',
           date: toolInput.date || new Date().toISOString().slice(0, 10)
@@ -226,12 +226,18 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
         const sheetsId = profile.sheets_booking_id;
         let sheetsResult = { skipped: true };
         if (sheetsId && finance) {
-          await finance.ensureTransactionSheetHeaders(sheetsId);
-          sheetsResult = await finance.logTransactionToSheets(sheetsId, { ...toolInput, type: 'income' });
+          sheetsResult = await finance.logTransactionToSheets(sheetsId, {
+            date: toolInput.date || new Date().toISOString().slice(0, 10),
+            type: 'income',
+            category: toolInput.villa_name || toolInput.category || 'booking',
+            amount: toolInput.amount,
+            account: toolInput.account || toolInput.payment_method || '',
+            note: toolInput.description || ''
+          });
         }
         result = {
           success: true, transactionId: txId,
-          message: `Payment of ${toolInput.currency || 'USD'} ${toolInput.amount} recorded`,
+          message: `Payment of ${toolInput.currency || 'IDR'} ${toolInput.amount} recorded`,
           sheets: sheetsResult
         };
         break;
@@ -243,9 +249,9 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
           category: toolInput.category || 'other',
           description: toolInput.description,
           amount: toolInput.amount,
-          currency: toolInput.currency || 'USD',
+          currency: toolInput.currency || 'IDR',
           villa_name: toolInput.villa_name || null,
-          payment_method: toolInput.payment_method || null,
+          payment_method: toolInput.payment_method || toolInput.account || null,
           reference: toolInput.reference || null,
           status: 'paid',
           date: toolInput.date || new Date().toISOString().slice(0, 10)
@@ -254,12 +260,25 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
         const sheetsId = profile.sheets_booking_id;
         let sheetsResult = { skipped: true };
         if (sheetsId && finance) {
-          await finance.ensureTransactionSheetHeaders(sheetsId);
-          sheetsResult = await finance.logTransactionToSheets(sheetsId, { ...toolInput, type: 'expense' });
+          // Map expense category to sheet category names
+          const expenseCategoryMap = {
+            cleaning: 'Villa Expense', maintenance: 'Villa Expense',
+            staff: 'Salary', utilities: toolInput.villa_name ? `${toolInput.villa_name} Electricity` : 'Villa Expense',
+            supplies: 'Villa Expense', other: 'Villa Expense'
+          };
+          const sheetCategory = expenseCategoryMap[toolInput.category] || toolInput.category || 'Villa Expense';
+          sheetsResult = await finance.logTransactionToSheets(sheetsId, {
+            date: toolInput.date || new Date().toISOString().slice(0, 10),
+            type: 'expense',
+            category: sheetCategory,
+            amount: toolInput.amount,
+            account: toolInput.account || toolInput.payment_method || '',
+            note: toolInput.description || ''
+          });
         }
         result = {
           success: true, transactionId: txId,
-          message: `Expense of ${toolInput.currency || 'USD'} ${toolInput.amount} recorded (${toolInput.category})`,
+          message: `Expense of ${toolInput.currency || 'IDR'} ${toolInput.amount} recorded (${toolInput.category})`,
           sheets: sheetsResult
         };
         break;
@@ -378,13 +397,24 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
           name: toolInput.account_name,
           bank: toolInput.bank || null,
           account_number: toolInput.account_number || null,
-          currency: toolInput.currency || 'USD',
+          currency: toolInput.currency || 'IDR',
           balance: toolInput.balance,
           notes: toolInput.notes || null
         });
+        // Sync to Rekening sheet if configured
+        const profileRek = memory.getOwnerProfile();
+        const sheetsIdRek = profileRek.sheets_booking_id;
+        let rekeningResult = { skipped: true };
+        if (sheetsIdRek && finance && finance.updateRekeningSheet) {
+          rekeningResult = await finance.updateRekeningSheet(sheetsIdRek, [{
+            name: toolInput.account_name,
+            balance: toolInput.balance
+          }]);
+        }
         result = {
           success: true,
-          message: `Bank account "${toolInput.account_name}" updated — balance: ${toolInput.currency || 'USD'} ${parseFloat(toolInput.balance).toLocaleString()}`
+          message: `Bank account "${toolInput.account_name}" updated — balance: ${toolInput.currency || 'IDR'} ${parseFloat(toolInput.balance).toLocaleString()}`,
+          rekening_sheet: rekeningResult
         };
         break;
       }
@@ -423,17 +453,30 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
         if (inv) {
           memory.logTransaction({
             type: 'income',
-            category: 'booking',
+            category: inv.villa_name || 'booking',
             description: `Invoice ${toolInput.invoice_number} paid — ${inv.guest_name}`,
             amount: inv.total,
-            currency: inv.currency || 'USD',
+            currency: inv.currency || 'IDR',
             villa_name: inv.villa_name || null,
             guest_name: inv.guest_name,
-            payment_method: toolInput.payment_method || null,
+            payment_method: toolInput.payment_method || toolInput.account || null,
             reference: toolInput.reference || null,
             status: 'paid',
             date: new Date().toISOString().slice(0, 10)
           });
+          // Log to Sheets
+          const profileInv = memory.getOwnerProfile();
+          const sheetsIdInv = profileInv.sheets_booking_id;
+          if (sheetsIdInv && finance) {
+            await finance.logTransactionToSheets(sheetsIdInv, {
+              date: new Date().toISOString().slice(0, 10),
+              type: 'income',
+              category: inv.villa_name || 'booking',
+              amount: inv.total,
+              account: toolInput.account || toolInput.payment_method || '',
+              note: `Invoice ${toolInput.invoice_number} — ${inv.guest_name}`
+            });
+          }
         }
         result = {
           success: true,

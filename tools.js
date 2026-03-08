@@ -270,6 +270,7 @@ const TOOLS = [
         currency: { type: "string", description: "Currency code: USD, IDR, EUR, AUD (default USD)" },
         guest_name: { type: "string", description: "Guest name" },
         villa_name: { type: "string", description: "Villa name" },
+        account: { type: "string", enum: ["BCA", "WISE", "PERMATA", "MANDIRI", "CASH"], description: "Which bank account received the payment (BCA, WISE, PERMATA, MANDIRI, CASH)" },
         payment_method: { type: "string", description: "How paid: bank_transfer, cash, credit_card, wise, paypal" },
         status: { type: "string", enum: ["paid", "pending", "partial"], description: "Payment status" },
         date: { type: "string", description: "Payment date YYYY-MM-DD (defaults to today)" },
@@ -290,6 +291,7 @@ const TOOLS = [
         currency: { type: "string", description: "Currency code" },
         category: { type: "string", enum: ["cleaning", "maintenance", "staff", "utilities", "supplies", "marketing", "transport", "food", "commission", "tax", "insurance", "other"], description: "Expense category" },
         villa_name: { type: "string", description: "Which villa this expense relates to" },
+        account: { type: "string", enum: ["BCA", "WISE", "PERMATA", "MANDIRI", "CASH"], description: "Which bank account was used to pay (BCA, WISE, PERMATA, MANDIRI, CASH)" },
         payment_method: { type: "string", description: "How paid" },
         date: { type: "string", description: "Expense date YYYY-MM-DD" },
         reference: { type: "string", description: "Receipt or reference number" }
@@ -388,6 +390,7 @@ const TOOLS = [
       type: "object",
       properties: {
         invoice_number: { type: "string", description: "Invoice number e.g. INV-2026-001" },
+        account: { type: "string", enum: ["BCA", "WISE", "PERMATA", "MANDIRI", "CASH"], description: "Which bank account received the payment" },
         payment_method: { type: "string", description: "How it was paid" },
         reference: { type: "string", description: "Bank reference or transaction ID" }
       },
