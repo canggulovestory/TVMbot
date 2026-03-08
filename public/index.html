@@ -81,7 +81,7 @@ function show(id, msg, type) {
 }
 async function checkStatus() {
   try {
-    const d = await fetch('/api/health').then(r=>r.json());
+    const d = await fetch('/status').then(r=>r.json());
     show('health-result', '&#10003; TVMbot is ONLINE<br>Time: ' + new Date().toLocaleString(), 'success');
   } catch(e) { show('health-result', '&#10007; TVMbot is offline.', 'error'); }
 }
@@ -98,7 +98,7 @@ async function sendMessage() {
   history.innerHTML += '<div class="chat-msg user"><strong>You:</strong> ' + msg + '</div>';
   document.getElementById('chat-msg').value = '';
   try {
-    const d = await fetch('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,message:msg})}).then(r=>r.json());
+    const d = await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,sessionId:"dashboard-"+Date.now(),userEmail:email})}).then(r=>r.json());
     history.innerHTML += '<div class="chat-msg bot"><strong>TVMbot:</strong> ' + d.reply + '</div>';
     history.scrollTop = history.scrollHeight;
   } catch(e) { history.innerHTML += '<div class="chat-msg bot">Error connecting to TVMbot.</div>'; }

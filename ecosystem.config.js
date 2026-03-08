@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'claude-chatbot',
+    name: 'tvmbot',
     script: './server.js',
     cwd: '/root/claude-chatbot',
     instances: 1,
