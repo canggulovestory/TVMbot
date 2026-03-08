@@ -3,106 +3,930 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TVMbot Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<title>TVMbot — Villa Management AI</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Montserrat',sans-serif; background:#ffffff; color:#111827; min-height:100vh; }
-.header { background:#ffffff; border-bottom:3px solid #16a34a; padding:20px 40px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-.logo { font-size:1.8rem; font-weight:900; letter-spacing:-1px; color:#111827; }
-.logo span { color:#16a34a; }
-.status-badge { background:#16a34a; color:#ffffff; padding:6px 18px; border-radius:20px; font-size:.8rem; font-weight:700; }
-.container { max-width:1100px; margin:0 auto; padding:40px 20px; }
-.section-title { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:#16a34a; margin-bottom:24px; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; }
-.card { background:#ffffff; border:1.5px solid #e5e7eb; border-radius:16px; padding:32px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-.card-icon { font-size:2rem; margin-bottom:16px; }
-.card h2 { font-size:1.1rem; font-weight:700; color:#111827; margin-bottom:8px; }
-.card p { color:#6b7280; font-size:.875rem; line-height:1.6; margin-bottom:20px; }
-label { display:block; font-size:.75rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
-input[type=email], textarea { width:100%; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:8px; font-family:'Montserrat',sans-serif; font-size:.875rem; color:#111827; background:#f9fafb; margin-bottom:12px; outline:none; }
-input[type=email]:focus, textarea:focus { border-color:#16a34a; background:#fff; }
-textarea { height:100px; resize:none; }
-button { width:100%; padding:12px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-family:'Montserrat',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; transition:background .2s; }
-button:hover { background:#15803d; }
-.result-box { margin-top:12px; padding:14px; border-radius:8px; font-size:.85rem; display:none; }
-.success { background:#f0fdf4; border:1.5px solid #86efac; color:#166534; }
-.error { background:#fef2f2; border:1.5px solid #fca5a5; color:#991b1b; }
-.chat-msg { padding:10px 14px; border-radius:8px; margin-bottom:8px; font-size:.85rem; line-height:1.5; }
-.chat-msg.user { background:#f0fdf4; border:1px solid #86efac; color:#166534; }
-.chat-msg.bot { background:#f9fafb; border:1px solid #e5e7eb; color:#374151; }
-#chat-history { max-height:180px; overflow-y:auto; margin-bottom:12px; }
-footer { text-align:center; padding:30px; color:#9ca3af; font-size:.8rem; border-top:1px solid #f3f4f6; margin-top:20px; }
+  :root {
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --green-dark: #14532d;
+    --green-mid: #22c55e;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Top Nav ── */
+  nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo span { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+  .nav-logo span b { color: var(--green); }
+  .nav-logo .version { font-size: .65rem; background: var(--green-light); color: var(--green-dark); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .status-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: .78rem; font-weight: 700; background: var(--green-light); color: var(--green-dark); cursor: pointer; }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .status-pill.offline { background: #fee2e2; color: #991b1b; }
+  .status-pill.offline .dot { background: var(--danger); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .nav-time { font-size: .78rem; color: var(--muted); font-weight: 500; }
+  .nav-owner { font-size: .78rem; color: var(--muted); }
+  .nav-owner b { color: var(--text); }
+
+  /* ── Layout ── */
+  .layout { display: grid; grid-template-columns: 260px 1fr 300px; gap: 0; height: calc(100vh - 60px); overflow: hidden; }
+
+  /* ── Sidebar Left ── */
+  .sidebar-left {
+    background: #fff;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+    padding: 20px 16px;
+    gap: 8px;
+  }
+  .sidebar-section { margin-bottom: 8px; }
+  .sidebar-label { font-size: .68rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; padding: 0 8px; }
+  .qa-btn {
+    width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; border: none;
+    background: transparent; cursor: pointer; font-size: .84rem; font-weight: 500;
+    color: var(--text); display: flex; align-items: center; gap: 10px; transition: all .15s;
+  }
+  .qa-btn:hover { background: var(--green-light); color: var(--green-dark); }
+  .qa-btn .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .qa-btn.active { background: var(--green-light); color: var(--green-dark); font-weight: 600; }
+  .divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+  /* Stats in sidebar */
+  .stat-mini { padding: 10px 12px; border-radius: 8px; background: var(--bg); margin-bottom: 6px; }
+  .stat-mini .label { font-size: .7rem; color: var(--muted); font-weight: 500; }
+  .stat-mini .val { font-size: 1.4rem; font-weight: 800; color: var(--text); }
+  .stat-mini .sub { font-size: .7rem; color: var(--green); font-weight: 500; }
+
+  /* ── Main Chat Area ── */
+  .main {
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Top bar in main */
+  .main-header {
+    padding: 16px 24px 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .main-header h2 { font-size: 1rem; font-weight: 700; }
+  .main-header p { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; }
+  .tag-green { background: var(--green-light); color: var(--green-dark); }
+  .tag-blue { background: #dbeafe; color: #1e40af; }
+  .tag-orange { background: #fef3c7; color: #92400e; }
+
+  /* Chat messages */
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg { display: flex; gap: 10px; max-width: 80%; }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg.bot { align-self: flex-start; }
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
+  }
+  .msg.bot .msg-avatar { background: var(--green); color: #fff; }
+  .msg.user .msg-avatar { background: var(--info); color: #fff; }
+  .msg-content { display: flex; flex-direction: column; gap: 4px; }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 14px; font-size: .85rem; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.bot .msg-bubble { background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.user .msg-bubble { background: var(--green); color: #fff; border-bottom-right-radius: 4px; }
+  .msg-meta { font-size: .68rem; color: var(--muted); }
+  .msg.user .msg-meta { text-align: right; }
+
+  /* Tool badge */
+  .tools-used { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .tool-badge { font-size: .65rem; padding: 2px 8px; border-radius: 10px; background: var(--green-light); color: var(--green-dark); font-weight: 600; }
+
+  /* Typing indicator */
+  .typing { display: flex; align-items: center; gap: 4px; padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce .8s infinite; }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  /* Welcome message */
+  .welcome-card {
+    background: linear-gradient(135deg, var(--green) 0%, #15803d 100%);
+    color: #fff; border-radius: var(--radius); padding: 20px 24px; margin-bottom: 8px;
+  }
+  .welcome-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .welcome-card p { font-size: .82rem; opacity: .9; line-height: 1.5; }
+  .welcome-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip {
+    padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,.2);
+    font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,.3);
+    transition: all .15s; color: #fff;
+  }
+  .chip:hover { background: rgba(255,255,255,.35); }
+
+  /* Chat input */
+  .chat-input-area {
+    padding: 16px 24px;
+    background: #fff;
+    border-top: 1px solid var(--border);
+  }
+  .email-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .email-row label { font-size: .75rem; color: var(--muted); font-weight: 500; white-space: nowrap; }
+  .email-row input {
+    flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: .8rem; background: var(--bg); color: var(--text);
+  }
+  .input-row { display: flex; gap: 8px; }
+  .chat-input {
+    flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: .88rem; font-family: inherit; resize: none; background: var(--bg);
+    color: var(--text); transition: border-color .15s; max-height: 120px; min-height: 42px;
+  }
+  .chat-input:focus { outline: none; border-color: var(--green); background: #fff; }
+  .send-btn {
+    padding: 10px 20px; background: var(--green); color: #fff; border: none;
+    border-radius: 10px; font-size: .88rem; font-weight: 600; cursor: pointer;
+    transition: all .15s; white-space: nowrap; display: flex; align-items: center; gap: 6px;
+  }
+  .send-btn:hover { background: #15803d; }
+  .send-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  /* ── Sidebar Right ── */
+  .sidebar-right {
+    background: #fff;
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .sidebar-right::-webkit-scrollbar { width: 4px; }
+  .sidebar-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .panel { }
+  .panel-header { font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .panel-header .refresh-btn { background: none; border: none; cursor: pointer; font-size: .75rem; color: var(--muted); padding: 2px 6px; border-radius: 4px; }
+  .panel-header .refresh-btn:hover { background: var(--bg); }
+
+  .booking-item {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    margin-bottom: 6px; font-size: .8rem;
+  }
+  .booking-item .guest { font-weight: 700; color: var(--text); }
+  .booking-item .villa { color: var(--green); font-weight: 600; font-size: .75rem; }
+  .booking-item .dates { color: var(--muted); font-size: .72rem; margin-top: 2px; }
+  .booking-item .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+
+  .decision-item { padding: 8px 10px; border-radius: 6px; background: var(--bg); margin-bottom: 4px; font-size: .75rem; }
+  .decision-item .time { color: var(--muted); font-size: .68rem; }
+  .decision-item .action { color: var(--text); font-weight: 500; margin-top: 1px; }
+  .decision-item .tools { color: var(--green); font-size: .68rem; }
+
+  .villa-chip {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .villa-chip .vname { font-weight: 700; font-size: .83rem; }
+  .villa-chip .vprice { color: var(--green); font-weight: 600; font-size: .78rem; }
+  .villa-chip .vloc { color: var(--muted); font-size: .72rem; }
+
+  .empty-state { text-align: center; padding: 16px; color: var(--muted); font-size: .78rem; }
+  .empty-state .icon { font-size: 1.5rem; margin-bottom: 6px; }
+
+  /* ── Onboarding Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; padding: 32px; width: 540px;
+    max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,.15);
+  }
+  .modal h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+  .modal p { font-size: .85rem; color: var(--muted); margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: .78rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: .85rem; font-family: inherit; color: var(--text); background: var(--bg);
+    transition: border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--green); background: #fff;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-step { display: none; }
+  .modal-step.active { display: block; }
+  .step-indicator { display: flex; gap: 6px; margin-bottom: 24px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
+  .step-dot.done { background: var(--green); }
+  .step-dot.active { background: var(--green-mid); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-primary { flex: 1; padding: 11px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #15803d; }
+  .btn-secondary { padding: 11px 20px; background: var(--bg); color: var(--text); border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+
+  /* ── Notifications ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    padding: 12px 20px; border-radius: 10px; font-size: .85rem; font-weight: 500;
+    box-shadow: var(--shadow-md); transform: translateY(100px); opacity: 0;
+    transition: all .3s; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--green); color: #fff; }
+  .toast.error { background: var(--danger); color: #fff; }
+  .toast.info { background: var(--info); color: #fff; }
+
+  /* ── Loading skeleton ── */
+  .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="logo">TVM<span>bot</span></div>
-  <div class="status-badge">● ONLINE</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">
+    <span>TVM<b>bot</b></span>
+    <span class="version">PEMS v2.0</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-owner">Owner: <b id="nav-owner">Loading...</b></span>
+    <span class="nav-time" id="nav-time"></span>
+    <div class="status-pill offline" id="status-pill" onclick="checkStatus()">
+      <span class="dot"></span>
+      <span id="status-text">Checking...</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="layout">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Actions</div>
+      <button class="qa-btn" onclick="quickAction('Check my latest emails and summarize what needs attention')">
+        <span class="icon">📧</span> Check Emails
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me all upcoming bookings and calendar events this week')">
+        <span class="icon">📅</span> This Week's Calendar
+      </button>
+      <button class="qa-btn" onclick="openOnboarding()">
+        <span class="icon">🏠</span> Setup Villas
+      </button>
+      <button class="qa-btn" onclick="quickAction('Generate a weekly cleaning schedule based on upcoming check-ins and check-outs')">
+        <span class="icon">🧹</span> Cleaning Schedule
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me flagged or starred emails that need urgent attention')">
+        <span class="icon">⭐</span> Flagged Emails
+      </button>
+      <button class="qa-btn" onclick="quickAction('Search Google Drive for any passport or ID documents uploaded recently')">
+        <span class="icon">🛂</span> Find Passports
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me recent files modified in Google Drive')">
+        <span class="icon">💾</span> Recent Drive Files
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Create</div>
+      <button class="qa-btn" onclick="promptContract()">
+        <span class="icon">📄</span> New Contract
+      </button>
+      <button class="qa-btn" onclick="quickAction('Generate an Instagram caption for our villa. Make it aspirational, include hashtags.')">
+        <span class="icon">📸</span> Instagram Caption
+      </button>
+      <button class="qa-btn" onclick="quickAction('Write an Airbnb listing description for our villa with key amenities and unique features.')">
+        <span class="icon">🏡</span> Airbnb Description
+      </button>
+      <button class="qa-btn" onclick="quickAction('Create a new Google Doc with a welcome letter template for arriving guests')">
+        <span class="icon">✉️</span> Welcome Letter
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Memory</div>
+      <div class="stat-mini">
+        <div class="label">Villas Managed</div>
+        <div class="val" id="stat-villas">–</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Upcoming Bookings</div>
+        <div class="val" id="stat-bookings">–</div>
+        <div class="sub" id="stat-bookings-sub">next 30 days</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Agent Model</div>
+        <div class="val" style="font-size:.75rem;font-weight:600;" id="stat-model">–</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+      <button class="qa-btn" onclick="openOnboarding()">
+        <span class="icon">⚙️</span> Owner Interview
+      </button>
+      <button class="qa-btn" onclick="loadRightPanel()">
+        <span class="icon">🔄</span> Refresh Data
+      </button>
+      <button class="qa-btn" onclick="clearChat()">
+        <span class="icon">🗑️</span> Clear Chat
+      </button>
+    </div>
+  </div>
+
+  <!-- ── MAIN CHAT ── -->
+  <div class="main">
+    <div class="main-header">
+      <div>
+        <h2>Chat with TVMbot</h2>
+        <p>Your autonomous villa management AI — ask anything, execute anything</p>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tag-green">📧 Gmail</span>
+        <span class="tag tag-green">📅 Calendar</span>
+        <span class="tag tag-green">💾 Drive</span>
+        <span class="tag tag-green">📄 Docs</span>
+        <span class="tag tag-green">📊 Sheets</span>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="welcome-card">
+        <h3>👋 Welcome to TVMbot PEMS v2.0</h3>
+        <p>I'm your autonomous AI agent. I can read your emails, manage bookings, create contracts, search Drive files, write to Sheets, generate cleaning schedules, and much more — all in one conversation.</p>
+        <div class="welcome-chips">
+          <span class="chip" onclick="quickAction('What can you do for me today?')">What can you do?</span>
+          <span class="chip" onclick="quickAction('Check my latest emails')">Check emails</span>
+          <span class="chip" onclick="quickAction('Show upcoming bookings')">Upcoming bookings</span>
+          <span class="chip" onclick="promptContract()">Create contract</span>
+          <span class="chip" onclick="quickAction('Generate an Instagram caption for my villa')">Instagram caption</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="email-row">
+        <label>Your email:</label>
+        <input type="email" id="user-email" placeholder="you@example.com" value="">
+      </div>
+      <div class="input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Ask TVMbot anything... 'Check my emails', 'Create a contract for John', 'Generate cleaning schedule'..." rows="1"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <span>Send</span> <span>↑</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT SIDEBAR ── -->
+  <div class="sidebar-right">
+
+    <!-- Upcoming Bookings -->
+    <div class="panel">
+      <div class="panel-header">
+        📅 Upcoming Bookings
+        <button class="refresh-btn" onclick="loadBookings()">↻</button>
+      </div>
+      <div id="panel-bookings">
+        <div class="empty-state"><div class="icon">📅</div>Loading...</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Villas -->
+    <div class="panel">
+      <div class="panel-header">
+        🏠 Villas in Memory
+        <button class="refresh-btn" onclick="loadVillas()">↻</button>
+      </div>
+      <div id="panel-villas">
+        <div class="empty-state"><div class="icon">🏠</div>Loading...</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Recent Agent Activity -->
+    <div class="panel">
+      <div class="panel-header">
+        🤖 Recent Agent Activity
+        <button class="refresh-btn" onclick="loadDecisions()">↻</button>
+      </div>
+      <div id="panel-decisions">
+        <div class="empty-state"><div class="icon">🤖</div>Loading...</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Integrations Status -->
+    <div class="panel">
+      <div class="panel-header">🔌 Integrations</div>
+      <div id="panel-integrations">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📧 Gmail</span>
+            <span class="tag tag-green" id="int-gmail" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📅 Calendar</span>
+            <span class="tag tag-green" id="int-calendar" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">💾 Drive</span>
+            <span class="tag tag-blue" id="int-drive" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📄 Docs</span>
+            <span class="tag tag-blue" id="int-docs" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📊 Sheets</span>
+            <span class="tag tag-blue" id="int-sheets" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">💬 WhatsApp</span>
+            <span class="tag tag-orange" id="int-whatsapp" style="font-size:.68rem; background:#fef3c7;color:#92400e;">Not connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
-<div class="container">
-  <p class="section-title">Bot Management Dashboard</p>
-  <div class="grid">
-    <div class="card">
-      <div class="card-icon">🔧</div>
-      <h2>System Status</h2>
-      <p>Check if TVMbot server is running correctly.</p>
-      <button onclick="checkStatus()">Check Status</button>
-      <div id="health-result" class="result-box"></div>
+
+<!-- ── ONBOARDING MODAL ── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" style="position:relative;">
+    <button class="btn-close" onclick="closeOnboarding()">✕</button>
+    <h2>🏠 Owner Interview</h2>
+    <p>Tell TVMbot about your business so it can manage everything for you. Takes 2 minutes.</p>
+    <div class="step-indicator">
+      <div class="step-dot active" id="sdot-1"></div>
+      <div class="step-dot" id="sdot-2"></div>
+      <div class="step-dot" id="sdot-3"></div>
     </div>
-    <div class="card">
-      <div class="card-icon">📋</div>
-      <h2>Owner Interview</h2>
-      <p>Configure TVMbot by answering 5 blocks of questions. Only needed once.</p>
-      <label>YOUR EMAIL</label>
-      <input type="email" id="interview-email" placeholder="you@example.com">
-      <button onclick="startInterview()">Start Interview</button>
-      <div id="interview-result" class="result-box"></div>
+
+    <!-- Step 1: Owner Info -->
+    <div class="modal-step active" id="step-1">
+      <h3 style="font-size:.9rem;font-weight:700;margin-bottom:16px;color:var(--muted)">Step 1 — About You</h3>
+      <div class="form-group">
+        <label>Your Full Name *</label>
+        <input type="text" id="f-name" placeholder="e.g. Afni Wardani">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Your Email *</label>
+          <input type="email" id="f-email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>WhatsApp Number</label>
+          <input type="text" id="f-phone" placeholder="+62 812 3456 7890">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Company / Brand Name</label>
+        <input type="text" id="f-company" placeholder="e.g. The Villa Managers">
+      </div>
+      <div class="form-group">
+        <label>Currency</label>
+        <select id="f-currency">
+          <option value="USD">USD – US Dollar</option>
+          <option value="IDR">IDR – Indonesian Rupiah</option>
+          <option value="EUR">EUR – Euro</option>
+          <option value="AUD">AUD – Australian Dollar</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="nextStep(2)">Next →</button>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-icon">💬</div>
-      <h2>Chat with TVMbot</h2>
-      <p>Test your bot by sending messages and see how it responds.</p>
-      <label>EMAIL</label>
-      <input type="email" id="chat-email" placeholder="you@example.com">
-      <div id="chat-history"></div>
-      <textarea id="chat-msg" placeholder="Type a message..."></textarea>
-      <button onclick="sendMessage()">Send Message</button>
+
+    <!-- Step 2: Villa Info -->
+    <div class="modal-step" id="step-2">
+      <h3 style="font-size:.9rem;font-weight:700;margin-bottom:16px;color:var(--muted)">Step 2 — Your Villa</h3>
+      <div class="form-group">
+        <label>Villa Name *</label>
+        <input type="text" id="f-villa-name" placeholder="e.g. Villa Canggu, Villa Ubud">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="f-villa-location" placeholder="e.g. Canggu, Bali">
+        </div>
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <select id="f-villa-bedrooms">
+            <option value="1">1 bedroom</option>
+            <option value="2">2 bedrooms</option>
+            <option value="3">3 bedrooms</option>
+            <option value="4">4 bedrooms</option>
+            <option value="5">5+ bedrooms</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Base Price / Night</label>
+          <input type="number" id="f-villa-price" placeholder="350">
+        </div>
+        <div class="form-group">
+          <label>Max Guests</label>
+          <input type="number" id="f-villa-guests" placeholder="8">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Key Amenities (comma separated)</label>
+        <input type="text" id="f-villa-amenities" placeholder="Pool, AC, WiFi, Kitchen, Motorbike">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="nextStep(1)">← Back</button>
+        <button class="btn-primary" onclick="nextStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Preferences -->
+    <div class="modal-step" id="step-3">
+      <h3 style="font-size:.9rem;font-weight:700;margin-bottom:16px;color:var(--muted)">Step 3 — Preferences</h3>
+      <div class="form-group">
+        <label>Google Sheets Booking Log ID (optional)</label>
+        <input type="text" id="f-sheets-id" placeholder="Paste your Google Sheets ID here">
+      </div>
+      <div class="form-group">
+        <label>Google Drive Folder ID for Guests (optional)</label>
+        <input type="text" id="f-drive-id" placeholder="Paste your Drive folder ID here">
+      </div>
+      <div class="form-group">
+        <label>Anything else TVMbot should know?</label>
+        <textarea id="f-notes" rows="3" placeholder="e.g. Check-in is 2pm, check-out is 11am. We serve breakfast. Minimum stay 3 nights..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="nextStep(2)">← Back</button>
+        <button class="btn-primary" onclick="saveOnboarding()">✓ Save to TVMbot Memory</button>
+      </div>
     </div>
   </div>
 </div>
-<footer>TVMbot &mdash; Powered by Claude AI &mdash; thevillamanagers.cloud &mdash; &copy; 2026</footer>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
 <script>
-function show(id, msg, type) {
-  const el = document.getElementById(id);
-  el.style.display = 'block';
-  el.className = 'result-box ' + type;
-  el.innerHTML = msg;
+const SESSION_ID = 'tvm_' + Math.random().toString(36).slice(2);
+let currentStep = 1;
+let isTyping = false;
+
+// ── Clock ──────────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('nav-time').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
+setInterval(updateClock, 1000); updateClock();
+
+// ── Status Check ───────────────────────────────────────────────────────────────
 async function checkStatus() {
   try {
-    const d = await fetch('/status').then(r=>r.json());
-    show('health-result', '&#10003; TVMbot is ONLINE<br>Time: ' + new Date().toLocaleString(), 'success');
-  } catch(e) { show('health-result', '&#10007; TVMbot is offline.', 'error'); }
+    const d = await fetch('/status').then(r => r.json());
+    const pill = document.getElementById('status-pill');
+    const txt  = document.getElementById('status-text');
+    if (d.status === 'online') {
+      pill.className = 'status-pill';
+      txt.textContent = 'ONLINE';
+      document.getElementById('stat-model').textContent = d.model?.replace('claude-','').replace('-20251101','') || '–';
+    } else {
+      pill.className = 'status-pill offline';
+      txt.textContent = 'OFFLINE';
+    }
+    return d;
+  } catch(e) {
+    document.getElementById('status-pill').className = 'status-pill offline';
+    document.getElementById('status-text').textContent = 'OFFLINE';
+    return null;
+  }
 }
-async function startInterview() {
-  const email = document.getElementById('interview-email').value;
-  if (!email) return show('interview-result','Please enter your email.','error');
-  show('interview-result','Interview started! Check the chat panel.','success');
+
+// ── Load right panel data ──────────────────────────────────────────────────────
+async function loadRightPanel() {
+  await Promise.all([loadBookings(), loadVillas(), loadDecisions(), checkStatus()]);
 }
-async function sendMessage() {
-  const email = document.getElementById('chat-email').value;
-  const msg = document.getElementById('chat-msg').value;
-  if (!email || !msg) return;
-  const history = document.getElementById('chat-history');
-  history.innerHTML += '<div class="chat-msg user"><strong>You:</strong> ' + msg + '</div>';
-  document.getElementById('chat-msg').value = '';
+
+async function loadBookings() {
   try {
-    const d = await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,sessionId:"dashboard-"+Date.now(),userEmail:email})}).then(r=>r.json());
-    history.innerHTML += '<div class="chat-msg bot"><strong>TVMbot:</strong> ' + d.reply + '</div>';
-    history.scrollTop = history.scrollHeight;
-  } catch(e) { history.innerHTML += '<div class="chat-msg bot">Error connecting to TVMbot.</div>'; }
+    const d = await fetch('/memory/bookings').then(r => r.json());
+    const el = document.getElementById('panel-bookings');
+    const bookings = d.upcoming || [];
+    document.getElementById('stat-bookings').textContent = bookings.length;
+
+    if (bookings.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📅</div>No upcoming bookings</div>';
+      return;
+    }
+    el.innerHTML = bookings.slice(0, 5).map(b => `
+      <div class="booking-item">
+        <div class="guest">${b.guest_name}</div>
+        <div class="villa">🏠 ${b.villa_name}</div>
+        <div class="dates">📅 ${b.check_in} → ${b.check_out}</div>
+        <div style="margin-top:4px;">
+          <span class="tag ${b.status === 'confirmed' ? 'tag-green' : 'tag-orange'}" style="font-size:.65rem;">${b.status}</span>
+          ${b.price ? `<span style="font-size:.72rem;color:var(--muted);margin-left:6px;">$${b.price}</span>` : ''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('panel-bookings').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
 }
+
+async function loadVillas() {
+  try {
+    const d = await fetch('/memory/profile').then(r => r.json());
+    const villas = d.villas || [];
+    const profile = d.profile || {};
+    document.getElementById('stat-villas').textContent = villas.length;
+    document.getElementById('nav-owner').textContent = profile.name || profile.owner_name || 'Not configured';
+
+    const el = document.getElementById('panel-villas');
+    if (villas.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">🏠</div>No villas in memory yet<br><small>Run Owner Interview to add</small></div>';
+      return;
+    }
+    el.innerHTML = villas.map(v => `
+      <div class="villa-chip">
+        <div>
+          <div class="vname">${v.name}</div>
+          <div class="vloc">📍 ${v.location || 'Location not set'} · ${v.bedrooms || '?'} BR</div>
+        </div>
+        <div class="vprice">${v.base_price ? '$' + v.base_price + '/n' : '–'}</div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('panel-villas').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
+}
+
+async function loadDecisions() {
+  try {
+    const d = await fetch('/memory/decisions').then(r => r.json());
+    const el = document.getElementById('panel-decisions');
+    const decisions = (d.decisions || []).slice(0, 6);
+    if (decisions.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">🤖</div>No activity yet</div>';
+      return;
+    }
+    el.innerHTML = decisions.map(dec => `
+      <div class="decision-item">
+        <div class="time">${dec.created_at?.slice(0,16).replace('T',' ') || '–'}</div>
+        <div class="action">${(dec.user_message || '').slice(0, 60)}...</div>
+        ${dec.tools_called ? `<div class="tools">🔧 ${dec.tools_called.split(',').slice(0,3).join(', ')}</div>` : ''}
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('panel-decisions').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
+}
+
+// ── Integrations status (from /status) ────────────────────────────────────────
+async function loadIntegrations() {
+  try {
+    const d = await fetch('/status').then(r => r.json());
+    // These are always connected based on config
+    ['gmail','calendar','drive','docs','sheets'].forEach(k => {
+      const el = document.getElementById('int-' + k);
+      if (el) { el.textContent = 'Connected'; el.className = 'tag tag-green'; el.style = 'font-size:.68rem;'; }
+    });
+  } catch(e) {}
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────────
+function appendMessage(role, text, meta = {}) {
+  const container = document.getElementById('chat-messages');
+  const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const isBot = role === 'bot';
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${isBot ? 'TVM' : 'You'}</div>
+    <div class="msg-content">
+      <div class="msg-bubble">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+      ${meta.toolsUsed?.length ? `<div class="tools-used">${meta.toolsUsed.map(t=>`<span class="tool-badge">🔧 ${t}</span>`).join('')}</div>` : ''}
+      <div class="msg-meta">${time}${meta.iterations ? ` · ${meta.iterations} steps` : ''}${meta.elapsed ? ` · ${(meta.elapsed/1000).toFixed(1)}s` : ''}</div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  removeTyping();
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-avatar">TVM</div><div class="msg-content"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const emailInput = document.getElementById('user-email');
+  const msg = input.value.trim();
+  const email = emailInput.value.trim() || 'owner@thevillamanagers.cloud';
+  if (!msg || isTyping) return;
+
+  appendMessage('user', msg);
+  input.value = '';
+  input.style.height = 'auto';
+  isTyping = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, sessionId: SESSION_ID, userEmail: email })
+    });
+    const d = await res.json();
+    removeTyping();
+
+    if (d.reply) {
+      appendMessage('bot', d.reply, { toolsUsed: d.meta?.toolsUsed, iterations: d.meta?.iterations, elapsed: d.meta?.elapsed });
+    } else if (d.error) {
+      appendMessage('bot', '⚠️ ' + d.error);
+    }
+
+    // Refresh right panel after action
+    setTimeout(loadRightPanel, 1000);
+  } catch(e) {
+    removeTyping();
+    appendMessage('bot', '⚠️ Could not reach TVMbot. Check if server is online.');
+  }
+
+  isTyping = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+function quickAction(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendMessage();
+}
+
+function promptContract() {
+  document.getElementById('chat-input').value = 'Create a rental contract for guest: [Guest Name], villa: [Villa Name], check-in: [YYYY-MM-DD], check-out: [YYYY-MM-DD], price: $[amount], email: [guest@email.com]';
+  document.getElementById('chat-input').focus();
+  document.getElementById('chat-input').select();
+  showToast('Fill in the [ ] fields then hit Send', 'info');
+}
+
+function clearChat() {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  showToast('Chat cleared', 'success');
+}
+
+// ── Auto-resize textarea ───────────────────────────────────────────────────────
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// ── Onboarding Modal ───────────────────────────────────────────────────────────
+function openOnboarding() { document.getElementById('modal-overlay').classList.add('open'); }
+function closeOnboarding() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function nextStep(n) {
+  document.getElementById(`step-${currentStep}`).classList.remove('active');
+  document.getElementById(`sdot-${currentStep}`).classList.remove('active');
+  document.getElementById(`sdot-${currentStep}`).classList.add('done');
+  currentStep = n;
+  document.getElementById(`step-${n}`).classList.add('active');
+  document.getElementById(`sdot-${n}`).classList.add('active');
+}
+
+async function saveOnboarding() {
+  const profile = {
+    name: document.getElementById('f-name').value,
+    email: document.getElementById('f-email').value,
+    phone: document.getElementById('f-phone').value,
+    company: document.getElementById('f-company').value,
+    currency: document.getElementById('f-currency').value,
+    notes: document.getElementById('f-notes').value,
+    sheets_booking_id: document.getElementById('f-sheets-id').value,
+    drive_guests_folder: document.getElementById('f-drive-id').value,
+    villas: []
+  };
+
+  const villaName = document.getElementById('f-villa-name').value;
+  if (villaName) {
+    profile.villas.push({
+      name: villaName,
+      location: document.getElementById('f-villa-location').value,
+      bedrooms: parseInt(document.getElementById('f-villa-bedrooms').value) || 1,
+      max_guests: parseInt(document.getElementById('f-villa-guests').value) || 4,
+      base_price: parseFloat(document.getElementById('f-villa-price').value) || 0,
+      amenities: document.getElementById('f-villa-amenities').value,
+    });
+  }
+
+  try {
+    const res = await fetch('/onboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile })
+    });
+    const d = await res.json();
+    if (d.success) {
+      closeOnboarding();
+      showToast('✓ Profile saved to TVMbot memory!', 'success');
+      loadRightPanel();
+      quickAction(`Great! I've set up my profile. My name is ${profile.name || 'the owner'} and I manage ${villaName || 'a villa'}. Please confirm what you now know about my business.`);
+    } else {
+      showToast('Error saving profile: ' + d.error, 'error');
+    }
+  } catch(e) {
+    showToast('Could not save profile', 'error');
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => { t.className = `toast ${type}`; }, 3500);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+async function init() {
+  await checkStatus();
+  await loadRightPanel();
+  await loadIntegrations();
+
+  // Auto-populate email if stored
+  const savedEmail = localStorage.getItem('tvm_email');
+  if (savedEmail) document.getElementById('user-email').value = savedEmail;
+  document.getElementById('user-email').addEventListener('change', function() {
+    localStorage.setItem('tvm_email', this.value);
+  });
+}
+
+init();
+setInterval(loadRightPanel, 60000); // refresh every 60s
 </script>
 </body>
 </html>
