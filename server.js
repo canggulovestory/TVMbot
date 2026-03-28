@@ -258,16 +258,48 @@ app.get('/api/csrf-token', (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── Session Store (in-memory, upgrade to Redis for prod) ─────────────────────
+// ─── Session Store ────────────────────────────────────────────────────────────
 const sessions = new Map();
-const pendingApprovals = new Map(); // sessionId → { plan, resolve, reject }
+const pendingApprovals = new Map(); // sessionId → { plan, resolve, reject, timestamp }
+
+// Session limits to prevent memory leaks on long-running PM2 processes
+const SESSION_MAX_COUNT = 100;
+const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours TTL
+const SESSION_MAX_HISTORY = 20;
 
 function getSession(sessionId) {
   if (!sessions.has(sessionId)) {
+    // Evict oldest session if at capacity
+    if (sessions.size >= SESSION_MAX_COUNT) {
+      let oldestKey = null, oldestTime = Infinity;
+      for (const [k, v] of sessions) {
+        if (v.createdAt < oldestTime) { oldestKey = k; oldestTime = v.createdAt; }
+      }
+      if (oldestKey) sessions.delete(oldestKey);
+    }
     sessions.set(sessionId, { history: [], userEmail: 'unknown', createdAt: Date.now() });
   }
-  return sessions.get(sessionId);
+  const s = sessions.get(sessionId);
+  // Trim history if it exceeds max (keep recent messages)
+  if (s.history.length > SESSION_MAX_HISTORY * 2) {
+    s.history = s.history.slice(-SESSION_MAX_HISTORY * 2);
+  }
+  return s;
 }
+
+// Cleanup expired sessions every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of sessions) {
+    if (now - v.createdAt > SESSION_MAX_AGE_MS) sessions.delete(k);
+  }
+  for (const [k, v] of pendingApprovals) {
+    if (v.timestamp && now - v.timestamp > 10 * 60 * 1000) {
+      try { v.reject(new Error('Approval timed out')); } catch(e) {}
+      pendingApprovals.delete(k);
+    }
+  }
+}, 10 * 60 * 1000);
 
 // ─── Build System Prompt ───────────────────────────────────────────────────────
 function buildSystemPrompt(memoryCtx) {
@@ -1059,6 +1091,9 @@ app.post('/chat', async (req, res) => {
 
   const { message, sessionId, userEmail } = req.body;
   if (!message) return res.status(400).json({ error: 'Message required' });
+  if (typeof message !== 'string') return res.status(400).json({ error: 'Message must be a string' });
+  if (message.trim().length === 0) return res.status(400).json({ error: 'Message cannot be empty' });
+  if (message.length > 4000) return res.status(400).json({ error: 'Message too long (max 4000 characters)' });
 
   const sid = sessionId || `session_${Date.now()}`;
   const email = userEmail || req.ip || 'unknown';

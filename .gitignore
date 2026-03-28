@@ -34,3 +34,14 @@ verify_validators.js
 # OS files
 .DS_Store
 Thumbs.db
+
+# Integration credentials (contains Google OAuth tokens — NEVER commit)
+config/integrations.json
+config/*.json
+!config/integrations.example.json
+
+# Data files
+data/
+*.db
+*.db-shm
+*.db-wal
