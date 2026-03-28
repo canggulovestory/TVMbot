@@ -1020,8 +1020,43 @@ async function runPEMSAgent(userMessage, sessionId, userEmail = 'unknown') {
 
 // ─── API Routes ────────────────────────────────────────────────────────────────
 
+// ─── Chat Rate Limiting (prevents API cost abuse) ──────────────────────────────
+// Each /chat call triggers 1-5 LLM calls. Limit to 20 msgs/min per session.
+const chatRateMap = new Map(); // ip → { count, windowStart }
+const CHAT_RATE_LIMIT = { maxPerMinute: 20, windowMs: 60 * 1000 };
+
+function checkChatRateLimit(ip) {
+  const now = Date.now();
+  const entry = chatRateMap.get(ip);
+  if (!entry || (now - entry.windowStart) > CHAT_RATE_LIMIT.windowMs) {
+    chatRateMap.set(ip, { count: 1, windowStart: now });
+    return { allowed: true };
+  }
+  entry.count++;
+  if (entry.count > CHAT_RATE_LIMIT.maxPerMinute) {
+    const remaining = Math.ceil((CHAT_RATE_LIMIT.windowMs - (now - entry.windowStart)) / 1000);
+    return { allowed: false, message: `Rate limited. Please wait ${remaining}s before sending more messages.` };
+  }
+  return { allowed: true };
+}
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const cutoff = Date.now() - CHAT_RATE_LIMIT.windowMs * 2;
+  for (const [ip, entry] of chatRateMap) {
+    if (entry.windowStart < cutoff) chatRateMap.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
 // Main chat endpoint
 app.post('/chat', async (req, res) => {
+  // Rate limit check — protect Anthropic/OpenAI API costs
+  const chatIp = req.ip || req.connection.remoteAddress;
+  const rateCheck = checkChatRateLimit(chatIp);
+  if (!rateCheck.allowed) {
+    return res.status(429).json({ error: rateCheck.message });
+  }
+
   const { message, sessionId, userEmail } = req.body;
   if (!message) return res.status(400).json({ error: 'Message required' });
 

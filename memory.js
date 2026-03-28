@@ -363,11 +363,13 @@ function getBookings(filter = {}) {
 }
 
 function getUpcomingBookings(days = 30) {
+  // Sanitize: ensure days is a safe positive integer (SQL injection prevention)
+  const safeDays = Math.max(1, Math.min(365, parseInt(days, 10) || 30));
   return db.prepare(`
     SELECT * FROM bookings
-    WHERE check_in >= date('now') AND check_in <= date('now', '+${days} days')
+    WHERE check_in >= date('now') AND check_in <= date('now', '+' || ? || ' days')
     ORDER BY check_in ASC
-  `).all();
+  `).all(String(safeDays));
 }
 
 // ─── Agent Decisions / History ─────────────────────────────────────────────────
@@ -597,13 +599,15 @@ function getAllLongTermRentals() {
 }
 
 function getUpcomingRentalPayments(days = 30) {
+  // Sanitize: ensure days is a safe positive integer (SQL injection prevention)
+  const safeDays = Math.max(1, Math.min(365, parseInt(days, 10) || 30));
   return db.prepare(`
     SELECT * FROM long_term_rentals
     WHERE status='active'
     AND next_payment >= date('now')
-    AND next_payment <= date('now', '+${days} days')
+    AND next_payment <= date('now', '+' || ? || ' days')
     ORDER BY next_payment ASC
-  `).all();
+  `).all(String(safeDays));
 }
 
 function endRental(id) {
