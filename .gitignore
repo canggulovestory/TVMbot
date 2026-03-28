@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & Credentials
+.env
+config/
+whatsapp-config.json
+whatsapp-session/
+auth_info_baileys/
+
+# Runtime Data
+data/
+logs/
+*.log
+
+# Temp files
+/tmp/
+_test_*.js
+_tmp_*.js
+check_early_rows.js
+fix_escape.js
+full_dump.js
+full_validation_test.js
+investigate_n157.js
+run_audit.js
+verify_fix.js
+verify_validators.js
+
+# Backups
+*.bak
+*.bak.*
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TVMbot Dashboard</title>
+  <!--
+    TVMbot Monitoring Dashboard
+
+    Inspired by Edict's 10-Panel Command Center — zero npm dependencies,
+    single HTML file, vanilla JS, polls a JSON API every 30 seconds.
+
+    Panels:
+    1. WhatsApp Connection Status
+    2. System Health (PM2, API, uptime)
+    3. Recent Activity (audit trail)
+    4. Maintenance Overview
+    5. Financial Summary
+    6. Formula Protection Log
+
+    Mount: server.js → app.get('/dashboard', ...)
+    Data:  server.js → app.get('/api/dashboard', ...)
+  -->
+  <style>
+  :root {
+      /* ── Brand ── */
+      --primary: #0d47a1;
+      --secondary: #10b981;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      /* ── Neutrals ── */
+      --neutral-50: #f9fafb;
+      --neutral-100: #f3f4f6;
+      --neutral-200: #e5e7eb;
+      --neutral-400: #9ca3af;
+      --neutral-600: #4b5563;
+      --neutral-900: #111827;
+      /* ── Typography ── */
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      /* ── Spacing ── */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2rem;
+      /* ── Radius ── */
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      /* ── Shadows ── */
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+      /* ── Dark theme overrides ── */
+      --dash-bg: #0f172a;
+      --dash-surface: #1e293b;
+      --dash-surface-alt: #1a2332;
+      --dash-border: #334155;
+      --dash-text: #e2e8f0;
+      --dash-muted: #94a3b8;
+      --dash-green: #22c55e;
+      --dash-yellow: #eab308;
+      --dash-red: #ef4444;
+      --dash-blue: #3b82f6;
+      --dash-purple: #a855f7;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--dash-bg);
+      color: var(--dash-text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e293b, #334155);
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #768064;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .header h1 span { color: #86a86b; }
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--dash-muted);
+    }
+    .pulse {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--dash-green);
+      animation: pulse 2s infinite;
+    }
+    .pulse.offline { background: #ef4444; animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Grid Layout ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 20px;
+      padding: 20px 30px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* ── Panel Cards ── */
+    .panel {
+      background: var(--dash-surface);
+      border-radius: 12px;
+      border: 1px solid var(--dash-border);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--dash-border);
+      background: #1a2332;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .panel-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .badge-green { background: #166534; color: #86efac; }
+    .badge-red { background: #991b1b; color: #fca5a5; }
+    .badge-yellow { background: #854d0e; color: #fde047; }
+    .badge-blue { background: #1e40af; color: #93c5fd; }
+    .panel-body { padding: 18px; }
+
+    /* ── Status Indicators ── */
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #ffffff08;
+    }
+    .status-row:last-child { border-bottom: none; }
+    .status-label { font-size: 13px; color: var(--dash-muted); }
+    .status-value { font-size: 13px; font-weight: 600; }
+    .status-ok { color: var(--dash-green); }
+    .status-warn { color: var(--dash-yellow); }
+    .status-error { color: var(--dash-red); }
+
+    /* ── Stat Cards Row ── */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 0 30px 0;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .stat-card {
+      background: var(--dash-surface);
+      border-radius: 12px;
+      border: 1px solid var(--dash-border);
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--dash-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Activity Feed ── */
+    .feed-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #ffffff08;
+      font-size: 13px;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item.priority-critical { border-left: 3px solid var(--dash-red, #ef4444); padding-left: 10px; background: rgba(239,68,68,.05); }
+    .feed-item.priority-important { border-left: 3px solid var(--dash-yellow, #eab308); padding-left: 10px; background: rgba(234,179,8,.04); }
+    .feed-item.priority-info { border-left: 3px solid var(--dash-blue, #3b82f6); padding-left: 10px; opacity: 0.8; }
+    .feed-time {
+      color: var(--dash-muted);
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+    .feed-action { color: var(--dash-text); }
+    .feed-action .tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .tag-write { background: #166534; color: #86efac; }
+    .tag-skip { background: #854d0e; color: #fde047; }
+    .tag-read { background: #1e40af; color: #93c5fd; }
+    .tag-system { background: #6b21a8; color: #d8b4fe; }
+    .tag-error { background: #991b1b; color: #fca5a5; }
+
+    /* ── Maintenance Table ── */
+    .mini-table {
+      width: 100%;
+      font-size: 13px;
+    }
+    .mini-table th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--dash-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--dash-border);
+    }
+    .mini-table td {
+      padding: 8px;
+      border-bottom: 1px solid #ffffff05;
+    }
+    .count-pill {
+      display: inline-block;
+      min-width: 24px;
+      text-align: center;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .pill-pending { background: #854d0e; color: #fde047; }
+    .pill-urgent { background: #991b1b; color: #fca5a5; }
+    .pill-done { background: #166534; color: #86efac; }
+
+    /* ── Financial Row ── */
+    .finance-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #ffffff08;
+    }
+    .finance-row:last-child { border-bottom: none; }
+    .finance-label { color: var(--dash-muted); font-size: 13px; }
+    .finance-value { font-weight: 600; font-size: 14px; }
+    .finance-positive { color: var(--dash-green); }
+    .finance-negative { color: var(--dash-red); }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--dash-muted);
+      font-size: 13px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #475569;
+      font-size: 12px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .stat-cards { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: 1fr; padding: 15px; }
+      .header { padding: 15px; }
+    }
+
+    /* ── Color Legend ── */
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 30px;
+      max-width: 1600px; margin: 0 auto;
+      font-size: 12px; color: var(--dash-muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── Date Range Picker ── */
+    .date-picker-row {
+      display: flex; gap: 8px; padding: 0 30px 12px;
+      max-width: 1600px; margin: 0 auto;
+    }
+    .range-btn {
+      padding: 6px 16px; border-radius: 8px; border: 1px solid var(--dash-border);
+      background: var(--dash-surface); color: var(--dash-muted); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .range-btn:hover { border-color: #768064; color: var(--dash-text); }
+    .range-btn.active { background: #768064; color: #fff; border-color: #768064; }
+    @media (max-width: 900px) {
+      .date-picker-row { padding: 0 15px 12px; flex-wrap: wrap; }
+      .range-btn { font-size: 11px; padding: 5px 12px; }
+    }
+
+    /* ── Chart Panels ── */
+    .chart-container { position: relative; height: 220px; padding: 12px; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 30px 20px; max-width: 1600px; margin: 0 auto; }
+    @media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; padding: 0 15px 15px; } }
+
+    /* ── Export Button ── */
+    .export-btn {
+      padding: 3px 10px; border-radius: 6px; border: 1px solid var(--dash-border);
+      background: transparent; color: var(--dash-muted); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .export-btn:hover { background: #334155; color: var(--dash-text); }
+
+    /* ── Filter Chips ── */
+    .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .filter-chip {
+      padding: 4px 12px; border-radius: 20px; border: 1px solid var(--dash-border, #334155);
+      background: transparent; color: var(--dash-muted, #94a3b8); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-chip:hover { border-color: #768064; color: var(--dash-text, #e2e8f0); }
+    .filter-chip.active { background: #768064; color: #fff; border-color: #768064; }
+    /* ── Clickable Maintenance Rows ── */
+    .maint-row { cursor: pointer; transition: background .15s; }
+    .maint-row:hover { background: rgba(118,128,100,.1); }
+    .maint-detail-row td { padding: 0 !important; border: none !important; }
+    .maint-detail {
+      padding: 10px 16px; background: rgba(30,41,59,.8); border-radius: 8px;
+      margin: 4px 8px 8px; font-size: 12px; color: var(--dash-muted, #94a3b8);
+    }
+    .maint-detail .md-label { font-weight: 600; color: var(--dash-text, #e2e8f0); margin-right: 6px; }
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <h1><span>TVM</span>bot Dashboard</h1>
+    <div class="header-status" role="status" aria-live="polite">
+      <div class="pulse" id="connectionPulse"></div>
+      <span id="connectionText">Connecting...</span>
+      <span>|</span>
+      <span id="lastUpdate">--</span>
+    </div>
+  </header>
+
+  <!-- Top Stats -->
+  <div style="padding-top: 20px;">
+    <div class="stat-cards" role="region" aria-label="Key metrics">
+      <div class="stat-card">
+        <div class="stat-number" style="color: #3b82f6;" id="statMessages">--</div>
+        <div class="stat-label">Messages Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: var(--dash-green);" id="statOccupancy">--</div>
+        <div class="stat-label">Active Rentals</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: var(--dash-yellow);" id="statPendingTasks">--</div>
+        <div class="stat-label">Pending Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: #a855f7;" id="statToolActions">--</div>
+        <div class="stat-label">Actions Today</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Healthy / Connected</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span> Warning / Pending</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Error / Urgent</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span> Info / Active</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#a855f7"></span> System / Metric</div>
+  </div>
+
+
+  <div class="date-picker-row" id="datePickerRow" role="toolbar" aria-label="Date range filter">
+    <button class="range-btn active" onclick="setRange('24h', this)" aria-label="Show today's data">Today</button>
+    <button class="range-btn" onclick="setRange('7d', this)" aria-label="Show last 7 days">Last 7 Days</button>
+    <button class="range-btn" onclick="setRange('30d', this)" aria-label="Show this month">This Month</button>
+    <button class="range-btn" onclick="setRange('90d', this)" aria-label="Show last 90 days">Last 90 Days</button>
+  </div>
+
+
+  <!-- Charts Row -->
+  <div class="chart-row">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Activity Trend (7 Days)</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="activityChart"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Task Breakdown</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="taskChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid" role="main" aria-label="Dashboard panels">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Maintenance Overview</span><button class="export-btn" onclick="exportPanel('maintenance')" aria-label="Export maintenance data as CSV">Export CSV</button>
+        <span class="panel-badge badge-yellow" id="maintenanceBadge">--</span>
+      </div>
+      <div class="panel-body">
+        <div class="filter-row" id="villaFilters">
+          <button class="filter-chip active" onclick="filterMaintenance('all', this)">All Villas</button>
+        </div>
+        <table class="mini-table" id="maintenanceTable">
+          <thead>
+            <tr>
+              <th>Villa / Tab</th>
+              <th>Pending</th>
+              <th>Urgent</th>
+              <th>Done</th>
+            </tr>
+          </thead>
+          <tbody id="maintenanceBody">
+            <tr><td colspan="4" class="empty-state">Waiting for data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Financial Summary</span><button class="export-btn" onclick="exportPanel('finance')" aria-label="Export financial data as CSV">Export CSV</button>
+        <span class="panel-badge badge-green" id="financeBadge">--</span>
+      </div>
+      <div class="panel-body" id="financeBody">
+        <div class="finance-row">
+          <span class="finance-label">Today's Income (Amount)</span>
+          <span class="finance-value finance-positive" id="todayIncome">--</span>
+        </div>
+        <div class="finance-row">
+          <span class="finance-label">Today's Expenses</span>
+          <span class="finance-value finance-negative" id="todayExpenses">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: Bookings & Occupancy -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Bookings & Occupancy</span>
+        <span class="panel-badge badge-blue" id="bookingsBadge">--</span>
+      </div>
+      <div class="panel-body" id="bookingsBody">
+        <div class="empty-state">Loading bookings...</div>
+      </div>
+    </div>
+
+    <!-- Panel: WhatsApp Activity -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">WhatsApp Activity</span>
+        <span class="panel-badge badge-green" id="whatsappBadge">--</span>
+      </div>
+      <div class="panel-body" id="whatsappBody">
+        <div class="empty-state">Loading WhatsApp stats...</div>
+      </div>
+    </div>
+
+    <!-- Panel: Today's Check-in / Check-out -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Today's Check-in / Check-out</span>
+        <span class="panel-badge badge-yellow" id="checkinBadge">--</span>
+      </div>
+      <div class="panel-body" id="checkinBody">
+        <div class="empty-state">Loading schedule...</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Recent Activity</span><button class="export-btn" onclick="exportPanel('activity')" aria-label="Export activity log as CSV">Export CSV</button>
+        <span class="panel-badge badge-blue" id="activityCount">0 events</span>
+      </div>
+      <div class="panel-body" id="activityFeed">
+        <div class="empty-state">Waiting for data...</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Active Workflows</span>
+        <span class="panel-badge badge-blue" id="workflowBadge">0 active</span>
+      </div>
+      <div class="panel-body" id="workflowFeed">
+        <div class="empty-state">No active workflows</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">Formula Protection</span>
+        <span class="panel-badge badge-yellow" id="protectionBadge">0 saved</span>
+      </div>
+      <div class="panel-body" id="protectionFeed">
+        <div class="empty-state">No formula protection events today</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" role="heading" aria-level="2">System Health</span>
+        <span class="panel-badge badge-green" id="systemBadge">Healthy</span>
+      </div>
+      <div class="panel-body">
+        <div class="status-row">
+          <span class="status-label">WhatsApp</span>
+          <span class="status-value" id="waStatus">--</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Claude API</span>
+          <span class="status-value" id="apiStatus">--</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer" role="contentinfo">
+    TVMbot Dashboard v2.0 &mdash; Operational Intelligence for The Villa Managers
+  </footer>
+
+  <script>
+    // ── Configuration ──
+    const API_URL = '/api/dashboard';
+    let currentRange = '24h';
+    function setRange(range, btn) {
+      currentRange = range;
+      document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      // Reconnect SSE with new range
+      if (window._evtSource) { window._evtSource.close(); sseActive = false; }
+      startSSE();
+      fetchDashboard(); // immediate update
+    }
+    const REFRESH_INTERVAL = 30000; // 30 seconds
+
+    // ── Fetch & Render ──
+    async function fetchDashboard() {
+      try {
+        const resp = await fetch(API_URL + '?range=' + currentRange);
+        if (!resp.ok) throw new Error('API returned ' + resp.status);
+        const data = await resp.json();
+        renderDashboard(data);
+        setConnectionStatus(true);
+      } catch (err) {
+        console.error('Dashboard fetch failed:', err);
+        setConnectionStatus(false);
+      }
+    }
+
+    function setConnectionStatus(online) {
+      const pulse = document.getElementById('connectionPulse');
+      const text = document.getElementById('connectionText');
+      const update = document.getElementById('lastUpdate');
+
+      if (online) {
+        pulse.className = 'pulse';
+        text.textContent = 'Connected';
+        update.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      } else {
+        pulse.className = 'pulse offline';
+        text.textContent = 'Disconnected';
+      }
+    }
+
+    function renderDashboard(data) {
+      // Top stats
+      setText('statMessages', data.stats?.messagesToday ?? '--');
+      setText('statOccupancy', data.stats?.activeRentals ?? data.stats?.occupancy ?? '--');
+      setText('statPendingTasks', data.stats?.pendingTasks ?? data.stats?.maintenancePending ?? '--');
+      setText('statToolActions', data.stats?.toolActionsToday ?? data.stats?.writesToday ?? '--');
+
+      // System health
+      renderSystemHealth(data.system || {});
+
+      // Activity feed
+      renderActivityFeed(data.recentActivity || []);
+
+      // Maintenance
+      renderMaintenance(data.maintenance || []);
+
+      // Financial
+      renderFinance(data.finance || {});
+
+      // Formula protection
+      renderProtection(data.protectionEvents || []);
+
+      // Workflows
+      renderWorkflows(data.workflows || []);
+
+      // New panels
+      renderBookings(data.bookings || data.upcomingBookings || []);
+      renderWhatsApp(data.whatsapp || data.whatsappStats || null);
+      renderCheckinSchedule(data.schedule || data.todaySchedule || null);
+
+      // Charts
+      updateCharts(data);
+    }
+
+    function renderSystemHealth(sys) {
+      setStatusValue('waStatus', sys.whatsapp || 'Unknown');
+      setStatusValue('apiStatus', sys.claudeApi || 'Unknown');
+      setStatusValue('sheetsStatus', sys.googleSheets || 'Unknown');
+      setStatusValue('pm2Status', sys.pm2 || 'Unknown');
+      setText('uptime', sys.uptime || '--');
+      setText('memUsage', sys.memory || '--');
+      setText('routerStatus', sys.routerStats || '--');
+
+      const badge = document.getElementById('systemBadge');
+      const allOk = sys.whatsapp === 'Connected' && sys.claudeApi === 'Connected' && sys.googleSheets === 'Connected';
+      badge.textContent = allOk ? 'Healthy' : 'Issues Detected';
+      badge.className = 'panel-badge ' + (allOk ? 'badge-green' : 'badge-red');
+    }
+
+    function renderActivityFeed(activities) {
+      const feed = document.getElementById('activityFeed');
+      const countBadge = document.getElementById('activityCount');
+      countBadge.textContent = activities.length + ' events';
+
+      if (activities.length === 0) {
+        feed.innerHTML = '<div class="empty-state">No activity yet today</div>';
+        return;
+      }
+
+      feed.innerHTML = activities.slice(0, 15).map(a => {
+        const tagClass = getTagClass(a.action || a.type);
+        const time = a.timestamp ? new Date(a.timestamp).toLocaleTimeString() : '--';
+        const action = (a.action || a.type || 'event').toLowerCase();
+        let priority = 'info';
+        if (['error', 'failed', 'rollback', 'alert', 'urgent'].includes(action)) priority = 'critical';
+        else if (['write', 'update', 'append', 'payment', 'booking', 'maintenance'].includes(action)) priority = 'important';
+        return `<div class="feed-item priority-${priority}">
+          <div class="feed-time">${time}</div>
+          <div class="feed-action">
+            <span class="tag ${tagClass}">${action.toUpperCase()}</span>
+            ${escapeHtml(a.summary || a.details || '')}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderMaintenance(items) {
+      const badge = document.getElementById('maintenanceBadge');
+      const totalPending = items.reduce((s, i) => s + (i.pending || 0), 0);
+      badge.textContent = totalPending + ' pending';
+      allMaintenanceItems = items;
+      buildVillaFilters(items);
+      renderMaintenanceRows(items);
+    }
+
+    function renderFinance(fin) {
+      setText('todayIncome', fin.todayIncome || '0');
+      setText('todayExpenses', fin.todayExpenses || '0');
+      setText('monthIncome', fin.monthIncome || '--');
+      setText('monthExpenses', fin.monthExpenses || '--');
+      setText('lastSync', fin.lastSync || 'Never');
+
+      const badge = document.getElementById('financeBadge');
+      badge.textContent = fin.monthLabel || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function renderProtection(events) {
+      const feed = document.getElementById('protectionFeed');
+      const badge = document.getElementById('protectionBadge');
+      badge.textContent = events.length + ' saved';
+
+      if (events.length === 0) {
+        feed.innerHTML = '<div class="empty-state">No formula protection events today</div>';
+        return;
+      }
+
+      feed.innerHTML = events.slice(0, 10).map(e => {
+        const time = e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : '--';
+        return `<div class="feed-item">
+          <div class="feed-time">${time}</div>
+          <div class="feed-action">
+            <span class="tag tag-skip">PROTECTED</span>
+            ${escapeHtml(e.cell || '')} in ${escapeHtml(e.sheet || '')} &mdash; formula preserved
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderWorkflows(workflows) {
+      const feed = document.getElementById('workflowFeed');
+      const badge = document.getElementById('workflowBadge');
+      badge.textContent = workflows.length + ' active';
+
+      if (workflows.length === 0) {
+        feed.innerHTML = '<div class="empty-state">No active workflows</div>';
+        return;
+      }
+
+      feed.innerHTML = workflows.map(w => `<div class="feed-item">
+        <div class="feed-time">${w.progress || '--'}</div>
+        <div class="feed-action">
+          <span class="tag tag-system">${(w.status || 'active').toUpperCase()}</span>
+          <strong>${escapeHtml(w.name || 'Workflow')}</strong> &mdash; ${escapeHtml(w.currentStep || '')}
+        </div>
+      </div>`).join('');
+    }
+
+
+    // ── Bookings & Occupancy ──
+    function renderBookings(bookings) {
+      const body = document.getElementById('bookingsBody');
+      const badge = document.getElementById('bookingsBadge');
+      if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
+        const activeCount = document.getElementById('statOccupancy')?.textContent || '--';
+        badge.textContent = activeCount + ' active';
+        body.innerHTML = '<div class="empty-state">No upcoming bookings data</div>';
+        return;
+      }
+      badge.textContent = bookings.length + ' bookings';
+      body.innerHTML = bookings.slice(0, 8).map(b => `<div class="feed-item">
+        <div class="feed-time">${escapeHtml(b.dates || b.checkIn || '--')}</div>
+        <div class="feed-action">
+          <span class="tag tag-write">${escapeHtml(b.villa || '--')}</span>
+          <strong>${escapeHtml(b.guest || b.name || '--')}</strong>
+          ${b.status ? ' &mdash; <em>' + escapeHtml(b.status) + '</em>' : ''}
+        </div>
+      </div>`).join('');
+    }
+
+    // ── WhatsApp Activity ──
+    function renderWhatsApp(wa) {
+      const body = document.getElementById('whatsappBody');
+      const badge = document.getElementById('whatsappBadge');
+      if (!wa) {
+        badge.textContent = '--';
+        body.innerHTML = '<div class="empty-state">No WhatsApp data available</div>';
+        return;
+      }
+      const msgCount = wa.messagesToday || wa.totalMessages || 0;
+      badge.textContent = msgCount + ' msgs';
+      let html = '';
+      html += `<div class="status-row"><span class="status-label">Messages Today</span><span class="status-value status-ok">${msgCount}</span></div>`;
+      html += `<div class="status-row"><span class="status-label">Conversations</span><span class="status-value">${wa.conversations || wa.uniqueChats || '--'}</span></div>`;
+      html += `<div class="status-row"><span class="status-label">Status</span><span class="status-value ${wa.connected ? 'status-ok' : 'status-error'}">${wa.connected ? 'Connected' : 'Disconnected'}</span></div>`;
+      if (wa.topChats && Array.isArray(wa.topChats)) {
+        html += '<div style="margin-top:8px;font-size:12px;color:#64748b;font-weight:600;">Top Conversations</div>';
+        wa.topChats.slice(0, 5).forEach(c => {
+          html += `<div class="status-row"><span class="status-label">${escapeHtml(c.name || c.id || '--')}</span><span class="status-value">${c.count || 0}</span></div>`;
+        });
+      }
+      body.innerHTML = html;
+    }
+
+    // ── Check-in / Check-out Schedule ──
+    function renderCheckinSchedule(schedule) {
+      const body = document.getElementById('checkinBody');
+      const badge = document.getElementById('checkinBadge');
+      if (!schedule || (!schedule.checkIns?.length && !schedule.checkOuts?.length)) {
+        badge.textContent = '0 today';
+        body.innerHTML = '<div class="empty-state">No check-ins or check-outs today</div>';
+        return;
+      }
+      const total = (schedule.checkIns?.length || 0) + (schedule.checkOuts?.length || 0);
+      badge.textContent = total + ' today';
+      let html = '';
+      if (schedule.checkIns?.length) {
+        html += '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:.5px;">Check-Ins</div>';
+        schedule.checkIns.forEach(ci => {
+          html += `<div class="feed-item"><div class="feed-action"><span class="tag tag-write">IN</span> <strong>${escapeHtml(ci.guest || '--')}</strong> &rarr; ${escapeHtml(ci.villa || '--')}</div></div>`;
+        });
+      }
+      if (schedule.checkOuts?.length) {
+        html += '<div style="margin:8px 0 6px;font-size:11px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.5px;">Check-Outs</div>';
+        schedule.checkOuts.forEach(co => {
+          html += `<div class="feed-item"><div class="feed-action"><span class="tag tag-error">OUT</span> <strong>${escapeHtml(co.guest || '--')}</strong> &larr; ${escapeHtml(co.villa || '--')}</div></div>`;
+        });
+      }
+      body.innerHTML = html;
+    }
+
+
+    // ── Villa Filtering ──
+    let allMaintenanceItems = [];
+
+    function buildVillaFilters(items) {
+      const row = document.getElementById('villaFilters');
+      if (!row) return;
+      const villas = [...new Set(items.map(i => i.villa || i.tab || '--'))];
+      let html = '<button class="filter-chip active" onclick="filterMaintenance('all', this)">All Villas</button>';
+      villas.forEach(v => {
+        html += `<button class="filter-chip" onclick="filterMaintenance('${escapeHtml(v)}', this)">${escapeHtml(v)}</button>`;
+      });
+      row.innerHTML = html;
+    }
+
+    function filterMaintenance(villa, btn) {
+      document.querySelectorAll('#villaFilters .filter-chip').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const filtered = villa === 'all' ? allMaintenanceItems : allMaintenanceItems.filter(i => (i.villa || i.tab) === villa);
+      renderMaintenanceRows(filtered);
+    }
+
+    function renderMaintenanceRows(items) {
+      const body = document.getElementById('maintenanceBody');
+      if (items.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" class="empty-state">No maintenance data</td></tr>';
+        return;
+      }
+      body.innerHTML = items.map(i => `<tr class="maint-row" onclick="toggleMaintenanceDetail(this, '${escapeHtml(i.villa || i.tab || '--')}')">
+        <td>${escapeHtml(i.villa || i.tab || '--')}</td>
+        <td><span class="count-pill pill-pending">${i.pending || 0}</span></td>
+        <td><span class="count-pill pill-urgent">${i.urgent || 0}</span></td>
+        <td><span class="count-pill pill-done">${i.done || 0}</span></td>
+      </tr>`).join('');
+    }
+
+
+    // ── Clickable Maintenance Detail ──
+    function toggleMaintenanceDetail(row, villa) {
+      const nextRow = row.nextElementSibling;
+      if (nextRow && nextRow.classList.contains('maint-detail-row')) {
+        nextRow.remove();
+        return;
+      }
+      // Remove any other open detail rows
+      document.querySelectorAll('.maint-detail-row').forEach(r => r.remove());
+      // Find the villa data
+      const item = allMaintenanceItems.find(i => (i.villa || i.tab) === villa);
+      if (!item) return;
+      const detailRow = document.createElement('tr');
+      detailRow.className = 'maint-detail-row';
+      const total = (item.pending || 0) + (item.urgent || 0) + (item.done || 0);
+      detailRow.innerHTML = `<td colspan="4"><div class="maint-detail">
+        <span class="md-label">Villa:</span> ${escapeHtml(villa)}<br>
+        <span class="md-label">Total Tasks:</span> ${total}<br>
+        <span class="md-label">Completion:</span> ${total > 0 ? Math.round(((item.done || 0) / total) * 100) : 0}%<br>
+        ${item.lastUpdated ? '<span class="md-label">Last Updated:</span> ' + escapeHtml(item.lastUpdated) + '<br>' : ''}
+        ${item.assignee ? '<span class="md-label">Assigned:</span> ' + escapeHtml(item.assignee) : ''}
+      </div></td>`;
+      row.after(detailRow);
+    }
+
+    // ── Helpers ──
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+
+    function setStatusValue(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val;
+      const connected = ['Connected', 'Online', 'Running', 'OK'].includes(val);
+      const warning = ['Reconnecting', 'Slow'].includes(val);
+      el.className = 'status-value ' + (connected ? 'status-ok' : warning ? 'status-warn' : 'status-error');
+    }
+
+    function getTagClass(action) {
+      const map = {
+        write: 'tag-write', update: 'tag-write', append: 'tag-write',
+        skip: 'tag-skip', protected: 'tag-skip',
+        read: 'tag-read', get: 'tag-read',
+        system: 'tag-system', info: 'tag-system',
+        error: 'tag-error', failed: 'tag-error', rollback: 'tag-error'
+      };
+      return map[(action || '').toLowerCase()] || 'tag-system';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ── Start with SSE (fallback to polling) ──
+    let sseActive = false;
+    function startSSE() {
+      try {
+        const evtSource = new EventSource('/api/dashboard-stream?range=' + currentRange);
+        evtSource.onmessage = function(e) {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'connected') { sseActive = true; setConnectionStatus(true); return; }
+            if (data.error) { console.warn('SSE error:', data.error); return; }
+            renderDashboard(data);
+            setConnectionStatus(true);
+          } catch(err) { console.warn('SSE parse error:', err); }
+        };
+        evtSource.onerror = function() {
+          sseActive = false;
+          evtSource.close();
+          console.warn('SSE disconnected, falling back to polling');
+          setConnectionStatus(false);
+          setTimeout(startSSE, 10000); // retry SSE in 10s
+          fetchDashboard(); // immediate poll
+        };
+        // Store reference for range changes
+        window._evtSource = evtSource;
+      } catch(e) {
+        console.warn('SSE not supported, using polling');
+        fetchDashboard();
+      }
+    }
+    startSSE();
+    
+    // ── Export Panel Data as CSV ──
+    function exportPanel(panelType) {
+      let csv = '';
+      const now = new Date().toISOString().split('T')[0];
+      if (panelType === 'maintenance') {
+        csv = 'Villa,Pending,Urgent,Done\n';
+        const rows = document.querySelectorAll('#maintenanceBody tr');
+        rows.forEach(r => {
+          const cells = r.querySelectorAll('td');
+          if (cells.length >= 4) csv += Array.from(cells).map(c => c.textContent.trim()).join(',') + '\n';
+        });
+      } else if (panelType === 'finance') {
+        csv = 'Metric,Value\n';
+        const rows = document.querySelectorAll('#financeBody .finance-row');
+        rows.forEach(r => {
+          const label = r.querySelector('.finance-label')?.textContent.trim() || '';
+          const value = r.querySelector('.finance-value')?.textContent.trim() || '';
+          csv += '"' + label + '","' + value + '"\n';
+        });
+      } else if (panelType === 'activity') {
+        csv = 'Time,Action\n';
+        const items = document.querySelectorAll('#activityFeed .feed-item');
+        items.forEach(item => {
+          const time = item.querySelector('.feed-time')?.textContent.trim() || '';
+          const action = item.querySelector('.feed-action')?.textContent.trim() || '';
+          csv += '"' + time + '","' + action.replace(/"/g, '""') + '"\n';
+        });
+      }
+
+      if (!csv) { alert('No data to export'); return; }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tvmbot-' + panelType + '-' + now + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    setInterval(() => { if (!sseActive) fetchDashboard(); }, 60000); // fallback only
+
+    // ── Charts ──
+    let activityChart, taskChart;
+
+    function initCharts() {
+      const ctx1 = document.getElementById('activityChart');
+      const ctx2 = document.getElementById('taskChart');
+      if (!ctx1 || !ctx2 || typeof Chart === 'undefined') return;
+
+      const labels7d = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        labels7d.push(d.toLocaleDateString('en-GB', { weekday: 'short' }));
+      }
+
+      activityChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: labels7d,
+          datasets: [{
+            label: 'Messages',
+            data: [0,0,0,0,0,0,0],
+            borderColor: '#768064',
+            backgroundColor: 'rgba(118,128,100,0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+          }, {
+            label: 'Actions',
+            data: [0,0,0,0,0,0,0],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#ffffff08' } },
+            y: { beginAtZero: true, ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#ffffff08' } }
+          }
+        }
+      });
+
+      taskChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pending', 'Urgent', 'Done'],
+          datasets: [{
+            data: [0, 0, 0],
+            backgroundColor: ['#eab308', '#ef4444', '#22c55e'],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, padding: 12 } } },
+          cutout: '65%',
+        }
+      });
+    }
+
+    function updateCharts(data) {
+      if (!activityChart || !taskChart) return;
+
+      // Update activity trend if data available
+      if (data.activityTrend && Array.isArray(data.activityTrend)) {
+        activityChart.data.datasets[0].data = data.activityTrend.map(d => d.messages || 0);
+        activityChart.data.datasets[1].data = data.activityTrend.map(d => d.actions || 0);
+        activityChart.update('none');
+      }
+
+      // Update task breakdown from maintenance data
+      if (data.maintenance && Array.isArray(data.maintenance)) {
+        const pending = data.maintenance.reduce((s, v) => s + (v.pending || 0), 0);
+        const urgent = data.maintenance.reduce((s, v) => s + (v.urgent || 0), 0);
+        const done = data.maintenance.reduce((s, v) => s + (v.done || 0), 0);
+        taskChart.data.datasets[0].data = [pending, urgent, done];
+        taskChart.update('none');
+      }
+    }
+
+    // Init charts on load
+    setTimeout(initCharts, 500);
+
+  </script>
+</body>
+</html>
