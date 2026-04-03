@@ -82,6 +82,34 @@ const TOOLS = [
     }
   },
   {
+    name: "calendar_delete_event",
+    description: "Delete a calendar event. Find by event ID or search by title first using calendar_get_events.",
+    input_schema: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "The event ID to delete (get from calendar_get_events)" },
+        title: { type: "string", description: "If no eventId, search by event title to find and delete" }
+      }
+    }
+  },
+  {
+    name: "calendar_update_event",
+    description: "Update an existing calendar event (change title, time, description, location, attendees).",
+    input_schema: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "The event ID to update (get from calendar_get_events)" },
+        title: { type: "string", description: "New event title (optional)" },
+        startTime: { type: "string", description: "New start time ISO 8601 (optional)" },
+        endTime: { type: "string", description: "New end time ISO 8601 (optional)" },
+        description: { type: "string", description: "New description (optional)" },
+        location: { type: "string", description: "New location (optional)" },
+        attendees: { type: "array", items: { type: "string" }, description: "Updated attendee emails (optional)" }
+      },
+      required: ["eventId"]
+    }
+  },
+  {
     name: "drive_search_files",
     description: "Search for files in Google Drive by name or keyword.",
     input_schema: {
@@ -247,7 +275,7 @@ const TOOLS = [
   },
   {
     name: "save_note",
-    description: "Save an important note or business information to agent memory for future reference.",
+    description: "Save an important note or business information to agent memory for future reference. NOTE: Do NOT use this to update villa lock codes, wifi passwords, electricity meters, or any villa utility data — use villa_update_utility instead.",
     input_schema: {
       type: "object",
       properties: {
@@ -256,6 +284,34 @@ const TOOLS = [
         tags: { type: "string", description: "Comma-separated tags e.g. 'guest,booking,important'" }
       },
       required: ["title", "body"]
+    }
+  },
+  {
+    name: "villa_update_utility",
+    description: "Update a villa's lock/security code, electricity meter number, electricity KWH usage, WiFi name, WiFi password, or WiFi speed. This PERMANENTLY updates the data shown on the villa property card. Use this — NOT save_note — whenever a user says things like: 'update lock code', 'change keybox code', 'new door code', 'update wifi password', 'update electricity meter', 'update meter number', 'update daya listrik'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        villa_name: { type: "string", description: "Full villa name e.g. 'Villa ANN', 'Villa ALYSSA', 'Villa LYSA'" },
+        field: {
+          type: "string",
+          enum: ["lock_code", "electricity_meter", "electricity_kwh", "wifi_name", "wifi_password", "wifi_mbps", "daya_listrik"],
+          description: "Which field to update: lock_code (door/keybox PIN), electricity_meter (meter serial number), electricity_kwh (current reading), wifi_name (SSID), wifi_password, wifi_mbps (internet speed), daya_listrik (electrical capacity in VA)"
+        },
+        value: { type: "string", description: "New value to set" }
+      },
+      required: ["villa_name", "field", "value"]
+    }
+  },
+  {
+    name: "villa_get_utilities",
+    description: "Read all current utility data for a villa: lock code, electricity meter, KWH, wifi name/password/speed.",
+    input_schema: {
+      type: "object",
+      properties: {
+        villa_name: { type: "string", description: "Villa name e.g. 'Villa ANN'" }
+      },
+      required: ["villa_name"]
     }
   },
   // ── Finance Tools ─────────────────────────────────────────────────────────
@@ -506,7 +562,191 @@ const TOOLS = [
     name: "maintenance_get_summary",
     description: "Get a summary of maintenance tasks per villa — shows open, in-progress, urgent counts and total costs. Good for a quick overview of which villas need the most attention.",
     input_schema: { type: "object", properties: {} }
+  },
+  {
+    name: "whatsapp_send_document",
+    description: "Send a Google Drive file to the current WhatsApp chat. DEFAULT: sends the file link (low cost). If user explicitly asks for the actual file/attachment, set sendFile=true to download and attach the document. Always prefer link unless user says send file, attach, or download.",
+    input_schema: {
+      type: "object",
+      properties: {
+        fileId: { type: "string", description: "Google Drive file ID (from drive_search_files result)" },
+        fileName: { type: "string", description: "Display name for the file" },
+        caption: { type: "string", description: "Optional message to send with the file" },
+        sendFile: { type: "boolean", description: "If true, download and attach the actual file. Default false = send Drive link only (preferred)." },
+        webViewLink: { type: "string", description: "Google Drive web link to the file (from drive_search_files result)" }
+      },
+      required: ["fileId"]
+    }
+  },
+
+  // ═══ WEB SCRAPING & RESEARCH ═══
+  {
+    name: "scrape_url",
+    description: "Scrape a webpage and extract structured content — title, text, links, images, prices, metadata, and JSON-LD structured data. Use for competitor research, checking villa listings on Airbnb/Booking.com, extracting content from supplier sites, or gathering information from any URL.",
+    input_schema: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "The URL to scrape" },
+        extract_type: { type: "string", enum: ["all", "text", "links", "images", "prices", "meta"], description: "What to extract. Default: all" }
+      },
+      required: ["url"]
+    }
+  },
+  {
+    name: "scrape_multiple",
+    description: "Scrape multiple URLs at once (max 5) and return structured content from each. Use for comparing competitor listings, gathering data from several villa sites, or batch research.",
+    input_schema: {
+      type: "object",
+      properties: {
+        urls: { type: "array", items: { type: "string" }, description: "List of URLs to scrape (max 5)" }
+      },
+      required: ["urls"]
+    }
+  },
+  {
+    name: "scrape_competitor_prices",
+    description: "Scrape a webpage specifically for pricing information. Extracts prices in IDR/Rp, USD/$, EUR/€, per-night rates, and Indonesian formats (juta/ribu). Use for competitor price monitoring on Airbnb, Booking.com, or villa rental sites.",
+    input_schema: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "The URL to scrape for pricing" }
+      },
+      required: ["url"]
+    }
   }
+,
+  {
+    name: "user_set_timezone",
+    description: "Set a user's timezone preference. Use when a user says 'set my timezone to...' or 'I am in timezone...'",
+    input_schema: {
+      type: "object",
+      properties: {
+        user_id: { type: "string", description: "User identifier (phone number or telegram ID)" },
+        timezone: { type: "string", description: "IANA timezone string e.g. 'Asia/Makassar', 'Europe/London', 'America/New_York'" }
+      },
+      required: ["user_id", "timezone"]
+    }
+  },
+  {
+    name: "user_set_language",
+    description: "Set a user's preferred language for AI responses",
+    input_schema: {
+      type: "object",
+      properties: {
+        user_id: { type: "string", description: "User identifier" },
+        language: { type: "string", description: "Language code e.g. 'en', 'id', 'nl'" }
+      },
+      required: ["user_id", "language"]
+    }
+  },
+  {
+    name: "user_get_settings",
+    description: "Get a user's settings (timezone, language, role, channel preferences)",
+    input_schema: {
+      type: "object",
+      properties: {
+        user_id: { type: "string", description: "User identifier" }
+      },
+      required: ["user_id"]
+    }
+  },
+// New Notion Todo tool definitions to append to tools.js
+
+  // ═══ NOTION TODO / TASK MANAGEMENT ═══
+  {
+    name: "todo_get_tasks",
+    description: "Get tasks from the team To Do list (Notion). Filter by status, priority, assignee. Use for: 'show my tasks', 'what's on the todo list', 'show tasks for Afni'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        status: { type: "string", enum: ["Not started", "In progress", "Done"], description: "Filter by task status" },
+        priority: { type: "string", enum: ["High", "Medium"], description: "Filter by priority level" },
+        assignee: { type: "string", description: "Filter by assignee name (Afni, Sof, Syifa)" },
+        limit: { type: "number", description: "Max tasks to return (default 50)" }
+      }
+    }
+  },
+  {
+    name: "todo_create_task",
+    description: "Create a new task in the team To Do list (Notion). Use for: 'add task', 'create todo', 'remind me to...'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        task_name: { type: "string", description: "The task title/name" },
+        assignee: { type: "string", description: "Who to assign it to (Afni, Sof, Syifa)" },
+        priority: { type: "string", enum: ["High", "Medium"], description: "Task priority" },
+        due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
+        description: { type: "string", description: "Additional details about the task" },
+        status: { type: "string", enum: ["Not started", "In progress", "Done"], description: "Initial status (default: Not started)" }
+      },
+      required: ["task_name"]
+    }
+  },
+  {
+    name: "todo_update_task",
+    description: "Update an existing task in the To Do list — change status, priority, assignee, due date. Use for: 'mark task as done', 'assign task to Syifa', 'change priority to high'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        task_id: { type: "string", description: "Notion page ID of the task to update" },
+        status: { type: "string", enum: ["Not started", "In progress", "Done"], description: "New status" },
+        priority: { type: "string", enum: ["High", "Medium"], description: "New priority" },
+        assignee: { type: "string", description: "New assignee (Afni, Sof, Syifa)" },
+        due_date: { type: "string", description: "New due date (YYYY-MM-DD)" },
+        description: { type: "string", description: "Updated description" },
+        task_name: { type: "string", description: "Updated task name" }
+      },
+      required: ["task_id"]
+    }
+  },
+  {
+    name: "todo_delete_task",
+    description: "Delete (archive) a task from the To Do list.",
+    input_schema: {
+      type: "object",
+      properties: {
+        task_id: { type: "string", description: "Notion page ID of the task to delete" }
+      },
+      required: ["task_id"]
+    }
+  },
+  {
+    name: "todo_get_summary",
+    description: "Get a summary of the team To Do list — total tasks, breakdown by status and assignee, overdue items. Use for: 'todo summary', 'task overview', 'how many tasks are open'.",
+    input_schema: { type: "object", properties: {} }
+  },
+
+  {
+    name: "generate_image",
+    description: "Generate an image using DALL-E 3. Use when user asks to create, draw, design, or generate any image, photo, visual, illustration, or graphic. Returns a URL to view/download the image.",
+    input_schema: {
+      type: "object",
+      properties: {
+        prompt: { type: "string", description: "Detailed description of the image to generate." },
+        size: { type: "string", enum: ["1024x1024", "1792x1024", "1024x1792"], description: "Image size. Default: 1024x1024." },
+        style: { type: "string", enum: ["natural", "vivid"], description: "natural = realistic, vivid = dramatic. Default: natural." },
+        quality: { type: "string", enum: ["standard", "hd"], description: "standard or hd. Default: standard." }
+      },
+      required: ["prompt"]
+    }
+  },
+  {
+    name: "get_notes",
+    description: "Retrieve saved notes, optionally filtered by business or namespace.",
+    input_schema: {
+      type: "object",
+      properties: {
+        namespace: { type: "string", description: "Filter by business/context (e.g. 'villa-ops'). Omit for all." },
+        limit: { type: "number", description: "Max notes to return. Default: 20." }
+      }
+    }
+  },
+  {
+    name: "list_businesses",
+    description: "List all business namespaces stored in memory.",
+    input_schema: { type: "object", properties: {} }
+  }
+
 ];
 
 module.exports = TOOLS;
