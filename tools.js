@@ -219,7 +219,7 @@ const TOOLS = [
   },
   {
     name: "sheets_write_data",
-    description: "Write/overwrite data to specific cells in a Google Spreadsheet.",
+    description: "Write/overwrite data to specific cells in a Google Spreadsheet. DO NOT use against the Staff Sheet (1oJzztdHyOPR2XD6zS2ma942U-u6i1nsE_G5sccGeFJw) or Internal Sheet (1Whlirqo52ve-hMvvllRVLYaUOwAiOTXK6lgCa1xCurQ) — use finance_log_* tools instead to avoid writing into formula cells.",
     input_schema: {
       type: "object",
       properties: {
@@ -232,7 +232,7 @@ const TOOLS = [
   },
   {
     name: "sheets_append_row",
-    description: "Append a new row to the end of a Google Spreadsheet sheet.",
+    description: "Append a new row to the end of a Google Spreadsheet sheet. DO NOT use against the Staff Sheet (1oJzztdHyOPR2XD6zS2ma942U-u6i1nsE_G5sccGeFJw) or Internal Sheet (1Whlirqo52ve-hMvvllRVLYaUOwAiOTXK6lgCa1xCurQ) — use finance_log_variable / finance_log_recurring / finance_log_income / finance_log_expense instead; generic append lands thousands of rows below the visible data.",
     input_schema: {
       type: "object",
       properties: {

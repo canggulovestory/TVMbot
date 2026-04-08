@@ -1082,6 +1082,21 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
 
       case 'sheets_write_data': {
         if (!sheets) throw new Error('Sheets integration not loaded');
+        // ── GUARD: block generic write against the finance template sheets ──
+        {
+          const FINANCE_STAFF = '1oJzztdHyOPR2XD6zS2ma942U-u6i1nsE_G5sccGeFJw';
+          const FINANCE_INTERNAL = '1Whlirqo52ve-hMvvllRVLYaUOwAiOTXK6lgCa1xCurQ';
+          if (toolInput.spreadsheetId === FINANCE_STAFF || toolInput.spreadsheetId === FINANCE_INTERNAL) {
+            const which = toolInput.spreadsheetId === FINANCE_STAFF ? 'Staff Sheet' : 'Internal Sheet';
+            result = {
+              success: false,
+              error: `sheets_write_data is disabled for the ${which} to protect formula cells and ensure writes land in the visible data region. Use finance_log_variable, finance_log_recurring, finance_log_income, or finance_log_expense instead.`,
+              spreadsheetId: toolInput.spreadsheetId,
+              blockedBy: 'finance_template_guard'
+            };
+            break;
+          }
+        }
         // Defensive parse: Claude sometimes sends values as a JSON string instead of an array
         if (typeof toolInput.values === 'string') {
           try { toolInput.values = JSON.parse(toolInput.values); } catch(e) { /* leave as-is */ }
@@ -1130,6 +1145,25 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
 
       case 'sheets_append_row': {
         if (!sheets) throw new Error('Sheets integration not loaded');
+        // ── GUARD: Block generic append against the finance template sheets ──
+        // The Staff and Internal sheets have large pre-populated grids with
+        // placeholder values that confuse Google's append auto-detection, so
+        // spreadsheets.values.append writes far below the visible data region
+        // (observed: row 10008 in Variable Expenses). Use the dedicated
+        // finance_log_* tools instead — they use findEmptyRow + values.update
+        // and land in the visible region.
+        const FINANCE_STAFF = '1oJzztdHyOPR2XD6zS2ma942U-u6i1nsE_G5sccGeFJw';
+        const FINANCE_INTERNAL = '1Whlirqo52ve-hMvvllRVLYaUOwAiOTXK6lgCa1xCurQ';
+        if (toolInput.spreadsheetId === FINANCE_STAFF || toolInput.spreadsheetId === FINANCE_INTERNAL) {
+          const which = toolInput.spreadsheetId === FINANCE_STAFF ? 'Staff Sheet' : 'Internal Sheet';
+          result = {
+            success: false,
+            error: `sheets_append_row is disabled for the ${which} because the template grid causes appends to land thousands of rows below the visible data. Use one of: finance_log_variable, finance_log_recurring, finance_log_income, or finance_log_expense instead.`,
+            spreadsheetId: toolInput.spreadsheetId,
+            blockedBy: 'finance_template_guard'
+          };
+          break;
+        }
         // UPGRADE #1: Validator — check appended row format
         if (validator && toolInput.values) {
           try {
