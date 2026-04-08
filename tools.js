@@ -564,6 +564,18 @@ const TOOLS = [
     input_schema: { type: "object", properties: {} }
   },
   {
+    name: "whatsapp_send_direct",
+    description: "Send a WhatsApp text message to a specific phone number. ONLY use this when the operator EXPLICITLY says 'send WhatsApp to <number>' or similar. NEVER use it for autonomous follow-ups, reminders, or proactive messages. The system will show a preview and require explicit yes/no confirmation before the message is actually delivered. Do NOT rephrase, summarize, or improve the user's message — pass it through verbatim. After this tool is called the assistant MUST stop and output ONLY the preview text returned by the tool.",
+    input_schema: {
+      type: "object",
+      properties: {
+        phone_number: { type: "string", description: "Recipient phone number in any format (e.g. '+6281234567890', '081234567890', '6281234567890'). Will be normalized to international format." },
+        message: { type: "string", description: "The exact text to send. Pass verbatim — do not rewrite." }
+      },
+      required: ["phone_number", "message"]
+    }
+  },
+  {
     name: "whatsapp_send_document",
     description: "Send a Google Drive file to the current WhatsApp chat. DEFAULT: sends the file link (low cost). If user explicitly asks for the actual file/attachment, set sendFile=true to download and attach the document. Always prefer link unless user says send file, attach, or download.",
     input_schema: {

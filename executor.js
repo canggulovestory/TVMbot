@@ -144,12 +144,41 @@ function _getEventBus() {
   return _execEventBus;
 }
 
+// ── Group Action → Tool Mapping (hard enforcement) ──────────────────────────
+const ACTION_TOOL_MAP = {
+  sheet_write: ['sheets_write_data','sheets_append_row','finance_log_payment','finance_log_expense',
+                'finance_log_variable','finance_log_recurring','finance_log_income','finance_mark_invoice_paid',
+                'finance_generate_invoice','finance_update_bank_balance','finance_sync_expenses'],
+  inquiry_search: ['sheets_read_data','drive_search_files','drive_find_passport','drive_scan_folder'],
+  reminder: ['calendar_create_event','calendar_update_event','calendar_delete_event'],
+  automation: ['gmail_send_message','docs_create_document','docs_update_document','docs_create_contract',
+               'drive_create_folder','drive_delete_file','notion_create_page']
+};
+
+function isToolBlockedByGroup(toolName) {
+  const grpCfg = global.__tvmbot_current_group_cfg;
+  if (!grpCfg || !grpCfg.allowed_actions) return null; // no restrictions
+  for (const [action, tools] of Object.entries(ACTION_TOOL_MAP)) {
+    if (tools.includes(toolName) && !grpCfg.allowed_actions.includes(action)) {
+      return action; // blocked — return the action category name
+    }
+  }
+  return null; // allowed
+}
+
 async function executeTool(toolName, toolInput, userEmail = 'unknown') {
   const startTime = Date.now();
   let result;
   let status = 'SUCCESS';
 
   try {
+    // ── Hard group action enforcement ──────────────────────────────────────
+    const blockedAction = isToolBlockedByGroup(toolName);
+    if (blockedAction) {
+      console.log(`[Executor] BLOCKED: ${toolName} — action "${blockedAction}" not allowed in this group`);
+      return { success: false, error: `Action "${blockedAction}" is not enabled for this group. Ask a group admin to enable it with: @bot allow ${blockedAction}` };
+    }
+
     console.log(`[Executor] Running: ${toolName}`, JSON.stringify(toolInput).slice(0, 120));
 
     switch (toolName) {
@@ -564,6 +593,49 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
 
         const report = memory.getPLReport(startDate, endDate);
         result = report;
+        break;
+      }
+
+      // ── WhatsApp Direct Send (operator-initiated, requires confirmation) ────
+      case 'whatsapp_send_direct': {
+        const rawPhone = String(toolInput.phone_number || '').trim();
+        const messageText = String(toolInput.message || '').trim();
+        if (!rawPhone) { result = { success: false, error: 'phone_number is required' }; break; }
+        if (!messageText) { result = { success: false, error: 'message is required' }; break; }
+
+        // Normalize phone → E.164-ish digits + leading +
+        let digits = rawPhone.replace(/\D/g, '');
+        // Indonesian convention: leading 0 → 62
+        if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+        // Strip any leading 00 international prefix
+        if (digits.startsWith('00')) digits = digits.slice(2);
+        if (digits.length < 8 || digits.length > 15) {
+          result = { success: false, error: `Phone number "${rawPhone}" looks invalid after normalization (${digits}).` };
+          break;
+        }
+        const normalized = '+' + digits;
+
+        // Stash pending send keyed by current session — server intercepts on next message.
+        const sid = global.__tvmbot_current_session || null;
+        const pending = global.__tvmbot_pendingDirectSends;
+        if (sid && pending) {
+          pending.set(sid, { phone: normalized, message: messageText, createdAt: Date.now() });
+        }
+
+        const previewText =
+          '📤 *WhatsApp send preview*\n' +
+          'To: ' + normalized + '\n' +
+          'Message:\n' + messageText + '\n\n' +
+          'Send this message? (yes/no)';
+
+        result = {
+          pending_direct_send: true,
+          phone: normalized,
+          message: messageText,
+          preview: previewText,
+          // The agent loop reads this field and short-circuits — see runPEMSAgent.
+          stop_and_reply: previewText
+        };
         break;
       }
 
@@ -1005,6 +1077,10 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
 
       case 'sheets_write_data': {
         if (!sheets) throw new Error('Sheets integration not loaded');
+        // Defensive parse: Claude sometimes sends values as a JSON string instead of an array
+        if (typeof toolInput.values === 'string') {
+          try { toolInput.values = JSON.parse(toolInput.values); } catch(e) { /* leave as-is */ }
+        }
         // UPGRADE #1: Validator pre-write gate — protect formulas
         if (validator) {
           try {

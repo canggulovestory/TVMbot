@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TVMbot Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f9fc;
+      --surface: #ffffff;
+      --border: #e8eaed;
+      --border-light: #f1f3f5;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --green: #10b981;
+      --green-light: #d1fae5;
+      --blue: #3b82f6;
+      --blue-light: #dbeafe;
+      --amber: #f59e0b;
+      --amber-light: #fef3c7;
+      --red: #ef4444;
+      --red-light: #fee2e2;
+      --purple: #8b5cf6;
+      --purple-light: #ede9fe;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Top Nav ── */
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .nav-brand .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--green-light);
+      color: #065f46;
+    }
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    .status-pill.connecting { background: var(--amber-light); color: #92400e; }
+    .status-pill.connecting .dot { background: var(--amber); animation: none; }
+    .status-pill.error { background: var(--red-light); color: #991b1b; }
+    .status-pill.error .dot { background: var(--red); animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .nav-link {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+    .nav-link:hover { background: var(--bg); color: var(--text-primary); }
+    .nav-link.active { background: var(--blue-light); color: var(--blue); }
+
+    /* ── Layout ── */
+    .page { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── Stats Row ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    .stat-value.loading { color: var(--border); }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 8px;
+    }
+    .badge-green { background: var(--green-light); color: #065f46; }
+    .badge-red { background: var(--red-light); color: #991b1b; }
+    .badge-blue { background: var(--blue-light); color: #1d4ed8; }
+
+    /* ── Main Grid ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .main-grid .span-2 { grid-column: span 2; }
+    @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr 1fr; } .main-grid .span-2 { grid-column: span 2; } }
+    @media (max-width: 700px) { .main-grid { grid-template-columns: 1fr; } .main-grid .span-2 { grid-column: span 1; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .card-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .icon-blue { background: var(--blue-light); }
+    .icon-green { background: var(--green-light); }
+    .icon-amber { background: var(--amber-light); }
+    .icon-purple { background: var(--purple-light); }
+    .icon-red { background: var(--red-light); }
+
+    .card-action {
+      font-size: 11px;
+      color: var(--blue);
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .card-action:hover { background: var(--blue-light); }
+    .card-body { padding: 16px 20px; }
+
+    /* ── Tables ── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      text-align: left;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 10px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-primary);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--bg); }
+
+    /* ── Status badges ── */
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-green { background: var(--green-light); color: #065f46; }
+    .tag-red { background: var(--red-light); color: #991b1b; }
+    .tag-amber { background: var(--amber-light); color: #92400e; }
+    .tag-blue { background: var(--blue-light); color: #1d4ed8; }
+    .tag-gray { background: var(--border-light); color: var(--text-secondary); }
+
+    /* ── Activity Feed ── */
+    .activity-list { padding: 0; }
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-light);
+      transition: background 0.15s;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: var(--bg); }
+    .activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .activity-content { flex: 1; min-width: 0; }
+    .activity-msg {
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .activity-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── Integration status ── */
+    .integration-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .integration-row:last-child { border-bottom: none; }
+    .integration-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .int-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      background: var(--bg);
+    }
+
+    /* ── Empty / Loading states ── */
+    .empty-state {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .empty-state .es-icon { font-size: 28px; margin-bottom: 8px; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--border-light) 25%, var(--border) 50%, var(--border-light) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+      height: 14px;
+      margin: 4px 0;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── Time filters ── */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+    }
+    .filter-btn {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    /* ── Refresh button ── */
+    .refresh-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+    }
+    .refresh-btn:hover { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+    .refresh-btn.spinning { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Uptime bar ── */
+    .uptime-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .uptime-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 2px;
+      transition: width 0.6s ease;
+    }
+
+    /* ── Financial KPIs ── */
+    .kpi-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .kpi-row:last-child { border-bottom: none; }
+    .kpi-label { font-size: 13px; color: var(--text-secondary); }
+    .kpi-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav class="nav">
+  <a href="/" class="nav-brand">
+    <div class="logo-icon">TV</div>
+    <span>TVMbot</span>
+  </a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">Chat</a>
+    <a href="/dashboard" class="nav-link active">Dashboard</a>
+    <div class="status-pill connecting" id="status-pill">
+      <div class="dot"></div>
+      <span id="status-text">Connecting...</span>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" title="Refresh data" onclick="loadAll()">↻</button>
+  </div>
+</nav>
+
+<!-- ── Page ── -->
+<div class="page">
+  <div class="page-header">
+    <h1>Operations Dashboard</h1>
+    <p id="last-updated">Loading data...</p>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Villas</div>
+      <div class="stat-value" id="stat-villas">—</div>
+      <div class="stat-sub">Registered properties</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Upcoming Bookings</div>
+      <div class="stat-value" id="stat-bookings">—</div>
+      <div class="stat-sub">Next 30 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Sessions</div>
+      <div class="stat-value" id="stat-sessions">—</div>
+      <div class="stat-sub">Chat sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">System Uptime</div>
+      <div class="stat-value" id="stat-uptime">—</div>
+      <div class="stat-sub" id="stat-uptime-sub">Checking...</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Recent Activity -->
+    <div class="card span-2">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon icon-blue">📋</div>
+          Recent Activity
+        </div>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setFilter('today', this)">Today</button>
+          <button class="filter-btn" onclick="setFilter('7d', this)">7 Days</button>
+          <button class="filter-btn" onclick="setFilter('30d', this)">30 Days</button>
+        </div>
+      </div>
+      <div id="activity-list">
+        <div class="empty-state"><div class="es-icon">⏳</div>Loading activity...</div>
+      </div>
+    </div>
+
+    <!-- Integrations -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon icon-green">🔌</div>
+          Integrations
+        </div>
+      </div>
+      <div id="integrations-list">
+        <div class="integration-row"><div class="integration-name"><div class="int-icon">📧</div>Gmail</div><div class="skeleton" style="width:60px;height:20px;border-radius:20px"></div></div>
+        <div class="integration-row"><div class="integration-name"><div class="int-icon">📅</div>Calendar</div><div class="skeleton" style="width:60px;height:20px;border-radius:20px"></div></div>
+        <div class="integration-row"><div class="integration-name"><div class="int-icon">📁</div>Drive</div><div class="skeleton" style="width:60px;height:20px;border-radius:20px"></div></div>
+        <div class="integration-row"><div class="integration-name"><div class="int-icon">📊</div>Sheets</div><div class="skeleton" style="width:60px;height:20px;border-radius:20px"></div></div>
+        <div class="integration-row"><div class="integration-name"><div class="int-icon">💬</div>WhatsApp</div><div class="skeleton" style="width:60px;height:20px;border-radius:20px"></div></div>
+      </div>
+    </div>
+
+    <!-- Maintenance -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon icon-amber">🔧</div>
+          Maintenance
+        </div>
+        <a href="/" class="card-action">View all →</a>
+      </div>
+      <div id="maintenance-body">
+        <div class="empty-state"><div class="es-icon">⏳</div>Loading...</div>
+      </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon icon-green">💰</div>
+          Financial Summary
+        </div>
+        <a href="/" class="card-action">Full report →</a>
+      </div>
+      <div class="card-body" id="financial-body">
+        <div class="kpi-row"><span class="kpi-label">Upcoming Payments</span><span class="kpi-value" id="fin-payments">—</span></div>
+        <div class="kpi-row"><span class="kpi-label">Active Rentals</span><span class="kpi-value" id="fin-rentals">—</span></div>
+        <div class="kpi-row"><span class="kpi-label">Villas Tracked</span><span class="kpi-value" id="fin-villas">—</span></div>
+      </div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="card span-2">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon icon-purple">🏠</div>
+          Upcoming Bookings
+        </div>
+        <a href="/" class="card-action">Check bookings →</a>
+      </div>
+      <div id="bookings-body">
+        <div class="empty-state"><div class="es-icon">⏳</div>Loading bookings...</div>
+      </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon icon-blue">🖥️</div>
+          System Health
+        </div>
+      </div>
+      <div class="card-body" id="health-body">
+        <div class="kpi-row"><span class="kpi-label">Status</span><span class="kpi-value" id="h-status">—</span></div>
+        <div class="kpi-row"><span class="kpi-label">Model</span><span class="kpi-value" id="h-model" style="font-size:11px">—</span></div>
+        <div class="kpi-row"><span class="kpi-label">Owner</span><span class="kpi-value" id="h-owner">—</span></div>
+        <div class="kpi-row"><span class="kpi-label">Version</span><span class="kpi-value" id="h-version">—</span></div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px;margin-bottom:4px">UPTIME</div>
+          <div class="uptime-bar"><div class="uptime-fill" id="uptime-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-grid -->
+</div><!-- /page -->
+
+<script>
+// ── State ──
+let currentFilter = 'today';
+let allDecisions = [];
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderActivity();
+}
+
+// ── Helpers ──
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(String(s)));
+  return d.innerHTML;
+}
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return `${Math.round(diff)}s ago`;
+  if (diff < 3600) return `${Math.round(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.round(diff/3600)}h ago`;
+  return `${Math.round(diff/86400)}d ago`;
+}
+function formatUptime(sec) {
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+  if (h > 24) return `${Math.floor(h/24)}d ${h%24}h`;
+  return `${h}h ${m}m`;
+}
+function dotColor(level) {
+  const map = { critical:'var(--red)', warning:'var(--amber)', info:'var(--blue)', success:'var(--green)' };
+  return map[level] || 'var(--text-muted)';
+}
+function tagByLevel(level) {
+  const map = { critical:'tag-red', warning:'tag-amber', info:'tag-blue', success:'tag-green' };
+  return `<span class="tag ${map[level]||'tag-gray'}">${escHtml(level||'info')}</span>`;
+}
+
+// ── Status ──
+async function loadStatus() {
+  try {
+    const r = await fetch('/status');
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+
+    // Pill
+    const pill = document.getElementById('status-pill');
+    pill.className = 'status-pill';
+    document.getElementById('status-text').textContent = d.status === 'online' ? 'Online' : d.status;
+    if (d.status !== 'online') pill.classList.add('error');
+
+    // Stats
+    document.getElementById('stat-villas').textContent = d.villas ?? '—';
+    document.getElementById('stat-bookings').textContent = d.upcomingBookings ?? '—';
+    document.getElementById('stat-sessions').textContent = d.activeSessions ?? '—';
+
+    // Uptime
+    if (d.uptime) {
+      const uptimeStr = formatUptime(d.uptime);
+      document.getElementById('stat-uptime').textContent = uptimeStr;
+      document.getElementById('stat-uptime-sub').textContent = 'Since last restart';
+      const pct = Math.min(100, (d.uptime / (7*86400)) * 100);
+      document.getElementById('uptime-bar').style.width = pct + '%';
+    }
+
+    // Health panel
+    document.getElementById('h-status').innerHTML = `<span class="tag tag-green">${escHtml(d.status)}</span>`;
+    document.getElementById('h-model').textContent = d.model || '—';
+    document.getElementById('h-owner').textContent = d.owner || '—';
+    document.getElementById('h-version').textContent = d.version || '—';
+
+    document.getElementById('last-updated').textContent = `Last updated ${new Date().toLocaleTimeString()}`;
+  } catch(e) {
+    const pill = document.getElementById('status-pill');
+    pill.className = 'status-pill error';
+    document.getElementById('status-text').textContent = 'Offline';
+  }
+}
+
+// ── Activity ──
+async function loadActivity() {
+  try {
+    const r = await fetch('/api/decisions?limit=50');
+    if (!r.ok) throw new Error();
+    allDecisions = await r.json();
+    renderActivity();
+  } catch {
+    document.getElementById('activity-list').innerHTML =
+      '<div class="empty-state"><div class="es-icon">📋</div>No activity data available</div>';
+  }
+}
+
+function renderActivity() {
+  const now = Date.now();
+  const cutoffs = { today: 86400000, '7d': 7*86400000, '30d': 30*86400000 };
+  const cutoff = cutoffs[currentFilter] || 86400000;
+  const filtered = allDecisions.filter(d => {
+    const t = new Date(d.created_at || d.timestamp || 0).getTime();
+    return now - t < cutoff;
+  }).slice(0, 15);
+
+  if (!filtered.length) {
+    document.getElementById('activity-list').innerHTML =
+      '<div class="empty-state"><div class="es-icon">💤</div>No activity in this period</div>';
+    return;
+  }
+  document.getElementById('activity-list').innerHTML = filtered.map(d => `
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${dotColor(d.level||'info')}"></div>
+      <div class="activity-content">
+        <div class="activity-msg">${escHtml(d.action || d.intent || d.message || 'Agent action')}</div>
+        <div class="activity-time">${timeAgo(d.created_at || d.timestamp)} &nbsp;·&nbsp; ${escHtml(d.tool || d.agent || '')}</div>
+      </div>
+      ${tagByLevel(d.level)}
+    </div>`).join('');
+}
+
+// ── Integrations ──
+async function loadIntegrations() {
+  try {
+    const r = await fetch('/api/integrations/status');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const icons = { gmail:'📧', calendar:'📅', drive:'📁', sheets:'📊', whatsapp:'💬', notion:'📝' };
+    const names = Object.keys(d);
+    if (!names.length) throw new Error();
+    document.getElementById('integrations-list').innerHTML = names.map(k => {
+      const ok = d[k];
+      return `<div class="integration-row">
+        <div class="integration-name"><div class="int-icon">${icons[k]||'��'}</div>${escHtml(k.charAt(0).toUpperCase()+k.slice(1))}</div>
+        <span class="tag ${ok ? 'tag-green' : 'tag-red'}">${ok ? 'Connected' : 'Offline'}</span>
+      </div>`;
+    }).join('');
+  } catch {
+    // Show static from /status info
+    const intList = [
+      {k:'gmail', icon:'📧'},{k:'calendar', icon:'📅'},{k:'drive', icon:'📁'},
+      {k:'sheets', icon:'📊'},{k:'whatsapp', icon:'💬'}
+    ];
+    document.getElementById('integrations-list').innerHTML = intList.map(i =>
+      `<div class="integration-row">
+        <div class="integration-name"><div class="int-icon">${i.icon}</div>${i.k.charAt(0).toUpperCase()+i.k.slice(1)}</div>
+        <span class="tag tag-gray">Unknown</span>
+      </div>`).join('');
+  }
+}
+
+// ── Bookings ──
+async function loadBookings() {
+  try {
+    const r = await fetch('/api/bookings/upcoming');
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const bookings = data.bookings || data || [];
+    if (!bookings.length) {
+      document.getElementById('bookings-body').innerHTML =
+        '<div class="empty-state"><div class="es-icon">🏠</div>No upcoming bookings</div>';
+      return;
+    }
+    document.getElementById('bookings-body').innerHTML = `
+      <table class="data-table">
+        <thead><tr>
+          <th>Guest</th><th>Villa</th><th>Check-in</th><th>Check-out</th><th>Status</th>
+        </tr></thead>
+        <tbody>${bookings.slice(0,8).map(b => `<tr>
+          <td>${escHtml(b.guest_name||b.guest||'—')}</td>
+          <td>${escHtml(b.villa_name||b.villa||'—')}</td>
+          <td>${escHtml(b.check_in||'—')}</td>
+          <td>${escHtml(b.check_out||'—')}</td>
+          <td><span class="tag ${b.status==='confirmed'?'tag-green':b.status==='pending'?'tag-amber':'tag-gray'}">${escHtml(b.status||'—')}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    document.getElementById('stat-bookings').textContent = bookings.length;
+  } catch {
+    document.getElementById('bookings-body').innerHTML =
+      '<div class="empty-state"><div class="es-icon">🏠</div>Could not load bookings</div>';
+  }
+}
+
+// ── Financial ──
+async function loadFinancial() {
+  try {
+    const r = await fetch('/api/memory/rentals');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const rentals = d.rentals || [];
+    document.getElementById('fin-rentals').textContent = rentals.filter(r=>r.status==='active').length;
+    document.getElementById('fin-payments').textContent = rentals.filter(r=>r.next_payment).length;
+  } catch { /* leave as — */ }
+
+  try {
+    const r2 = await fetch('/status');
+    const d2 = await r2.json();
+    document.getElementById('fin-villas').textContent = d2.villas ?? '—';
+  } catch {}
+}
+
+// ── Maintenance ──
+async function loadMaintenance() {
+  try {
+    const r = await fetch('/api/memory/villas');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const villas = d.villas || [];
+    if (!villas.length) {
+      document.getElementById('maintenance-body').innerHTML =
+        '<div class="empty-state"><div class="es-icon">🔧</div>No villas registered</div>';
+      return;
+    }
+    document.getElementById('maintenance-body').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Villa</th><th>Status</th></tr></thead>
+        <tbody>${villas.slice(0,6).map(v=>`<tr>
+          <td>${escHtml(v.name||'—')}</td>
+          <td><span class="tag tag-green">Active</span></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  } catch {
+    document.getElementById('maintenance-body').innerHTML =
+      '<div class="empty-state"><div class="es-icon">🔧</div>Could not load data</div>';
+  }
+}
+
+// ── Load All ──
+async function loadAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  await Promise.allSettled([
+    loadStatus(),
+    loadActivity(),
+    loadIntegrations(),
+    loadBookings(),
+    loadFinancial(),
+    loadMaintenance()
+  ]);
+  btn.classList.remove('spinning');
+}
+
+// ── Init ──
+loadAll();
+setInterval(loadAll, 30000); // refresh every 30s
+</script>
+</body>
+</html>

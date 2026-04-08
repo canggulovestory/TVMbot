@@ -173,16 +173,27 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
 
-// Auth middleware — LOGIN DISABLED (re-enable when needed, original below)
+// Auth middleware — fully enforced
+const OPEN_PATHS = [
+  '/login.html', '/auth/login', '/auth/logout',
+  '/favicon.svg', '/webhook/gmail',
+  '/api/email-watcher/poll', '/api/email-watcher/start-watch'
+];
+
 function requireAuth(req, res, next) {
-  if (req.session && !req.session.loggedIn) {
-    req.session.loggedIn = true;
-    req.session.username = 'admin';
+  // Always allow open paths and static assets (js/, css/, etc.)
+  if (OPEN_PATHS.includes(req.path)) return next();
+  if (req.path.startsWith('/js/') || req.path.startsWith('/css/') || req.path.startsWith('/assets/')) return next();
+  // Allow if already authenticated
+  if (req.session && req.session.loggedIn) return next();
+  // API requests → 401 JSON (frontend fetch interceptor handles session_expired)
+  if (req.path.startsWith('/api/') || req.path.startsWith('/chat') || req.path.startsWith('/upload')) {
+    return res.status(401).json({ error: 'Not authenticated', session_expired: true });
   }
-  return next();
+  // Browser page requests → redirect to login
+  return res.redirect('/login.html');
 }
 app.use(requireAuth);
-// ORIGINAL: const open=[...]; if(open.includes(req.path))return next(); if(req.session&&req.session.loggedIn)return next(); res.redirect('/login.html');
 // ─── CSRF Protection ───────────────────────────────────────────────────────────
 const crypto = require('crypto');
 function generateCsrfToken(session) {
@@ -285,9 +296,22 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
+// ─── NO AUTONOMOUS MODE ───────────────────────────────────────────────────────
+// Global kill switch — when true, the bot acts as a TOOL only, never on its own.
+// No cron jobs, no proactive monitor sends, no background daemon WhatsApp sends.
+// Defaults to TRUE. Override with NO_AUTONOMOUS_MODE=false in .env to re-enable.
+const NO_AUTONOMOUS_MODE = (process.env.NO_AUTONOMOUS_MODE || 'true').toLowerCase() !== 'false';
+global.__tvmbot_no_autonomous = NO_AUTONOMOUS_MODE;
+console.log(`[Boot] NO_AUTONOMOUS_MODE = ${NO_AUTONOMOUS_MODE} (autonomous WhatsApp sends ${NO_AUTONOMOUS_MODE ? 'BLOCKED' : 'allowed'})`);
+
 // ─── Session Store ────────────────────────────────────────────────────────────
 const sessions = new Map();
 const pendingApprovals = new Map(); // sessionId → { plan, resolve, reject, timestamp }
+// Pending direct WhatsApp sends awaiting yes/no confirmation
+// sessionId → { phone: '+628...', message: '...', createdAt: timestamp }
+const pendingDirectSends = new Map();
+global.__tvmbot_pendingDirectSends = pendingDirectSends;
+const PENDING_SEND_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // Session limits to prevent memory leaks on long-running PM2 processes
 const SESSION_MAX_COUNT = 100;
@@ -327,6 +351,23 @@ setInterval(() => {
     }
   }
 }, 10 * 60 * 1000);
+
+// ─── Reply Cleanup — collapse excessive blank lines ───────────────────────────
+function cleanReply(text) {
+  if (!text) return text;
+  // Normalize CRLF / CR to LF
+  text = text.replace(/\r\n?/g, '\n');
+  // Strip trailing whitespace from each line (some lines have trailing spaces that defeat the regex)
+  text = text.split('\n').map(l => l.replace(/[ \t]+$/, '')).join('\n');
+  // Collapse 3+ consecutive newlines → max 2 (one blank line)
+  text = text.replace(/\n{3,}/g, '\n\n');
+  // Remove blank lines between list items (run twice to catch sequences)
+  for (let i = 0; i < 3; i++) {
+    text = text.replace(/\n\n([ \t]*[-•*][ \t])/g, '\n$1');
+    text = text.replace(/\n\n([ \t]*\d+[.)][ \t])/g, '\n$1');
+  }
+  return text.trim();
+}
 
 // ─── Build System Prompt ───────────────────────────────────────────────────────
 function buildSystemPrompt(memoryCtx) {
@@ -392,6 +433,15 @@ EXECUTION RULES:
 5. After completing tasks, confirm briefly what was done. Keep confirmations SHORT on WhatsApp.
 6. Save important discoveries to memory using save_note
 7. If a task is unclear, ask ONE short clarifying question before proceeding
+13. TASK ROUTING (CRITICAL): When user says "make a task", "add to task list", "create a checklist", "follow this up", "assign this", "track this", "to-do" — ALWAYS use todo_create_task to save it to Notion. Do NOT just output text. The task must be saved. Confirm with the Notion URL from the result.
+14. TOOL-NOT-ASSISTANT MODE (CRITICAL): You are a TOOL. You execute exactly what the operator says — nothing more.
+    - NEVER initiate, propose follow-ups, remind, ping, or send unsolicited messages.
+    - NEVER continue a topic on your own. If the operator did not ask, do not act.
+    - NEVER add commentary, suggestions, or "next steps" after completing a request unless asked.
+    - When the operator says "send WhatsApp to <number>: <message>", call whatsapp_send_direct with phone_number and message VERBATIM. Do not paraphrase, polish, or expand the message.
+    - The whatsapp_send_direct tool returns a preview that ends with "Send this message? (yes/no)". When you receive that result, output the preview text EXACTLY as returned and STOP. Do not call any other tool. Do not add anything before or after.
+    - After the operator confirms with "yes", the system handles the actual send and the assistant is not invoked again for that turn. Do not preempt this.
+    - After a successful send the only acceptable acknowledgement is "Sent to +<number>." — nothing else.
 8. ALWAYS use info@thevillamanagers.com for everything — emails, calendar, payment reminders, contracts, maintenance, schedules. NEVER use any personal email address.
 9. For scheduled/cron tasks: check what was already processed. Do NOT send duplicate notifications for the same item.
 10. Check Google Sheets and internal data FIRST before using general knowledge. Local data is always more authoritative.
@@ -901,22 +951,41 @@ function filterToolsForQuery(userMessage) {
       tools: ['notion_get_pages', 'notion_create_page']
     },
     todo: {
-      keywords: ['todo', 'task', 'to do', 'to-do', 'assign', 'assignee', 'overdue', 'kanban', 'checklist'],
+      keywords: ['todo', 'task', 'to do', 'to-do', 'assign', 'assignee', 'overdue', 'kanban', 'checklist', 'follow up', 'follow this up', 'track this', 'remind me to', 'add to my list'],
       tools: ['todo_get_tasks', 'todo_create_task', 'todo_update_task', 'todo_delete_task', 'todo_get_summary']
     },
     villa_utility: {
       keywords: ['lock', 'code', 'keybox', 'key box', 'door code', 'pin', 'electricity', 'meter', 'kwh', 'wifi', 'password', 'daya listrik', 'update lock', 'update code', 'update meter', 'kode', 'sandi', 'listrik'],
       tools: ['villa_update_utility', 'villa_get_utilities']
+    },
+    whatsapp: {
+      keywords: [
+        'whatsapp', 'wa', 'send wa', 'kirim wa', 'kirim whatsapp', 'send whatsapp',
+        'wa to', 'wa ke', 'send to +', 'kirim ke +', 'message +', 'pesan ke +',
+        'send a wa', 'send a whatsapp', 'text +', 'dm +', 'kirim pesan'
+      ],
+      tools: ['whatsapp_send_direct', 'whatsapp_send_document']
     }
   };
+
+  // Force-include whatsapp tools when message contains a phone number AND a send verb
+  const phoneRegex = /(?:\+?62|\+?\d{1,3}[\s-]?)?\d[\d\s().-]{6,}\d/;
+  const sendVerb = /(send|kirim|text|dm|message|pesan|forward|teruskan)\b/i;
+  if (phoneRegex.test(userMessage) && sendVerb.test(userMessage)) {
+    // Pre-include whatsapp tools
+    if (!toolGroups.whatsapp) {
+      toolGroups.whatsapp = { keywords: [], tools: ['whatsapp_send_direct', 'whatsapp_send_document'] };
+    }
+    toolGroups.whatsapp.__forced = true;
+  }
 
   // Always include these core tools (tiny overhead)
   const selectedTools = new Set(['get_owner_profile', 'save_note']);
 
-  // Match tool groups based on keywords
+  // Match tool groups based on keywords (and forced flag)
   let matched = false;
   for (const [group, config] of Object.entries(toolGroups)) {
-    if (config.keywords.some(kw => msg.includes(kw))) {
+    if (config.__forced || config.keywords.some(kw => msg.includes(kw))) {
       config.tools.forEach(t => selectedTools.add(t));
       matched = true;
     }
@@ -1219,11 +1288,31 @@ async function runPEMSAgent(userMessage, sessionId, userEmail = 'unknown') {
           result = cached;
           cacheHits++;
         } else {
+          // Pass current sessionId to executor (used by whatsapp_send_direct preview/confirm)
+          global.__tvmbot_current_session = sessionId;
           result = await executeTool(block.name, block.input, userEmail);
+          global.__tvmbot_current_session = null;
           // Cache read-only tool results
           if (CACHEABLE_TOOLS.has(block.name)) {
             setCachedResponse(cacheKey, result);
           }
+        }
+
+        // Short-circuit: if a tool requested stop_and_reply (e.g. whatsapp_send_direct preview),
+        // bypass any further AI iterations and return the preview text verbatim.
+        if (result && result.stop_and_reply) {
+          const shortReply = cleanReply(result.stop_and_reply);
+          session.history.push({ role: 'user', content: userMessage });
+          session.history.push({ role: 'assistant', content: shortReply });
+          if (session.history.length > 20) session.history = session.history.slice(-20);
+          return {
+            reply: shortReply,
+            plan,
+            validation,
+            toolsUsed: [...toolsUsed],
+            iterations,
+            elapsed: Date.now() - startTime
+          };
         }
 
         // Auto-learn from tool results
@@ -1358,6 +1447,54 @@ app.post('/chat', async (req, res) => {
   const email = userEmail || req.ip || 'unknown';
 
   try {
+    // ── Pending direct WhatsApp send: yes/no confirmation ──────────────────
+    if (pendingDirectSends.has(sid)) {
+      const entry = pendingDirectSends.get(sid);
+      // Expire stale entries
+      if (Date.now() - entry.createdAt > PENDING_SEND_TTL_MS) {
+        pendingDirectSends.delete(sid);
+      } else {
+        const lower = (message || '').toLowerCase().trim();
+        const yesWords = ['yes', 'y', 'ya', 'send', 'send it', 'kirim', 'confirm', 'ok', 'okay', 'go', 'go ahead', 'do it', 'proceed'];
+        const noWords  = ['no', 'n', 'cancel', 'stop', 'batal', 'jangan', 'abort', 'nevermind', 'never mind'];
+        const isYes = yesWords.some(w => lower === w || lower.startsWith(w + ' '));
+        const isNo  = noWords.some(w => lower === w || lower.startsWith(w + ' '));
+
+        if (isYes) {
+          pendingDirectSends.delete(sid);
+          try {
+            // Authorize the outbound send through the NO_AUTONOMOUS gate
+            global.__tvmbot_authorized_send = true;
+            try {
+              await whatsapp.sendToNumber(entry.phone, entry.message);
+            } finally {
+              global.__tvmbot_authorized_send = false;
+            }
+            return res.json({
+              reply: `Sent to ${entry.phone}.`,
+              sessionId: sid,
+              meta: { toolsUsed: ['whatsapp_send_direct'], iterations: 1 }
+            });
+          } catch (e) {
+            return res.json({
+              reply: `Failed to send to ${entry.phone}: ${e.message}`,
+              sessionId: sid,
+              meta: { toolsUsed: ['whatsapp_send_direct'], iterations: 1 }
+            });
+          }
+        } else if (isNo) {
+          pendingDirectSends.delete(sid);
+          return res.json({
+            reply: `Cancelled. Nothing was sent to ${entry.phone}.`,
+            sessionId: sid,
+            meta: { toolsUsed: [], iterations: 0 }
+          });
+        }
+        // Anything else: drop the pending and fall through to normal handling
+        pendingDirectSends.delete(sid);
+      }
+    }
+
     // Check for pending approval confirmation
     if (pendingApprovals.has(sid)) {
       const lower = message.toLowerCase().trim();
@@ -1439,7 +1576,7 @@ app.post('/chat', async (req, res) => {
     const result = await runPEMSAgent(enrichedMessage, sid, email);
 
     res.json({
-      reply: result.reply,
+      reply: cleanReply(result.reply),
       sessionId: sid,
       meta: {
         plan: result.plan?.strategy,
@@ -1927,6 +2064,7 @@ app.get('/', (req, res) => {
 
 // Daily morning briefing (9 AM)
 cron.schedule('0 9 * * *', async () => {
+  if (NO_AUTONOMOUS_MODE) { console.log('[Cron] Morning briefing skipped (NO_AUTONOMOUS_MODE)'); return; }
   console.log('[Cron] Running morning briefing...');
   try {
     if (!gmail || typeof gmail.getEmails !== 'function') return;
@@ -1944,6 +2082,7 @@ cron.schedule('0 9 * * *', async () => {
 
 // Hourly email check
 cron.schedule('0 * * * *', async () => {
+  if (NO_AUTONOMOUS_MODE) return;
   if (!gmail || typeof gmail.getUnreadEmails !== 'function') return;
   try {
     const unread = await gmail.getUnreadEmails(5);
@@ -1957,6 +2096,7 @@ cron.schedule('0 * * * *', async () => {
 
 // Daily maintenance reminder — 9:00 AM Bali time (WITA, UTC+8)
 cron.schedule('0 9 * * *', async () => {
+  if (NO_AUTONOMOUS_MODE) { console.log('[Cron] Maintenance reminder skipped (NO_AUTONOMOUS_MODE)'); return; }
   console.log('[Cron] Running maintenance reminder...');
   try {
     if (!maintenance || !whatsapp) {
@@ -2012,6 +2152,7 @@ cron.schedule('0 9 * * *', async () => {
 
 // Follow-up check — 3:00 PM Bali time (ask for after-photos on items reported 3+ days ago)
 cron.schedule('0 15 * * *', async () => {
+  if (NO_AUTONOMOUS_MODE) { console.log('[Cron] Maintenance follow-up skipped (NO_AUTONOMOUS_MODE)'); return; }
   console.log('[Cron] Running maintenance follow-up check...');
   try {
     if (!maintenance || !whatsapp) return;
@@ -2055,6 +2196,7 @@ cron.schedule('0 15 * * *', async () => {
 
 // Daily 7:00 AM — Periodic maintenance schedule scan + calendar sync + 2-day reminder
 cron.schedule('0 7 * * *', async () => {
+  if (NO_AUTONOMOUS_MODE) { console.log('[Cron] Periodic schedule scan skipped (NO_AUTONOMOUS_MODE)'); return; }
   console.log('[Cron] Running periodic schedule scan...');
   try {
     if (!periodicSchedule) {
@@ -2115,8 +2257,9 @@ cron.schedule('0 7 * * *', async () => {
   }
 }, { timezone: 'Asia/Makassar' });
 
-// Email Watcher — fallback poll every 15 minutes
+// Email Watcher — fallback poll every 15 minutes (read-only — safe under NO_AUTONOMOUS_MODE)
 cron.schedule('*/15 * * * *', async () => {
+  if (NO_AUTONOMOUS_MODE) return;
   if (!emailWatcher) return;
   try {
     const result = await emailWatcher.pollForNewEmails();
@@ -2130,6 +2273,7 @@ cron.schedule('*/15 * * * *', async () => {
 
 // Gmail Watch renewal — every 6 days (watch expires after 7 days)
 cron.schedule('0 3 */6 * *', async () => {
+  if (NO_AUTONOMOUS_MODE) return;
   if (!emailWatcher) return;
   try {
     console.log('[Cron] Renewing Gmail push watch...');
@@ -2521,6 +2665,97 @@ app.listen(PORT, () => {
     // Store WhatsApp globally for executor document sending
     global.__tvmbot_whatsapp = whatsapp;
 
+
+// ── WhatsApp /bot admin command handler ─────────────────────────────────────
+async function handleBotCommand(text, groupJid, senderJid, replyJid) {
+  const parts = text.replace(/^@bot\s*/i, '').split(/\s+/);
+  const cmd = parts[0]?.toLowerCase();
+
+  // status & help → anyone can use
+  const publicCmds = ['status', 'help', '', undefined];
+  if (!publicCmds.includes(cmd)) {
+    // config-change commands → group admins only
+    let isAdmin = false;
+    try {
+      const fullSenderJid = senderJid.includes('@') ? senderJid : `${senderJid}@s.whatsapp.net`;
+      isAdmin = await whatsapp.isGroupAdmin(groupJid, fullSenderJid);
+    } catch(e) {}
+    if (!isAdmin) return '❌ Only group admins can change bot settings.\nType *@bot status* to see current settings.';
+  }
+  const arg1 = parts[2]?.toLowerCase();
+  const arg2 = parts[3]?.toLowerCase();
+
+  const ACTION_LABELS = {
+    reply: '💬 reply',
+    inquiry_search: '🔍 inquiry search',
+    sheet_write: '📊 sheet write',
+    reminder: '⏰ reminders',
+    automation: '⚙️ automation'
+  };
+
+  const cfg = whatsapp.loadConfig();
+  const group = (cfg.groups || []).find(g => g.jid === groupJid);
+  if (!group) return '❌ This group is not in the bot allowlist yet.';
+
+  if (cmd === 'on') {
+    whatsapp.updateGroupConfig(groupJid, { active: true });
+    return `✅ Bot *ON* in this group.\nMode: ${group.mode || 'always'}`;
+  }
+  if (cmd === 'off') {
+    whatsapp.updateGroupConfig(groupJid, { active: false });
+    return '🔕 Bot *OFF* — I will stay silent in this group.';
+  }
+  if (cmd === 'mode' && arg1) {
+    const modeMap = { always: 'always', all: 'always', mention: 'mention_only', mention_only: 'mention_only', silent: 'silent' };
+    const newMode = modeMap[arg1];
+    if (!newMode) return '❌ Valid modes: `always` · `mention` · `silent`';
+    whatsapp.updateGroupConfig(groupJid, {
+      mode: newMode,
+      respondToAll: newMode === 'always',
+      requireMention: newMode === 'mention_only'
+    });
+    return `✅ Mode set to *${newMode}*`;
+  }
+  if (cmd === 'allow' && arg1) {
+    const current = group.allowed_actions || ['reply'];
+    if (!current.includes(arg1)) current.push(arg1);
+    whatsapp.updateGroupConfig(groupJid, { allowed_actions: current });
+    return `✅ *${ACTION_LABELS[arg1] || arg1}* action enabled`;
+  }
+  if (cmd === 'deny' && arg1) {
+    const current = (group.allowed_actions || ['reply']).filter(a => a !== arg1);
+    whatsapp.updateGroupConfig(groupJid, { allowed_actions: current });
+    return `🚫 *${ACTION_LABELS[arg1] || arg1}* action disabled`;
+  }
+  if (cmd === 'status' || cmd === '' || !cmd) {
+    const mode = group.mode || (group.respondToAll ? 'always' : 'mention_only');
+    const active = group.active !== false;
+    const actions = (group.allowed_actions || ['reply']).map(a => ACTION_LABELS[a] || a).join(', ');
+    return `*TVMbot Group Status*\n` +
+      `Status: ${active ? '🟢 Active' : '🔴 Off'}\n` +
+      `Mode: ${mode}\n` +
+      `Allowed: ${actions}\n\n` +
+      `_Commands: @bot on · @bot off · @bot mode [always|mention|silent]_\n` +
+      `_@bot allow [reply|inquiry_search|sheet_write|reminder|automation]_\n` +
+      `_@bot deny [action] · @bot status_`;
+  }
+  return `*TVMbot commands:*\n@bot on · @bot off\n@bot mode [always|mention|silent]\n@bot allow [action] · @bot deny [action]\n@bot status`;
+}
+
+// ── Group action filter: returns null if ok, string error if blocked ──────────
+function checkGroupAction(action, groupJid) {
+  if (!groupJid) return null; // DMs always allowed
+  const cfg = whatsapp.loadConfig();
+  const group = (cfg.groups || []).find(g => g.jid === groupJid);
+  if (!group) return null;
+  const allowed = group.allowed_actions;
+  if (!allowed) return null; // no filter set
+  if (!allowed.includes(action)) {
+    return `🚫 This action (${action}) is not enabled for this group.`;
+  }
+  return null;
+}
+
     whatsapp.setMessageHandler(async ({ text, senderPhone, isGroup, groupJid, replyJid, quotedText }) => {
       try {
         const sessionId = `wa_${replyJid.replace(/[^a-z0-9]/gi,'_')}`;
@@ -2531,10 +2766,37 @@ app.listen(PORT, () => {
         const quotedCtx = quotedText ? `[Replying to: ${quotedText}] ` : '';
         // Inject fresh datetime per message (RULE 01 from LinkAI best practices)
         const datetimeCtx = formatDatetimeInjection(senderPhone, memory.getDb());
-        const fullText = `${datetimeCtx} ${contextTag} ${quotedCtx}${text}`;
-
         // Set current chat JID for document sending
         global.__tvmbot_current_jid = replyJid;
+
+        // ── @bot command handler (admin config commands only) ─────────────
+        // IMPORTANT: only intercept known config commands, NOT general @bot questions
+        // Regular @bot questions (e.g. "@bot what is the check-in time?") go to AI
+        if (isGroup && /^@bot\b/i.test(text.trim())) {
+          const BOT_CMD_RE = /^@bot\s+(on|off|mode|allow|deny|status)\b/i;
+          if (BOT_CMD_RE.test(text.trim())) {
+            return await handleBotCommand(text.trim(), groupJid, senderPhone, replyJid);
+          }
+          // Not a config command — strip the @bot prefix and pass full text to AI
+          // (falls through to normal AI handling below)
+        }
+
+        // ── Group action context: set global + inject restriction hint ────
+        let groupActionCtx = '';
+        if (isGroup && groupJid) {
+          const grpCfg = whatsapp.getGroupConfig ? whatsapp.getGroupConfig(groupJid) : null;
+          global.__tvmbot_current_group_cfg = grpCfg;
+          if (grpCfg && grpCfg.allowed_actions) {
+            const ALL_ACTIONS = ['inquiry_search','sheet_write','reminder','automation'];
+            const blocked = ALL_ACTIONS.filter(a => !grpCfg.allowed_actions.includes(a));
+            if (blocked.length > 0) {
+              groupActionCtx = `[GROUP RESTRICTIONS: These actions are NOT allowed here: ${blocked.join(', ')}. Do NOT use tools for these actions.] `;
+            }
+          }
+        } else {
+          global.__tvmbot_current_group_cfg = null;
+        }
+        const fullText = `${datetimeCtx} ${contextTag} ${quotedCtx}${groupActionCtx}${text}`;
 
         // CLOSED. keyword: auto-close maintenance task from quoted context
         if (text.trim() === 'CLOSED.' && quotedText) {
@@ -2584,6 +2846,7 @@ app.listen(PORT, () => {
               } catch(e) { /* ignore post-processing errors */ }
             }
         if (reply) reply = reply.replace(/\*\*/g, '*');
+        if (reply) reply = cleanReply(reply);
         return reply;
       } catch (e) {
         console.error('[WA handler]', e.message);
@@ -2599,6 +2862,7 @@ app.listen(PORT, () => {
         const result = await runPEMSAgent(data.text, sessionId, `wa_${data.senderPhone}`);
         let reply = result.reply;
         if (reply) reply = reply.replace(/\*\*/g, '*');
+        if (reply) reply = cleanReply(reply);
         return reply;
       },
       memory 
@@ -2695,10 +2959,16 @@ app.listen(PORT, () => {
       // Store monitor globally so memory-manager can access it
       global.__tvmbot_monitor = proactiveMonitor;
 
-      // Start monitoring
-      proactiveMonitor.start();
-      // Start Ruflo background daemon workers
-      if (ruflo && ruflo.backgroundDaemon) {
+      // Start monitoring — only if autonomous mode allowed
+      if (NO_AUTONOMOUS_MODE) {
+        console.log('[Monitor] NOT started (NO_AUTONOMOUS_MODE = true)');
+      } else {
+        proactiveMonitor.start();
+      }
+      // Start Ruflo background daemon workers — only if autonomous mode allowed
+      if (NO_AUTONOMOUS_MODE) {
+        console.log('[Daemon] NOT started (NO_AUTONOMOUS_MODE = true)');
+      } else if (ruflo && ruflo.backgroundDaemon) {
         try {
           typeof ruflo.backgroundDaemon === "function" ? ruflo.backgroundDaemon().start() : ruflo.backgroundDaemon.start();
           console.log('[Daemon] Background workers started');
@@ -2882,23 +3152,41 @@ app.get('/memory/payments', (req, res) => {
 // ── Finance Endpoints (Phase 3) ───────────────────────────────────────────────
 
 // POST /api/finance/log-expense — direct DB insert, no AI
-app.post('/api/finance/log-expense', (req, res) => {
+app.post('/api/finance/log-expense', async (req, res) => {
   try {
     const { villa, amount, category, description, date } = req.body;
     if (!amount || isNaN(parseFloat(amount))) {
       return res.status(400).json({ error: 'amount is required and must be a number' });
     }
+    const expDate = date || new Date().toISOString().slice(0, 10);
+    const expDesc = description || 'Expense';
+    const expCategory = category || 'general';
+    const expAmount = parseFloat(amount);
+
+    // 1. SQLite memory
     const id = memory.logTransaction({
-      type: 'expense',
-      villa_name: villa || '',
-      amount: parseFloat(amount),
-      currency: 'IDR',
-      category: category || 'general',
-      description: description || 'Expense',
-      date: date || new Date().toISOString().slice(0, 10),
-      status: 'paid'
+      type: 'expense', villa_name: villa || '', amount: expAmount,
+      currency: 'IDR', category: expCategory, description: expDesc,
+      date: expDate, status: 'paid'
     });
-    res.json({ success: true, id, message: 'Expense logged successfully' });
+
+    // 2. Google Sheets (Staff Sheet — Variable Expenses tab)
+    let sheetsOk = false;
+    try {
+      const finance = require('./integrations/finance');
+      if (finance && finance.logVariableExpense) {
+        const sr = await finance.logVariableExpense({
+          date: expDate, property: villa || '', category: expCategory,
+          description: expDesc, amount: expAmount, notes: 'via UI'
+        });
+        sheetsOk = sr && sr.success;
+        console.log('[API] Expense → Sheets:', sr?.message || 'unknown');
+      }
+    } catch (shErr) {
+      console.error('[API] Expense → Sheets FAILED:', shErr.message);
+    }
+
+    res.json({ success: true, id, sheetsWritten: sheetsOk, message: 'Expense logged' + (sheetsOk ? ' + Sheets updated' : ' (Sheets write failed)') });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

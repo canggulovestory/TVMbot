@@ -1,10 +1,9 @@
 // supervisor.js — Quality Control & Risk Validation Layer for TVMbot PEMS
 // Validates plans and results before/after execution to prevent costly mistakes
+// LLM usage: GPT-4o-mini for deepValidate (saves Anthropic Sonnet for tool-use loops)
 
-const Anthropic = require('@anthropic-ai/sdk');
+const { llm_call, isOpenAIAvailable } = require('./llm-provider');
 require('dotenv').config();
-
-const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Risk Levels ───────────────────────────────────────────────────────────────
 const RISK = {
@@ -216,15 +215,12 @@ Respond with JSON only:
 }`;
 
   try {
-    const response = await claude.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    const text = response.content.find(b => b.type === 'text')?.text || '{}';
+    // Use GPT-4o-mini for deep validation — saves Anthropic Sonnet tokens
+    // Falls back to Haiku if OpenAI unavailable
+    const model = isOpenAIAvailable() ? 'gpt-mini' : 'haiku';
+    const result = await llm_call(model, [{ role: 'user', content: prompt }], { max_tokens: 800 });
+    const text = result.text || '{}';
     const cleanJson = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
     return JSON.parse(cleanJson);
   } catch (err) {
     console.error('[Supervisor] deepValidate error:', err.message);

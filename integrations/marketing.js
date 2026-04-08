@@ -1,9 +1,7 @@
 // integrations/marketing.js — AI Content Generation for Villa Marketing
+// Model: GPT-4o-mini via llm-provider (was Opus — 125x cheaper, same quality for creative tasks)
 
-const Anthropic = require('@anthropic-ai/sdk');
-require('dotenv').config();
-
-const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const { complete, isOpenAIAvailable } = require('../llm-provider');
 
 const CONTENT_PROMPTS = {
   instagram: (villaName, details) => `Create an engaging Instagram caption for "${villaName}" villa.
@@ -37,21 +35,16 @@ async function generateMarketingContent(villaName, contentType = 'instagram', de
     return { error: `Unknown content type: ${contentType}. Available: ${Object.keys(CONTENT_PROMPTS).join(', ')}` };
   }
 
-  try {
-    const response = await claude.messages.create({
-      model: 'claude-opus-4-5-20251101',
-      max_tokens: 800,
-      messages: [{
-        role: 'user',
-        content: promptFn(villaName, details)
-      }]
-    });
+  // Route: GPT-4o-mini (creative content) → fallback to Sonnet if OpenAI unavailable
+  const modelKey = isOpenAIAvailable() ? 'gpt-mini' : 'sonnet';
 
-    const content = response.content.find(b => b.type === 'text')?.text || '';
+  try {
+    const content = await complete(modelKey, promptFn(villaName, details), { max_tokens: 800 });
     return {
       villaName,
       contentType,
       content,
+      model: modelKey,
       wordCount: content.split(/\s+/).length,
       generatedAt: new Date().toISOString()
     };

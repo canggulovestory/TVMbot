@@ -154,6 +154,27 @@ db.exec(`
     updated_at TEXT DEFAULT (datetime('now'))
   );
 
+
+  CREATE TABLE IF NOT EXISTS long_term_rentals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    villa_name TEXT NOT NULL,
+    tenant_name TEXT NOT NULL,
+    tenant_email TEXT,
+    tenant_phone TEXT,
+    rental_type TEXT DEFAULT 'monthly' CHECK(rental_type IN ('monthly','yearly','quarterly')),
+    check_in TEXT NOT NULL,
+    check_out TEXT NOT NULL,
+    offer_price REAL,
+    monthly_amount REAL,
+    total_amount REAL,
+    payment_day INTEGER DEFAULT 1,
+    next_payment TEXT,
+    status TEXT DEFAULT 'active' CHECK(status IN ('active','ended','negotiating')),
+    calendar_event_ids TEXT,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
   CREATE TABLE IF NOT EXISTS maintenance_tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     villa_name TEXT NOT NULL,
@@ -173,16 +194,30 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
+  
+  CREATE TABLE IF NOT EXISTS user_settings (
+    user_id TEXT PRIMARY KEY,
+    channel TEXT DEFAULT 'whatsapp',
+    name TEXT,
+    role TEXT DEFAULT 'staff',
+    language TEXT,
+    timezone TEXT,
+    telegram_chat_id TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // ─── Business Facts ────────────────────────────────────────────────────────────
 function setFact(category, key, value, source = 'system') {
+  if (!key) { console.warn('[Memory] setFact called with null/empty key, ignoring'); return; }
+  if (!category) category = 'general';
   const stmt = db.prepare(`
     INSERT INTO business_facts (category, key, value, source, updated_at)
     VALUES (?, ?, ?, ?, datetime('now'))
     ON CONFLICT(key) DO UPDATE SET value=excluded.value, source=excluded.source, updated_at=excluded.updated_at
   `);
-  stmt.run(category, key, String(value), source);
+  stmt.run(category, String(key), String(value), source);
 }
 
 function getFact(key) {
@@ -231,6 +266,18 @@ function saveOwnerProfileBulk(profileObj) {
 
 // ─── Villas ────────────────────────────────────────────────────────────────────
 function upsertVilla(data) {
+  const safe = {
+    name: data.name || 'Unknown Villa',
+    location: data.location || '',
+    bedrooms: data.bedrooms || null,
+    max_guests: data.max_guests || null,
+    base_price: data.base_price || null,
+    cleaning_fee: data.cleaning_fee || null,
+    amenities: data.amenities || '',
+    drive_folder_id: data.drive_folder_id || null,
+    sheets_id: data.sheets_id || null,
+    notes: data.notes || ''
+  };
   const stmt = db.prepare(`
     INSERT INTO villas (name, location, bedrooms, max_guests, base_price, cleaning_fee, amenities, drive_folder_id, sheets_id, notes, updated_at)
     VALUES (@name, @location, @bedrooms, @max_guests, @base_price, @cleaning_fee, @amenities, @drive_folder_id, @sheets_id, @notes, datetime('now'))
@@ -240,7 +287,7 @@ function upsertVilla(data) {
       amenities=excluded.amenities, drive_folder_id=excluded.drive_folder_id,
       sheets_id=excluded.sheets_id, notes=excluded.notes, updated_at=excluded.updated_at
   `);
-  stmt.run(data);
+  stmt.run(safe);
 }
 
 function getVilla(name) {
@@ -281,6 +328,17 @@ function updateGuestStats(email, revenue) {
 
 // ─── Bookings ──────────────────────────────────────────────────────────────────
 function saveBooking(data) {
+  if (!data.guest_email) data.guest_email = '';
+  if (!data.guest_name) data.guest_name = 'Unknown Guest';
+  if (!data.villa_name) data.villa_name = '';
+  if (!data.check_out) data.check_out = '';
+  if (!data.total_price) data.total_price = 0;
+  if (!data.price) data.price = data.total_price || 0;
+  if (!data.source) data.source = 'manual';
+  if (!data.status) data.status = 'confirmed';
+  if (!data.contract_doc_id) data.contract_doc_id = null;
+  if (!data.calendar_event_id) data.calendar_event_id = null;
+  if (!data.notes) data.notes = '';
   const stmt = db.prepare(`
     INSERT INTO bookings (guest_name, guest_email, villa_name, check_in, check_out, price, status, contract_doc_id, calendar_event_id, notes)
     VALUES (@guest_name, @guest_email, @villa_name, @check_in, @check_out, @price, @status, @contract_doc_id, @calendar_event_id, @notes)
@@ -305,19 +363,29 @@ function getBookings(filter = {}) {
 }
 
 function getUpcomingBookings(days = 30) {
+  // Sanitize: ensure days is a safe positive integer (SQL injection prevention)
+  const safeDays = Math.max(1, Math.min(365, parseInt(days, 10) || 30));
   return db.prepare(`
     SELECT * FROM bookings
-    WHERE check_in >= date('now') AND check_in <= date('now', '+${days} days')
+    WHERE check_in >= date('now') AND check_in <= date('now', '+' || ? || ' days')
     ORDER BY check_in ASC
-  `).all();
+  `).all(String(safeDays));
 }
 
 // ─── Agent Decisions / History ─────────────────────────────────────────────────
 function logDecision(data) {
+  const safe = {
+    session_id: data.session_id || 'system',
+    user_message: data.user_message || data.action || '',
+    plan_used: data.plan_used || data.plan || '',
+    tools_called: data.tools_called || data.tool || '',
+    outcome: data.outcome || data.details || '',
+    supervisor_notes: data.supervisor_notes || ''
+  };
   db.prepare(`
     INSERT INTO decisions (session_id, user_message, plan_used, tools_called, outcome, supervisor_notes)
     VALUES (@session_id, @user_message, @plan_used, @tools_called, @outcome, @supervisor_notes)
-  `).run(data);
+  `).run(safe);
 }
 
 function getRecentDecisions(limit = 10) {
@@ -345,6 +413,11 @@ function getAllNotes() {
 
 // ─── Transactions ──────────────────────────────────────────────────────────────
 function logTransaction(data) {
+  if (!data.description) data.description = data.type || 'Transaction';
+  if (!data.villa_name) data.villa_name = '';
+  if (!data.category) data.category = data.type || 'general';
+  if (!data.type || !['income','expense'].includes(data.type)) data.type = 'expense';
+  if (!data.amount) data.amount = 0;
   const stmt = db.prepare(`
     INSERT INTO transactions (type, category, description, amount, currency, villa_name, guest_name, booking_id, payment_method, reference, status, date)
     VALUES (@type, @category, @description, @amount, @currency, @villa_name, @guest_name, @booking_id, @payment_method, @reference, @status, @date)
@@ -430,10 +503,10 @@ function getTotalBankBalance() {
 // ─── Invoices ──────────────────────────────────────────────────────────────────
 function generateInvoiceNumber() {
   const year = new Date().getFullYear();
-  const last = db.prepare("SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1").get();
-  if (!last) return `INV-${year}-001`;
-  const num = parseInt(last.invoice_number.split('-')[2] || 0) + 1;
-  return `INV-${year}-${String(num).padStart(3, '0')}`;
+  const count = db.prepare("SELECT COUNT(*) as c FROM invoices WHERE invoice_number LIKE ?").get(`INV-${year}-%`);
+  const num = (count ? count.c : 0) + 1;
+  const rand = Math.random().toString(36).slice(2, 6); // 4-char random for uniqueness
+  return `INV-${year}-${String(num).padStart(3, '0')}-${rand}`;
 }
 
 function saveInvoice(data) {
@@ -473,6 +546,76 @@ function getInvoices(filter = {}) {
   if (filter.status) return db.prepare("SELECT * FROM invoices WHERE status = ? ORDER BY created_at DESC").all(filter.status);
   if (filter.guest_email) return db.prepare("SELECT * FROM invoices WHERE guest_email = ? ORDER BY created_at DESC").all(filter.guest_email);
   return db.prepare('SELECT * FROM invoices ORDER BY created_at DESC LIMIT 20').all();
+}
+
+
+// ─── Long-Term Rentals ──────────────────────────────────────────────────────────
+function saveLongTermRental(data) {
+  const stmt = db.prepare(`
+    INSERT INTO long_term_rentals
+      (villa_name, tenant_name, tenant_email, tenant_phone, rental_type,
+       check_in, check_out, offer_price, monthly_amount, total_amount,
+       payment_day, next_payment, status, calendar_event_ids, notes, updated_at)
+    VALUES
+      (@villa_name, @tenant_name, @tenant_email, @tenant_phone, @rental_type,
+       @check_in, @check_out, @offer_price, @monthly_amount, @total_amount,
+       @payment_day, @next_payment, @status, @calendar_event_ids, @notes, datetime('now'))
+    ON CONFLICT DO NOTHING
+  `);
+  const existing = db.prepare("SELECT id FROM long_term_rentals WHERE villa_name=? AND status='active'").get(data.villa_name);
+  if (existing) {
+    db.prepare(`UPDATE long_term_rentals SET
+      tenant_name=@tenant_name, tenant_email=@tenant_email, tenant_phone=@tenant_phone,
+      rental_type=@rental_type, check_in=@check_in, check_out=@check_out,
+      offer_price=@offer_price, monthly_amount=@monthly_amount, total_amount=@total_amount,
+      payment_day=@payment_day, next_payment=@next_payment, status=@status,
+      calendar_event_ids=@calendar_event_ids, notes=@notes, updated_at=datetime('now')
+      WHERE id=@id`).run({ ...data, id: existing.id });
+    return existing.id;
+  }
+  const res = stmt.run({
+    villa_name: data.villa_name, tenant_name: data.tenant_name,
+    tenant_email: data.tenant_email || null, tenant_phone: data.tenant_phone || null,
+    rental_type: data.rental_type || 'monthly',
+    check_in: data.check_in, check_out: data.check_out,
+    offer_price: parseFloat(data.offer_price) || null,
+    monthly_amount: parseFloat(data.monthly_amount) || null,
+    total_amount: parseFloat(data.total_amount) || null,
+    payment_day: parseInt(data.payment_day) || 1,
+    next_payment: data.next_payment || null,
+    status: data.status || 'active',
+    calendar_event_ids: data.calendar_event_ids || null,
+    notes: data.notes || null
+  });
+  return res.lastInsertRowid;
+}
+
+function getLongTermRental(villa_name) {
+  return db.prepare("SELECT * FROM long_term_rentals WHERE villa_name=? AND status='active' ORDER BY created_at DESC LIMIT 1").get(villa_name);
+}
+
+function getAllLongTermRentals() {
+  return db.prepare("SELECT * FROM long_term_rentals WHERE status='active' ORDER BY next_payment ASC").all();
+}
+
+function getUpcomingRentalPayments(days = 30) {
+  // Sanitize: ensure days is a safe positive integer (SQL injection prevention)
+  const safeDays = Math.max(1, Math.min(365, parseInt(days, 10) || 30));
+  return db.prepare(`
+    SELECT * FROM long_term_rentals
+    WHERE status='active'
+    AND next_payment >= date('now')
+    AND next_payment <= date('now', '+' || ? || ' days')
+    ORDER BY next_payment ASC
+  `).all(String(safeDays));
+}
+
+function endRental(id) {
+  db.prepare("UPDATE long_term_rentals SET status='ended', updated_at=datetime('now') WHERE id=?").run(id);
+}
+
+function updateRentalNextPayment(id, next_payment) {
+  db.prepare("UPDATE long_term_rentals SET next_payment=?, updated_at=datetime('now') WHERE id=?").run(next_payment, id);
 }
 
 // ─── Context Builder (for injecting into LLM prompts) ──────────────────────────
@@ -586,6 +729,54 @@ function getMaintenanceSummary() {
   return rows;
 }
 
+
+// ─── User Settings (per-user timezone, language, channel prefs) ───────────────
+function getUserSettings(userId) {
+  return db.prepare('SELECT * FROM user_settings WHERE user_id = ?').get(userId) || null;
+}
+
+function upsertUserSettings(userId, data) {
+  const existing = getUserSettings(userId);
+  if (existing) {
+    const fields = [];
+    const values = [];
+    for (const [k, v] of Object.entries(data)) {
+      if (k !== 'user_id' && v !== undefined) {
+        fields.push(`${k} = ?`);
+        values.push(v);
+      }
+    }
+    if (fields.length > 0) {
+      fields.push("updated_at = datetime('now')");
+      values.push(userId);
+      db.prepare(`UPDATE user_settings SET ${fields.join(', ')} WHERE user_id = ?`).run(...values);
+    }
+  } else {
+    db.prepare(`INSERT INTO user_settings (user_id, channel, name, role, language, timezone, telegram_chat_id) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
+      userId,
+      data.channel || 'whatsapp',
+      data.name || null,
+      data.role || 'staff',
+      data.language || null,
+      data.timezone || null,
+      data.telegram_chat_id || null
+    );
+  }
+  return getUserSettings(userId);
+}
+
+function getUserTimezone(userId) {
+  const user = getUserSettings(userId);
+  return (user && user.timezone) || process.env.TZ || 'Asia/Makassar';
+}
+
+function getAllUsers() {
+  return db.prepare('SELECT * FROM user_settings ORDER BY created_at DESC').all();
+}
+
+function getDb() { return db; }
+
 module.exports = {
   // Facts
   setFact, getFact, getFactsByCategory, getAllFacts,
@@ -607,10 +798,14 @@ module.exports = {
   upsertBankAccount, updateBankBalance, getAllBankAccounts, getTotalBankBalance,
   // Finance — Invoices
   generateInvoiceNumber, saveInvoice, updateInvoiceStatus, getInvoices,
+  // Long-term Rentals
+  saveLongTermRental, getLongTermRental, getAllLongTermRentals, getUpcomingRentalPayments, endRental, updateRentalNextPayment,
   // Maintenance
   addMaintenanceTask, updateMaintenanceTask, getMaintenanceTasks, getMaintenanceSummary,
   // Context
   buildContextSummary,
   // DB
-  db
+  db,
+  // User Settings
+  getUserSettings, upsertUserSettings, getUserTimezone, getAllUsers, getDb
 };

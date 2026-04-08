@@ -5,3 +5,21 @@ data/
 *.db
 config/integrations.json
 
+whatsapp-config.json
+
+# Backup artifacts
+_backups/
+*.bak
+*.bak.*
+*.bak-*
+# Audit/scratch outputs
+audit-*.json
+audit-*.txt
+audit-*.log
+_*.md
+# Session/cookie jars
+/tmp/diag-cookie.jar
+*.cookie.jar
+# Uploads/cache
+tmp/
+.tmp/

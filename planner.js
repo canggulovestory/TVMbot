@@ -1,10 +1,10 @@
 // planner.js — Goal Decomposition Engine for TVMbot PEMS Architecture
 // Takes a user request + memory context → returns a structured execution plan
+// Model: GPT-4o-mini (primary) | Haiku (fallback if OpenAI unavailable)
+// Anthropic is treated as a LIMITED resource — planner uses OpenAI to save Anthropic tokens
 
-const Anthropic = require('@anthropic-ai/sdk');
+const { llm_call, isOpenAIAvailable } = require('./llm-provider');
 require('dotenv').config();
-
-const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Available Tools Reference (for plan generation) ──────────────────────────
 const TOOL_CATALOG = `
@@ -71,6 +71,28 @@ OUTPUT FORMAT:
 }`;
 
 // ─── Main Planning Function ────────────────────────────────────────────────────
+// choose planning model: GPT-4o-mini first (cheap), fallback to Haiku (Anthropic)
+function _plannerModel() {
+  return isOpenAIAvailable() ? 'gpt-mini' : 'haiku';
+}
+
+async function callWithRetry(callFn, maxRetries = 2) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await callFn();
+    } catch (err) {
+      const isRateLimit = err.status === 429 || (err.message && err.message.includes('rate'));
+      if (isRateLimit && attempt < maxRetries) {
+        const wait = (attempt + 1) * 20;
+        console.log(`[Planner] Rate limited, waiting ${wait}s (attempt ${attempt + 1})...`);
+        await new Promise(r => setTimeout(r, wait * 1000));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 async function createPlan(userMessage, memoryContext = '', conversationSummary = '') {
   const userContent = `
 MEMORY CONTEXT:
@@ -84,15 +106,18 @@ ${userMessage}
 
 Generate the execution plan as JSON.`;
 
-  try {
-    const response = await claude.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 1500,
-      system: PLANNER_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userContent }]
-    });
+  const model = _plannerModel();
+  console.log(`[Planner] Using model: ${model}`);
 
-    const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  try {
+    const result = await callWithRetry(() =>
+      llm_call(model, [{ role: 'user', content: userContent }], {
+        max_tokens: 1500,
+        system: PLANNER_SYSTEM_PROMPT
+      })
+    );
+
+    const text = result.text || '{}';
 
     // Clean JSON (remove any accidental markdown fences)
     const cleanJson = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -102,7 +127,6 @@ Generate the execution plan as JSON.`;
       plan = JSON.parse(cleanJson);
     } catch (parseErr) {
       console.error('[Planner] JSON parse error:', parseErr.message);
-      // Fallback: single respond step
       plan = {
         strategy: 'Direct response (plan parse failed)',
         clarification_needed: false,
@@ -111,12 +135,11 @@ Generate the execution plan as JSON.`;
       };
     }
 
-    // Validate structure
     if (!plan.steps || !Array.isArray(plan.steps)) {
       plan.steps = [{ step: 1, action: 'respond', params: {}, purpose: 'Direct response', depends_on: [], sensitive: false }];
     }
 
-    console.log(`[Planner] Plan created: "${plan.strategy}" | ${plan.steps.length} steps`);
+    console.log(`[Planner] Plan created via ${model}: "${plan.strategy}" | ${plan.steps.length} steps`);
     return plan;
 
   } catch (err) {
@@ -144,21 +167,20 @@ ${userMessage}
 
 Revise the plan to address the supervisor's concerns. Return updated JSON plan.`;
 
+  const model = _plannerModel();
   try {
-    const response = await claude.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 1500,
-      system: PLANNER_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userContent }]
-    });
-
-    const text = response.content.find(b => b.type === 'text')?.text || '{}';
+    const result = await callWithRetry(() =>
+      llm_call(model, [{ role: 'user', content: userContent }], {
+        max_tokens: 1500,
+        system: PLANNER_SYSTEM_PROMPT
+      })
+    );
+    const text = result.text || '{}';
     const cleanJson = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
     return JSON.parse(cleanJson);
   } catch (err) {
     console.error('[Planner] Revise error:', err.message);
-    return originalPlan; // Return original if revision fails
+    return originalPlan;
   }
 }
 

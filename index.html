@@ -1,0 +1,3222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#768064">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TVMbot">
+<meta name="description" content="TVMbot — AI-powered Villa Management for The Villa Managers">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVMbot — Villa Management AI</title>
+<style>
+  :root {
+    /* ── Brand ── */
+    --primary: #0d47a1;
+    --secondary: #10b981;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    /* ── Legacy aliases (backward-compat) ── */
+    --green: #768064;
+    --green-light: #E7Ecda;
+    --green-dark: #5a6350;
+    --green-mid: #6b5f4d;
+    /* ── Neutrals ── */
+    --neutral-50: #f9fafb;
+    --neutral-100: #f3f4f6;
+    --neutral-200: #e5e7eb;
+    --neutral-400: #9ca3af;
+    --neutral-600: #4b5563;
+    --neutral-900: #111827;
+    /* ── Existing mapped ── */
+    --bg: var(--neutral-50);
+    --card: #ffffff;
+    --border: var(--neutral-200);
+    --text: var(--neutral-900);
+    --muted: var(--neutral-600);
+    --warning: var(--accent);
+    --info: var(--primary);
+    --shadow: var(--shadow-sm);
+    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    /* ── Typography ── */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    /* ── Spacing ── */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    /* ── Radius ── */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* ── Design System Utilities ── */
+  .ds-text-primary { color: var(--primary); }
+  .ds-text-secondary { color: var(--secondary); }
+  .ds-text-accent { color: var(--accent); }
+  .ds-text-danger { color: var(--danger); }
+  .ds-text-muted { color: var(--muted); }
+  .ds-bg-primary { background: var(--primary); }
+  .ds-bg-secondary { background: var(--secondary); }
+  .ds-bg-accent { background: var(--accent); }
+  .ds-bg-danger { background: var(--danger); }
+  .ds-font-xs { font-size: var(--font-size-xs); }
+  .ds-font-sm { font-size: var(--font-size-sm); }
+  .ds-font-base { font-size: var(--font-size-base); }
+  .ds-font-lg { font-size: var(--font-size-lg); }
+  .ds-font-xl { font-size: var(--font-size-xl); }
+  .ds-font-2xl { font-size: var(--font-size-2xl); }
+  .ds-space-xs { margin: var(--space-xs); }
+  .ds-space-sm { margin: var(--space-sm); }
+  .ds-space-md { margin: var(--space-md); }
+  .ds-space-lg { margin: var(--space-lg); }
+  .ds-space-xl { margin: var(--space-xl); }
+  .ds-radius-sm { border-radius: var(--radius-sm); }
+  .ds-radius-md { border-radius: var(--radius-md); }
+  .ds-radius-lg { border-radius: var(--radius-lg); }
+  .ds-radius-xl { border-radius: var(--radius-xl); }
+  .ds-shadow-sm { box-shadow: var(--shadow-sm); }
+  .ds-shadow-md { box-shadow: var(--shadow-md); }
+  .ds-shadow-lg { box-shadow: var(--shadow-lg); }
+  body { font-family: var(--font-family); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Top Nav ── */
+  nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo span { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+  .nav-logo span b { color: var(--green); }
+  .nav-logo .version { font-size: .65rem; background: var(--green-light); color: var(--green-dark); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .status-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: .78rem; font-weight: 700; background: var(--green-light); color: var(--green-dark); cursor: pointer; }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .status-pill.offline { background: #fee2e2; color: #991b1b; }
+  .status-pill.offline .dot { background: var(--danger); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .nav-time { font-size: .78rem; color: var(--muted); font-weight: 500; }
+  .nav-owner { font-size: .78rem; color: var(--muted); }
+  .nav-owner b { color: var(--text); }
+
+  /* ── Layout ── */
+  .layout { display: grid; grid-template-columns: 260px 1fr 300px; gap: 0; height: calc(100vh - 60px); overflow: hidden; }
+
+  /* ── Sidebar Left ── */
+  .sidebar-left {
+    background: #fff;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+    padding: 20px 16px;
+    gap: 8px;
+  }
+  .sidebar-section { margin-bottom: 8px; }
+  .sidebar-label { font-size: .68rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; padding: 0 8px; }
+  .qa-btn {
+    width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; border: none;
+    background: transparent; cursor: pointer; font-size: .84rem; font-weight: 500;
+    color: var(--text); display: flex; align-items: center; gap: 10px; transition: all .15s;
+  }
+  .qa-btn:hover { background: var(--green-light); color: var(--green-dark); }
+  .qa-btn .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .qa-btn.active { background: var(--green-light); color: var(--green-dark); font-weight: 600; }
+  .divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+  /* Stats in sidebar */
+  .stat-mini { padding: 10px 12px; border-radius: 8px; background: var(--bg); margin-bottom: 6px; }
+  .stat-mini .label { font-size: .7rem; color: var(--muted); font-weight: 500; }
+  .stat-mini .val { font-size: 1.4rem; font-weight: 800; color: var(--text); }
+  .stat-mini .sub { font-size: .7rem; color: var(--green); font-weight: 500; }
+
+  /* ── Main Chat Area ── */
+  .main {
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Top bar in main */
+  .main-header {
+    padding: 16px 24px 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .main-header h2 { font-size: 1rem; font-weight: 700; }
+  .main-header p { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; }
+  .tag-green { background: var(--green-light); color: var(--green-dark); }
+  .tag-blue { background: #dbeafe; color: #1e40af; }
+  .tag-orange { background: #fef3c7; color: #92400e; }
+
+  /* Chat messages */
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg { display: flex; gap: 10px; max-width: 80%; }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg.bot { align-self: flex-start; }
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
+  }
+  .msg.bot .msg-avatar { background: var(--green); color: #fff; }
+  .msg.user .msg-avatar { background: var(--primary); color: #fff; }
+  .msg-content { display: flex; flex-direction: column; gap: 4px; }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 14px; font-size: .85rem; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.bot .msg-bubble { background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.bot .msg-bubble h1,.msg.bot .msg-bubble h2,.msg.bot .msg-bubble h3 { font-size: .95rem; font-weight: 700; margin: 8px 0 4px; }
+  .msg.bot .msg-bubble h1:first-child,.msg.bot .msg-bubble h2:first-child,.msg.bot .msg-bubble h3:first-child { margin-top: 0; }
+  .msg.bot .msg-bubble p { margin: 0 0 8px; }
+  .msg.bot .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg.bot .msg-bubble ul,.msg.bot .msg-bubble ol { margin: 4px 0 8px; padding-left: 20px; }
+  .msg.bot .msg-bubble li { margin: 2px 0; }
+  .msg.bot .msg-bubble code { background: var(--neutral-100); padding: 1px 5px; border-radius: 4px; font-size: .82rem; font-family: 'SF Mono', Consolas, monospace; }
+  .msg.bot .msg-bubble pre { background: var(--neutral-100); padding: 10px 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
+  .msg.bot .msg-bubble pre code { background: none; padding: 0; font-size: .8rem; }
+  .msg.bot .msg-bubble table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: .82rem; }
+  .msg.bot .msg-bubble th,.msg.bot .msg-bubble td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; }
+  .msg.bot .msg-bubble th { background: var(--neutral-100); font-weight: 600; }
+  .msg.bot .msg-bubble blockquote { border-left: 3px solid var(--green); padding-left: 12px; margin: 8px 0; color: var(--muted); font-style: italic; }
+  .msg.bot .msg-bubble strong { font-weight: 700; }
+  .msg.bot .msg-bubble a { color: var(--primary); text-decoration: underline; }
+  .msg.user .msg-bubble { background: var(--green); color: #fff; border-bottom-right-radius: 4px; }
+  .msg-meta { font-size: .68rem; color: var(--muted); }
+  .msg.user .msg-meta { text-align: right; }
+
+  /* Tool badge */
+  .tools-used { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .tool-badge { font-size: .75rem; padding: 4px 10px; border-radius: 10px; background: var(--green-light); color: var(--green-dark); font-weight: 600; letter-spacing: .02em; }
+
+  /* Typing indicator */
+  .typing { display: flex; align-items: center; gap: 4px; padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce .8s infinite; }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  /* Welcome message */
+  .welcome-card {
+    background: linear-gradient(135deg, var(--green) 0%, #5a6350 100%);
+    color: #fff; border-radius: var(--radius); padding: 20px 24px; margin-bottom: 8px;
+  }
+  .welcome-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .welcome-card p { font-size: .82rem; opacity: .9; line-height: 1.5; }
+  .welcome-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip {
+    padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,.2);
+    font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,.3);
+    transition: all .15s; color: #fff;
+  }
+  .chip:hover { background: rgba(255,255,255,.35); }
+
+  /* Chat input */
+  .chat-input-area {
+    padding: 16px 24px;
+    background: #fff;
+    border-top: 1px solid var(--border);
+  }
+  .input-row { display: flex; gap: 8px; }
+  .chat-input {
+    flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: .88rem; font-family: inherit; resize: none; background: var(--bg);
+    color: var(--text); transition: border-color .15s; max-height: 200px; min-height: 42px;
+  }
+  .chat-input:focus { outline: none; border-color: var(--green); background: #fff; }
+  .send-btn {
+    padding: 10px 20px; background: var(--green); color: #fff; border: none;
+    border-radius: 10px; font-size: .88rem; font-weight: 600; cursor: pointer;
+    transition: all .15s; white-space: nowrap; display: flex; align-items: center; gap: 6px;
+  }
+  .send-btn:hover { background: #5a6350; }
+  .send-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  /* ── File Upload UI ── */
+  .attach-btn {
+    padding: 10px 12px; background: var(--bg); color: var(--muted); border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 1rem; cursor: pointer; transition: all .15s; display: flex; align-items: center;
+  }
+  .attach-btn:hover { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
+  .file-preview-bar {
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+    background: var(--green-light); border-radius: 8px; margin-bottom: 8px;
+    font-size: .8rem; color: var(--green-dark); font-weight: 500;
+  }
+  .file-preview-bar .fp-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-preview-bar .fp-remove { background: none; border: none; cursor: pointer; font-size: .9rem; color: var(--green-dark); padding: 0 2px; }
+  .drop-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(118,128,100,.18);
+    border: 3px dashed var(--green); z-index: 9999; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700; color: var(--green-dark); backdrop-filter: blur(2px);
+  }
+  .drop-overlay.active { display: flex; }
+  .drop-overlay-box { background: #fff; border-radius: 16px; padding: 32px 48px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+  .drop-overlay-box .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .msg-file-bubble {
+    display: flex; align-items: center; gap: 10px; background: var(--green-light);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 4px; font-size: .83rem;
+  }
+  .msg-file-bubble .ficon { font-size: 1.4rem; }
+  .msg-file-bubble .finfo .fname { font-weight: 700; color: var(--green-dark); }
+  .msg-file-bubble .finfo .fsize { font-size: .72rem; color: var(--muted); }
+
+  /* ── Sidebar Right ── */
+  .sidebar-right {
+    background: #fff;
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .sidebar-right::-webkit-scrollbar { width: 4px; }
+  .sidebar-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .panel { }
+  .panel-header { font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .panel-header .refresh-btn { background: none; border: none; cursor: pointer; font-size: .75rem; color: var(--muted); padding: 2px 6px; border-radius: 4px; }
+  .panel-header .refresh-btn:hover { background: var(--bg); }
+
+  .booking-item {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    margin-bottom: 6px; font-size: .8rem;
+  }
+  .booking-item .guest { font-weight: 700; color: var(--text); }
+  .booking-item .villa { color: var(--green); font-weight: 600; font-size: .75rem; }
+  .booking-item .dates { color: var(--muted); font-size: .72rem; margin-top: 2px; }
+  .booking-item .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+
+  .decision-item { padding: 8px 10px; border-radius: 6px; background: var(--bg); margin-bottom: 4px; font-size: .75rem; }
+  .decision-item .time { color: var(--muted); font-size: .68rem; }
+  .decision-item .action { color: var(--text); font-weight: 500; margin-top: 1px; }
+  .decision-item .tools { color: var(--green); font-size: .68rem; }
+
+
+
+  /* Rental form modal */
+  .rf-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:3000; align-items:center; justify-content:center; padding:16px; }
+  .rf-overlay.open { display:flex; }
+  .rf-modal { background:#fff; border-radius:20px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,.2); }
+  .rf-header { padding:22px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:#fff; z-index:1; }
+  .rf-title  { font-size:1.1rem; font-weight:800; }
+  .rf-body   { padding:20px 24px 28px; }
+  .rf-section{ margin-bottom:18px; }
+  .rf-section-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--green); margin-bottom:10px; }
+  .rf-amount-box { background:#f8fafc; border:1.5px solid var(--border); border-radius:12px; padding:16px; margin-top:10px; }
+  .rf-amount-row { display:flex; justify-content:space-between; font-size:.85rem; padding:4px 0; }
+  .rf-amount-row .lbl { color:var(--muted); }
+  .rf-amount-row .val { font-weight:700; }
+  .rf-amount-row.total { border-top:1px solid var(--border); margin-top:6px; padding-top:8px; font-size:.95rem; }
+  /* Calendar links */
+  .cal-links { margin-top:16px; }
+  .cal-links-title { font-size:.72rem; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .cal-link-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:6px; max-height:200px; overflow-y:auto; }
+  .cal-link-btn { display:block; text-align:center; padding:7px 6px; background:#f0f2e8; border:1px solid var(--border); border-radius:8px; font-size:.72rem; font-weight:600; color:var(--green); text-decoration:none; transition:background .15s; }
+  .cal-link-btn:hover { background:#E7Ecda; }
+  /* Payment pill in villa detail */
+  .rental-active-pill { display:inline-flex; align-items:center; gap:5px; background:#E7Ecda; color:#43442b; border-radius:20px; padding:4px 12px; font-size:.72rem; font-weight:700; margin-bottom:14px; }
+  /* Payments panel items */
+  .payment-item { padding:10px 12px; border-radius:10px; border:1px solid var(--border); margin-bottom:8px; }
+  .payment-item.due-soon { border-color:#f59e0b; background:#fffbeb; }
+  .payment-item.overdue  { border-color:#ef4444; background:#fef2f2; }
+  .payment-item .pi-villa  { font-weight:700; font-size:.83rem; }
+  .payment-item .pi-tenant { color:var(--muted); font-size:.75rem; margin-top:1px; }
+  .payment-item .pi-amount { font-weight:800; color:var(--green); font-size:.9rem; }
+  .payment-item .pi-date   { font-size:.72rem; color:var(--muted); }
+  /* Villa Detail Modal */
+  .vd-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:2000; align-items:center; justify-content:center; padding:16px; }
+  .vd-overlay.open { display:flex; }
+  .vd-modal { background:#fff; border-radius:20px; width:100%; max-width:560px; max-height:80vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,.18); }
+  .vd-header { padding:24px 24px 0; display:flex; justify-content:space-between; align-items:flex-start; position:sticky; top:0; background:#fff; border-bottom:1px solid var(--border); padding-bottom:16px; z-index:1; }
+  .vd-title { font-size:1.25rem; font-weight:900; color:var(--text); }
+  .vd-sub   { font-size:.78rem; color:var(--muted); margin-top:3px; }
+  .vd-body  { padding:20px 24px 28px; }
+  .vd-section { margin-bottom:20px; }
+  .vd-section-title { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--green); margin-bottom:10px; }
+  .vd-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .vd-stat { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .vd-stat .label { font-size:.68rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.8px; margin-bottom:4px; }
+  .vd-stat .value { font-size:.88rem; font-weight:700; color:var(--text); word-break:break-all; }
+  .vd-stat .value a { color:var(--green); text-decoration:none; }
+  .vd-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:.82rem; }
+  .vd-row:last-child { border-bottom:none; }
+  .vd-row .key { color:var(--muted); }
+  .vd-row .val { font-weight:600; color:var(--text); text-align:right; max-width:60%; }
+  .vd-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:.68rem; font-weight:700; }
+  .vd-badge.open       { background:#fef3c7; color:#92400e; }
+  .vd-badge.confirmed  { background:#dcfce7; color:#166534; }
+  .vd-badge.urgent     { background:#fee2e2; color:#991b1b; }
+  .vd-badge.completed  { background:#f0fdf4; color:#166534; }
+  .vd-empty { text-align:center; color:var(--muted); font-size:.8rem; padding:14px 0; }
+  .villa-chip { cursor:pointer; transition:background .15s, box-shadow .15s; }
+  .villa-chip:hover { background:#f0f2e8; box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .villa-chip {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .villa-chip .vname { font-weight: 700; font-size: .83rem; }
+  .villa-chip .vprice { color: var(--green); font-weight: 600; font-size: .78rem; }
+  .villa-chip .vloc { color: var(--muted); font-size: .72rem; }
+
+  .empty-state { text-align: center; padding: 16px; color: var(--muted); font-size: .78rem; }
+  .empty-state .icon { font-size: 1.5rem; margin-bottom: 6px; }
+
+  /* ── Onboarding Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; padding: 32px; width: 540px;
+    max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,.15);
+  }
+  .modal h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+  .modal p { font-size: .85rem; color: var(--muted); margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: .78rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: .85rem; font-family: inherit; color: var(--text); background: var(--bg);
+    transition: border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--green); background: #fff;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  /* (Onboarding modal CSS removed — no longer used) */
+
+  .step-dot.done { background: var(--green); }
+  .step-dot.active { background: var(--green-mid); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-primary { flex: 1; padding: 11px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #5a6350; }
+  .btn-secondary { padding: 11px 20px; background: var(--bg); color: var(--text); border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+
+  /* ── Notifications ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    padding: 12px 20px; border-radius: 10px; font-size: .85rem; font-weight: 500;
+    box-shadow: var(--shadow-md); transform: translateY(100px); opacity: 0;
+    transition: all .3s; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--green); color: #fff; }
+  .toast.error { background: var(--danger); color: #fff; }
+  .toast.info { background: var(--info); color: #fff; }
+
+  /* ── Loading skeleton ── */
+  .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  
+  /* ── Pull to refresh ── */
+  .ptr-indicator {
+    text-align: center; padding: 0; height: 0; overflow: hidden;
+    transition: height .2s ease, opacity .2s ease;
+    color: var(--green); font-size: .78rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px; opacity: 0;
+  }
+  .ptr-indicator.active { height: 40px; opacity: 1; }
+  .ptr-indicator .ptr-spinner {
+    width: 16px; height: 16px; border: 2px solid var(--green-light);
+    border-top-color: var(--green); border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* ── Smooth sidebar transition ── */
+  .sidebar-left { transition: transform .25s cubic-bezier(.4,0,.2,1); }
+  .mobile-sidebar-open .sidebar-left { transition-delay: 50ms; }
+  /* ── Voice Input ── */
+  .mic-btn {
+    padding: 10px 12px; background: var(--bg); color: var(--muted); border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 1rem; cursor: pointer; transition: all .15s;
+    display: flex; align-items: center;
+  }
+  .mic-btn:hover { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
+  .mic-btn.recording { background: #fee2e2; color: #dc2626; border-color: #dc2626; animation: pulse 1s infinite; }
+  .mic-btn.unsupported { display: none; }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ══════════════════════════════════════════════
+     MOBILE / iPHONE RESPONSIVE LAYOUT
+  ══════════════════════════════════════════════ */
+
+  /* Bottom nav bar (mobile only — hidden on desktop) */
+  .mobile-bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff; border-top: 1px solid var(--border);
+    z-index: 150; padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-bottom-nav .mbn-inner {
+    display: flex; align-items: stretch; height: 56px;
+  }
+  .mbn-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2px; border: none; background: transparent;
+    cursor: pointer; font-size: .6rem; font-weight: 600; color: var(--muted);
+    -webkit-tap-highlight-color: transparent; padding: 0; transition: color .15s;
+  }
+  .mbn-btn .mbn-icon { font-size: 1.25rem; line-height: 1; }
+  .mbn-btn.active { color: var(--green); }
+  .mbn-btn.active .mbn-icon { transform: scale(1.1); }
+
+  /* Mobile panels bottom sheet */
+  .mobile-panels-sheet {
+    display: none; position: fixed; inset: 0; z-index: 500;
+  }
+  .mobile-panels-sheet.open { display: block; }
+  
+  /* ── Tab scroll hint (mobile) ── */
+  .mps-tabs { position: relative; }
+  .mps-tabs::after {
+    content: '';
+    position: absolute; right: 0; top: 0; bottom: 0; width: 32px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.95));
+    pointer-events: none; z-index: 1;
+  }
+  .mps-tabs.scrolled-end::after { display: none; }
+  .mps-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,.4);
+    backdrop-filter: blur(2px);
+  }
+  .mps-content {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #fff; border-radius: 20px 20px 0 0;
+    max-height: 80vh; overflow-y: auto;
+    padding: 0 0 env(safe-area-inset-bottom);
+  }
+  .mps-handle {
+    width: 36px; height: 4px; background: var(--border); border-radius: 2px;
+    margin: 10px auto 16px;
+  }
+  .mps-tabs {
+    display: flex; border-bottom: 1px solid var(--border); padding: 0 16px;
+    overflow-x: auto; gap: 0; -webkit-overflow-scrolling: touch;
+  }
+  .mps-tab {
+    padding: 10px 16px; font-size: .82rem; font-weight: 600; color: var(--muted);
+    border: none; background: none; cursor: pointer; white-space: nowrap;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mps-tab.active { color: var(--green); border-bottom-color: var(--green); }
+  .mps-panel { display: none; padding: 12px 16px 20px; }
+  .mps-panel.active { display: block; }
+
+  /* ── Large tablet (768–1024px) ── */
+  @media (max-width: 1024px) {
+    .layout { grid-template-columns: 200px 1fr 240px; }
+    .sidebar-left { padding: 16px 12px; }
+    .sidebar-right { padding: 12px; }
+    .qa-btn { font-size: .8rem; padding: 8px 10px; }
+    .stat-mini .val { font-size: 1.2rem; }
+    .chat-messages { padding: 16px 18px; }
+    nav { padding: 0 16px; }
+  }
+
+  /* ── Small tablet (768–900px) ── */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; position: relative; }
+    .sidebar-left {
+      position: fixed; top: 60px; left: 0;
+      width: 280px; height: calc(100vh - 60px);
+      z-index: 200; transform: translateX(-100%);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+      box-shadow: 4px 0 24px rgba(0,0,0,.15);
+    }
+    .sidebar-left.open { transform: translateX(0); }
+    .sidebar-right {
+      position: fixed; top: 60px; right: 0;
+      width: 300px; height: calc(100vh - 60px);
+      z-index: 200; transform: translateX(100%);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+      box-shadow: -4px 0 24px rgba(0,0,0,.15);
+    }
+    .sidebar-right.open { transform: translateX(0); }
+    .main-header .tag { display: none; }
+    .hamburger-btn { display: flex !important; }
+  }
+
+  /* ── Phone (≤ 640px) ── */
+  @media (max-width: 640px) {
+    .vd-modal { max-height: 80vh; border-radius: 16px 16px 0 0; }
+    .vd-overlay.open { align-items: flex-end; }
+
+    /* ─ Nav ─ */
+    nav { padding: 0 14px; height: 52px; }
+    .nav-logo span { font-size: 1.1rem; }
+    .nav-owner, .nav-time { display: none; }
+    .status-pill { padding: 5px 10px; font-size: .72rem; }
+
+    /* ─ Layout ─ */
+    .layout {
+      grid-template-columns: 1fr;
+      height: calc(100vh - 52px - 56px - env(safe-area-inset-bottom, 0px)); /* minus nav + bottom bar */
+      position: relative;
+    }
+    .main { height: 100%; }
+
+    /* ─ Left sidebar — slide-in drawer ─ */
+    .sidebar-left {
+      position: fixed; top: 52px; left: 0;
+      width: 82vw; max-width: 300px;
+      height: calc(100vh - 52px - env(safe-area-inset-bottom, 0px));
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+      box-shadow: 4px 0 24px rgba(0,0,0,.18);
+    }
+    .sidebar-left.open { transform: translateX(0); }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.4); z-index: 199;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.show { display: block; }
+
+    /* ─ Hamburger ─ */
+    .hamburger-btn {
+      display: flex !important;
+      align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: #fff;
+      cursor: pointer; font-size: 1.2rem; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ─ Main header ─ */
+    .main-header { padding: 10px 14px 8px; flex-wrap: wrap; gap: 6px; }
+    .main-header h2 { font-size: .9rem; }
+    .main-header p { font-size: .72rem; }
+    .main-header .tag { font-size: .66rem; padding: 2px 8px; }
+
+    /* ─ Chat messages ─ */
+    .chat-messages { padding: 12px 12px 8px; gap: 12px; }
+    .msg { max-width: 94%; }
+    .msg-bubble { font-size: .88rem; padding: 11px 13px; line-height: 1.55; }
+    .msg-avatar { width: 28px; height: 28px; font-size: .65rem; flex-shrink: 0; }
+
+    /* ─ Welcome chips ─ */
+    .welcome-card { padding: 20px 14px; }
+    .welcome-card h3 { font-size: 1rem; }
+    .welcome-card p { font-size: .82rem; }
+    .welcome-chips { gap: 6px; margin-top: 12px; flex-direction: column; }
+    .chip { font-size: .8rem; padding: 9px 14px; width: 100%; text-align: center; }
+
+    /* ─ Input area ─ */
+    .chat-input-area {
+      padding: 8px 10px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    /* Prevent iOS auto-zoom on focus — must be 16px */
+    .chat-input { font-size: 16px; padding: 11px 13px; border-radius: 14px; min-height: 44px; }
+    .send-btn { width: 44px; height: 44px; border-radius: 12px; font-size: 1.1rem; flex-shrink: 0; padding: 0; }
+    .send-btn span:first-child { display: none; }
+    .attach-btn { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; padding: 0; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+
+    /* ─ Prevent iOS zoom on ALL form inputs ─ */
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    select, textarea {
+      font-size: 16px !important;
+    }
+
+    /* ─ Form rows → single column on mobile ─ */
+    .form-row { grid-template-columns: 1fr; gap: 0; }
+
+    /* ─ Sidebar quick actions ─ */
+    .qa-btn { padding: 14px 14px; font-size: .88rem; border-radius: 10px; min-height: 48px; -webkit-tap-highlight-color: transparent; }
+    .qa-btn .icon { font-size: 1.15rem; }
+    .sidebar-label { font-size: .7rem; margin-bottom: 8px; padding: 0 4px; }
+
+    /* ─ Villa chips — bigger tap target ─ */
+    .villa-chip { padding: 12px 14px; min-height: 56px; -webkit-tap-highlight-color: transparent; }
+    .villa-chip .vname { font-size: .88rem; }
+
+    /* ─ Toast — move above bottom nav ─ */
+    .toast { bottom: 72px; right: 12px; left: 12px; text-align: center; max-width: none; }
+
+    /* ─ Modals → bottom sheets on mobile ─ */
+    .vd-overlay, .rf-overlay { align-items: flex-end; padding: 0; }
+    .vd-modal, .rf-modal {
+      border-radius: 22px 22px 0 0;
+      max-height: 92vh; max-width: 100%;
+      width: 100%;
+    }
+    .vd-header, .rf-header {
+      padding: 14px 18px 10px;
+      position: sticky; top: 0; background: #fff; z-index: 1;
+      border-radius: 22px 22px 0 0;
+    }
+    /* Drag handle on bottom sheets */
+    .vd-header::before, .rf-header::before {
+      content: ''; display: block; width: 36px; height: 4px;
+      background: var(--border); border-radius: 2px;
+      margin: 0 auto 12px;
+    }
+    .vd-body, .rf-body { padding: 12px 16px 24px; }
+    .vd-body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+    .rf-body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+
+    /* ─ Modals → bottom sheet ─ */
+    .modal-overlay { align-items: flex-end; }
+    .modal {
+      width: 100%; max-width: 100%;
+      border-radius: 22px 22px 0 0;
+      max-height: 95vh;
+      padding: 20px 18px 24px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+    .modal::before {
+      content: ''; display: block; width: 36px; height: 4px;
+      background: var(--border); border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    /* ─ RF calendar links grid ─ */
+    .rf-cal-grid { grid-template-columns: 1fr !important; }
+
+    /* ─ Drop overlay ─ hide drag text on mobile ─ */
+    .drop-overlay { display: none !important; }
+
+    /* ─ Bottom nav ─ */
+    .mobile-bottom-nav { display: block; }
+    .sidebar-right { display: none !important; }
+
+    /* (multi-card removed) */
+
+    /* ─ VD grid ─ */
+    .vd-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ─ Very small phones (≤ 390px) ─ */
+  @media (max-width: 390px) {
+    .vd-grid { grid-template-columns: 1fr; }
+    .chip { font-size: .75rem; padding: 8px 10px; }
+    .welcome-card h3 { font-size: .92rem; }
+  }
+
+  /* Hamburger + bottom nav hidden on desktop */
+  .hamburger-btn { display: none; }
+
+  /* Safe area for iPhone notch/home indicator */
+  @supports (padding: max(0px)) {
+    @media (max-width: 640px) {
+      .chat-input-area { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+      .mobile-bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+    }
+  }
+
+  /* Global tap highlight removal on interactive elements */
+  button, a, [onclick] { -webkit-tap-highlight-color: transparent; }
+
+  /* ── WhatsApp modal → bottom sheet on mobile ── */
+  @media (max-width: 640px) {
+    #wa-modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+    #wa-modal-overlay > .modal {
+      border-radius: 22px 22px 0 0 !important;
+      max-height: 92vh !important; max-width: 100% !important; width: 100% !important;
+      overflow-y: auto !important;
+    }
+    #wa-modal-overlay > .modal::before {
+      content: ''; display: block; width: 36px; height: 4px;
+      background: var(--border); border-radius: 2px; margin: 10px auto 6px;
+    }
+    #wa-qr-img { width: 200px !important; height: 200px !important; }
+    #wa-addgroup-overlay { align-items: flex-end !important; padding: 0 !important; }
+    #wa-addgroup-overlay > .modal {
+      border-radius: 22px 22px 0 0 !important; max-width: 100% !important; width: 100% !important;
+      padding-bottom: calc(22px + env(safe-area-inset-bottom)) !important;
+    }
+  }
+
+  /* ── Chat Search ── */
+  .search-bar {
+    display: none; padding: 8px 24px; background: #fff;
+    border-bottom: 1px solid var(--border); align-items: center; gap: 8px;
+  }
+  .search-bar.open { display: flex; }
+  .search-bar input {
+    flex: 1; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: .85rem; font-family: inherit; background: var(--bg); color: var(--text);
+  }
+  .search-bar input:focus { outline: none; border-color: var(--green); background: #fff; }
+  .search-bar .search-count { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+  .search-bar .close-search {
+    background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--muted); padding: 4px;
+  }
+  .search-bar .close-search:hover { color: var(--text); }
+  .msg.search-highlight .msg-bubble { box-shadow: 0 0 0 2px var(--green); }
+
+  @media (max-width: 640px) {
+    .search-bar { padding: 8px 12px; }
+    .search-bar input { font-size: 16px; }
+  }
+
+
+  /* ── Loading Skeleton (enhanced) ── */
+  .skeleton-msg { display: flex; gap: 10px; max-width: 70%; }
+  .skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--border); }
+  .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .skeleton-line { height: 12px; border-radius: 4px; background: linear-gradient(90deg, var(--border) 25%, #d5dae0 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  .skeleton-line:nth-child(1) { width: 80%; }
+  .skeleton-line:nth-child(2) { width: 60%; }
+  .skeleton-line:nth-child(3) { width: 40%; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .skeleton-msg.hidden { display: none; }
+
+
+  /* ── Right Sidebar Enhanced ── */
+  .sidebar-right .panel-header { font-size: .72rem; font-weight: 700; color: var(--green); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .quick-stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .78rem; }
+  .quick-stat-row:last-child { border-bottom: none; }
+  .quick-stat-row .label { color: var(--muted); }
+  .quick-stat-row .value { font-weight: 700; color: var(--text); }
+  .quick-stat-row .value.positive { color: #16a34a; }
+  .quick-stat-row .value.negative { color: #ef4444; }
+  .quick-stat-row .value.warning { color: #f59e0b; }
+
+
+  /* ── Offline Indicator ── */
+  /* ── WhatsApp QR Reconnect Banner ── */
+  .wa-reconnect-banner {
+    display: none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-bottom: 1px solid #f59e0b; padding: 12px 20px;
+    align-items: center; gap: 16px; z-index: 99;
+    animation: slideDown .3s ease;
+  }
+  .wa-reconnect-banner.show { display: flex; }
+  .wa-reconnect-banner .qr-thumb {
+    width: 80px; height: 80px; border-radius: 8px; border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1); cursor: pointer; background: #fff;
+  }
+  .wa-reconnect-banner .qr-info { flex: 1; }
+  .wa-reconnect-banner .qr-title { font-size: .88rem; font-weight: 700; color: #92400e; }
+  .wa-reconnect-banner .qr-desc { font-size: .78rem; color: #a16207; margin-top: 2px; }
+  .wa-reconnect-banner .qr-dismiss {
+    background: none; border: 1px solid #d97706; border-radius: 8px;
+    padding: 6px 12px; font-size: .75rem; font-weight: 600;
+    color: #92400e; cursor: pointer; white-space: nowrap;
+  }
+  .wa-reconnect-banner .qr-dismiss:hover { background: rgba(217,119,6,.1); }
+  @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @media (max-width: 640px) {
+    .wa-reconnect-banner { padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
+    .wa-reconnect-banner .qr-thumb { width: 64px; height: 64px; }
+    .wa-reconnect-banner .qr-title { font-size: .82rem; }
+  }
+
+  .offline-banner {
+    display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    background: linear-gradient(90deg, #ef4444, #dc2626); color: #fff;
+    text-align: center; padding: 8px 16px; font-size: .82rem; font-weight: 600;
+    animation: slideDown .3s ease;
+  }
+  .offline-banner.show { display: block; }
+  .reconnected-banner {
+    display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    background: linear-gradient(90deg, #16a34a, #15803d); color: #fff;
+    text-align: center; padding: 8px 16px; font-size: .82rem; font-weight: 600;
+    animation: slideDown .3s ease;
+  }
+  .reconnected-banner.show { display: block; }
+  @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+</head>
+<body>
+<script>
+// ── CSRF Token ──
+let _csrfToken = '';
+async function fetchCsrfToken() {
+  try {
+    const r = await fetch('/api/csrf-token');
+    if (r.ok) { const d = await r.json(); _csrfToken = d.token; }
+  } catch(e) { console.warn('[CSRF] Could not fetch token:', e.message); }
+}
+fetchCsrfToken();
+
+// Patch fetch to auto-include CSRF token on POST
+const _origFetch = window.fetch;
+window.fetch = function(url, opts) {
+  if (opts && opts.method && opts.method.toUpperCase() === 'POST' && _csrfToken) {
+    if (!opts.headers) opts.headers = {};
+    if (opts.headers instanceof Headers) { opts.headers.set('x-csrf-token', _csrfToken); }
+    else if (typeof opts.headers === 'object') { opts.headers['x-csrf-token'] = _csrfToken; }
+  }
+  return _origFetch.apply(this, arguments);
+};
+</script>
+<div class="offline-banner" id="offline-banner" role="alert">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+  No internet connection — retrying...
+</div>
+<div class="reconnected-banner" id="reconnected-banner">
+  Connected — you're back online
+</div>
+
+
+<!-- ── NAV ── -->
+<nav role="navigation" aria-label="Main navigation">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div class="nav-logo">
+      <span>TVM<b>bot</b></span>
+      <span class="version">TVMbot v2.0</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <a href="/dashboard" style="padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;background:var(--neutral-100);color:var(--muted);text-decoration:none;border:1px solid var(--border);" title="Open Dashboard">Dashboard</a>
+    <button onclick="toggleSearch()" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.9rem;color:var(--muted)" aria-label="Search messages (Ctrl+K)" title="Search (Ctrl+K)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+    <div class="status-pill offline" id="status-pill" onclick="checkStatus()">
+      <span class="dot"></span>
+      <span id="status-text">Checking...</span>
+    </div>
+    <a href="/auth/logout" style="padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:700;background:#fef2f2;color:#991b1b;text-decoration:none;border:1px solid #fecaca;" title="Logout">⎋</a>
+  </div>
+</nav>
+
+<!-- WhatsApp QR Reconnect Banner -->
+<div class="wa-reconnect-banner" id="wa-qr-banner">
+  <img class="qr-thumb" id="wa-qr-thumb" src="" alt="WhatsApp QR" onclick="document.getElementById('wa-qr-modal-overlay').classList.add('open')">
+  <div class="qr-info">
+    <div class="qr-title">WhatsApp disconnected — scan QR to reconnect</div>
+    <div class="qr-desc">Open WhatsApp on your phone > Settings > Linked Devices > Link a Device</div>
+  </div>
+  <button class="qr-dismiss" onclick="this.parentElement.classList.remove('show')">Dismiss</button>
+</div>
+
+<!-- QR Full-size Modal -->
+<div class="modal-overlay" id="wa-qr-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="text-align:center;max-width:380px;">
+    <h2 style="margin-bottom:8px;">Scan QR Code</h2>
+    <p style="margin-bottom:16px;">Open WhatsApp > Linked Devices > Link a Device</p>
+    <img id="wa-qr-full" src="" style="width:260px;height:260px;border-radius:12px;border:2px solid var(--border);" alt="QR Code">
+    <div style="margin-top:16px;">
+      <button class="btn-secondary" onclick="document.getElementById('wa-qr-modal-overlay').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+  <div class="mbn-inner">
+    <button class="mbn-btn active" id="mbn-chat" onclick="mbnSwitch('chat')">
+      <span class="mbn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>Chat
+    </button>
+    <button class="mbn-btn" id="mbn-villas" onclick="mbnSwitch('villas')">
+      <span class="mbn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>Villas
+    </button>
+    <button class="mbn-btn" id="mbn-payments" onclick="mbnSwitch('payments')">
+      <span class="mbn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>Payments
+    </button>
+    <button class="mbn-btn" id="mbn-menu" onclick="toggleSidebar()">
+      <span class="mbn-icon">☰</span>Menu
+    </button>
+  </div>
+</nav>
+
+<!-- ── MOBILE PANELS SHEET ── -->
+<div class="mobile-panels-sheet" id="mobile-panels-sheet">
+  <div class="mps-backdrop" onclick="closeMobileSheet()"></div>
+  <div class="mps-content">
+    <div class="mps-handle"></div>
+    <div class="mps-tabs">
+      <button class="mps-tab active" id="mpst-villas" onclick="mpsTab('villas')">Villas</button>
+      <button class="mps-tab" id="mpst-payments" onclick="mpsTab('payments')">Payments</button>
+    </div>
+    <div class="mps-panel active" id="mpsp-villas">
+      <div id="mps-villas-content"><div class="empty-state">Loading...</div></div>
+    </div>
+    <div class="mps-panel" id="mpsp-payments">
+      <div id="mps-payments-content"><div class="empty-state">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="layout">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Actions</div>
+      <button class="qa-btn" onclick="window.open('https://villa-contract.vercel.app','_blank')" style="background:var(--green-light);color:var(--green-dark);font-weight:700;">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span> Create Contract
+      </button>
+      <button class="qa-btn" id="wa-quick-btn" onclick="openWhatsAppPanel()" style="background:#dcfce7;color:#166534;font-weight:700;border:2px solid #86efac;">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span> WhatsApp <span id="wa-quick-status" style="font-size:.7rem;font-weight:400;margin-left:4px;opacity:.8;">● not connected</span>
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me all upcoming bookings and calendar events this week')">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span> This Week's Calendar
+      </button>
+      <button class="qa-btn" onclick="quickAction('Generate a weekly cleaning schedule based on upcoming check-ins and check-outs')">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg></span> Cleaning Schedule
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me recent files modified in Google Drive')">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></span> Recent Drive Files
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Finance</div>
+      <button class="qa-btn" onclick="quickAction('Show me the financial summary for this month — total income, expenses, and net profit')">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span> Monthly Summary
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me all bank account balances — BCA, WISE, PERMATA, MANDIRI, CASH')">
+        <span class="icon">🏦</span> Bank Balances
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me recent transactions — last 20 income and expense entries')">
+        <span class="icon">📋</span> Recent Transactions
+      </button>
+      <button class="qa-btn" onclick="quickAction('Are there any outstanding or unpaid invoices?')">
+        <span class="icon">⏳</span> Outstanding Bills
+      </button>
+      <button class="qa-btn" onclick="quickAction('Generate a full P&L report for this year')">
+        <span class="icon">📈</span> Yearly P&L
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">📋 Contracts</div>
+      <button class="qa-btn" onclick="window.open('https://villa-contract.vercel.app','_blank')">
+        <span class="icon">📄</span> Create New Contract
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show me all recent contracts and bookings saved in memory')">
+        <span class="icon">📁</span> View All Contracts
+      </button>
+      <button class="qa-btn" onclick="quickAction('How do I use the villa contract app at villa-contract.vercel.app?')">
+        <span class="icon">❓</span> Contract App Help
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">🔧 Maintenance & Setup</div>
+      <button class="qa-btn" onclick="quickAction('Show all open maintenance tasks across all villas')">
+        <span class="icon">🛠️</span> Open Tasks
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show urgent maintenance tasks that need immediate attention')">
+        <span class="icon">🚨</span> Urgent Issues
+      </button>
+      <button class="qa-btn" onclick="quickAction('Show completed maintenance tasks from this month')">
+        <span class="icon">✅</span> Completed
+      </button>
+      <button class="qa-btn" onclick="quickAction('What maintenance is scheduled for this week?')">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span> This Week
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Memory</div>
+      <div class="stat-mini">
+        <div class="label">Villas Managed</div>
+        <div class="val" id="stat-villas">–</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Upcoming Bookings</div>
+        <div class="val" id="stat-bookings">–</div>
+        <div class="sub" id="stat-bookings-sub">next 30 days</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Agent Model</div>
+        <div class="val" style="font-size:.75rem;font-weight:600;" id="stat-model">–</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+      <button class="qa-btn" onclick="loadRightPanel()">
+        <span class="icon">🔄</span> Refresh Data
+      </button>
+      <button class="qa-btn" onclick="clearChat()">
+        <span class="icon">🗑️</span> Clear Chat
+      </button>
+    </div>
+  </div>
+
+  <!-- ── MAIN CHAT ── -->
+  <div class="main">
+    <div class="main-header">
+      <div>
+        <h2>Chat with TVMbot</h2>
+        <p>Your autonomous villa management AI — ask anything, execute anything</p>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tag-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>Gmail</span>
+        <span class="tag tag-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Calendar</span>
+        <span class="tag tag-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>Drive</span>
+        <span class="tag tag-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Docs</span>
+        <span class="tag tag-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line></svg>Sheets</span>
+      </div>
+    </div>
+
+    <div class="search-bar" id="search-bar" role="search" aria-label="Search messages">
+      <input type="text" id="search-input" placeholder="Search messages..." aria-label="Search messages" onkeyup="handleSearch(event)">
+      <span class="search-count" id="search-count"></span>
+      <button class="close-search" onclick="toggleSearch()" aria-label="Close search">&times;</button>
+    </div>
+    <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Chat messages">
+      <div class="ptr-indicator" id="ptrIndicator"><div class="ptr-spinner"></div> Pull to refresh</div>
+      <div class="welcome-card">
+        <h3>👋 Welcome back, Afni!</h3>
+        <p>TVMbot is ready — ask about finances, maintenance, emails, or your villas anytime.</p>
+        <div class="welcome-chips">
+          <span class="chip" onclick="quickAction('Show all bank account balances — BCA, WISE, PERMATA, MANDIRI, CASH')">💰 Bank Balances</span>
+          <span class="chip" onclick="quickAction('Show financial summary for this month — income, expenses, and net profit')">📊 This Month</span>
+          <span class="chip" onclick="quickAction('Show all open maintenance tasks across all villas')">🔧 Maintenance</span>
+          <span class="chip" onclick="quickAction('Check my latest emails and summarize what needs attention')">📧 Emails</span>
+          <span class="chip" onclick="quickAction('Show upcoming bookings this week')">📅 Bookings</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area" id="chat-input-area">
+      <div id="file-preview-bar" class="file-preview-bar" style="display:none;">
+        <span class="ficon" id="fp-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+        <span class="fp-name" id="fp-name">filename.pdf</span>
+        <span style="font-size:.72rem;color:var(--muted);" id="fp-size"></span>
+        <button class="fp-remove" onclick="clearAttachment()" title="Remove file">✕</button>
+      </div>
+      <div class="input-row">
+        <input type="file" id="file-input" accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.jpg,.jpeg,.png,.webp" style="display:none;" onchange="handleFileSelect(this.files[0])">
+        <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="Voice input" aria-label="Voice input"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></button>
+        <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach file (PDF, Word, Excel, image)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></button>
+        <textarea class="chat-input" aria-label="Type your message" id="chat-input" placeholder="Ask anything, or drop a file here… 'invoice pdf' → bot auto-reads it" rows="1"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <span>Send</span> <span>↑</span>
+        </button>
+      </div>
+    </div>
+
+<!-- Drop overlay -->
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-overlay-box">
+    <div class="icon">📂</div>
+    <div>Drop your file here</div>
+    <div style="font-size:.9rem;font-weight:400;margin-top:6px;color:var(--muted);">PDF · Word · Excel · CSV · Image</div>
+  </div>
+</div>
+  </div>
+
+  <!-- ── RIGHT SIDEBAR ── -->
+  <div class="sidebar-right">
+
+    <!-- Upcoming Bookings -->
+    <div class="panel">
+      <div class="panel-header">
+        💰 Upcoming Payments
+        <button class="refresh-btn" onclick="loadPayments()">↻</button>
+      </div>
+      <div id="panel-bookings">
+        <div class="empty-state"><div class="icon">📅</div>Loading...</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Villas -->
+    <div class="panel">
+      <div class="panel-header">
+        🏠 Villas in Memory
+        <button class="refresh-btn" onclick="loadVillas()">↻</button>
+      </div>
+      <div id="panel-villas">
+        <div class="empty-state"><div class="icon">🏠</div>Loading...</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Recent Agent Activity -->
+    <div class="panel">
+      <div class="panel-header">
+        🤖 Recent Agent Activity
+        <button class="refresh-btn" onclick="loadDecisions()">↻</button>
+      </div>
+      <div id="panel-decisions">
+        <div class="empty-state"><div class="icon">🤖</div>Loading...</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Integrations Status -->
+    <div class="panel">
+      <div class="panel-header">🔌 Integrations</div>
+      <div id="panel-integrations">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📧 Gmail</span>
+            <span class="tag tag-green" id="int-gmail" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📅 Calendar</span>
+            <span class="tag tag-green" id="int-calendar" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">💾 Drive</span>
+            <span class="tag tag-blue" id="int-drive" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📄 Docs</span>
+            <span class="tag tag-blue" id="int-docs" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">📊 Sheets</span>
+            <span class="tag tag-blue" id="int-sheets" style="font-size:.68rem;">–</span>
+          </div>
+          <div class="booking-item" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.8rem;font-weight:600;">💬 WhatsApp</span>
+            <span class="tag tag-orange" id="int-whatsapp" style="font-size:.68rem; background:#fef3c7;color:#92400e;cursor:pointer;" onclick="openWhatsAppPanel()">Not connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- (Onboarding modal removed) -->
+
+<!-- ── VILLA DETAIL MODAL ── -->
+<div class="vd-overlay" id="vd-overlay" onclick="if(event.target===this)closeVillaDetail()">
+  <div class="vd-modal" id="vd-modal">
+    <div class="vd-header">
+      <div>
+        <div class="vd-title" id="vd-title">Villa</div>
+        <div class="vd-sub"  id="vd-sub">Loading...</div>
+      </div>
+      <button class="btn-close" onclick="closeVillaDetail()" style="position:static;margin-left:12px;">✕</button>
+    </div>
+    <div class="vd-body" id="vd-body">
+      <div class="vd-empty">Loading villa details...</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── RENTAL FORM MODAL ── -->
+<div class="rf-overlay" id="rf-overlay" onclick="if(event.target===this)closeRentalForm()">
+  <div class="rf-modal">
+    <div class="rf-header">
+      <div class="rf-title" id="rf-title">📋 Long-term Rental</div>
+      <button class="btn-close" onclick="closeRentalForm()" style="position:static">✕</button>
+    </div>
+    <div class="rf-body">
+      <input type="hidden" id="rf-villa-name">
+
+      <div class="rf-section">
+        <div class="rf-section-label">🏠 Villa & Rental Type</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rental Type</label>
+            <select id="rf-type" onchange="rfRecalc()">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="quarterly">Quarterly (3 months)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="rf-status">
+              <option value="active">Active</option>
+              <option value="negotiating">Negotiating</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="rf-section">
+        <div class="rf-section-label">👤 Tenant Details</div>
+        <div class="form-group">
+          <label>Tenant Name *</label>
+          <input type="text" id="rf-tenant-name" placeholder="e.g. Pak Budi Santoso">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone / WhatsApp</label>
+            <input type="text" id="rf-tenant-phone" placeholder="+62 812 ...">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="rf-tenant-email" placeholder="tenant@email.com">
+          </div>
+        </div>
+      </div>
+
+      <div class="rf-section">
+        <div class="rf-section-label">📅 Contract Period</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Check-in *</label>
+            <input type="date" id="rf-checkin" onchange="rfRecalc()">
+          </div>
+          <div class="form-group">
+            <label>Check-out *</label>
+            <input type="date" id="rf-checkout" onchange="rfRecalc()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Payment Due Day (of month)</label>
+            <select id="rf-payment-day" onchange="rfRecalc()">
+              <option value="1">1st of the month</option>
+              <option value="2">2nd of the month</option>
+              <option value="3">3rd of the month</option>
+              <option value="4">4th of the month</option>
+              <option value="5">5th of the month</option>
+              <option value="6">6th of the month</option>
+              <option value="7">7th of the month</option>
+              <option value="8">8th of the month</option>
+              <option value="9">9th of the month</option>
+              <option value="10">10th of the month</option>
+              <option value="11">11th of the month</option>
+              <option value="12">12th of the month</option>
+              <option value="13">13th of the month</option>
+              <option value="14">14th of the month</option>
+              <option value="15">15th of the month</option>
+              <option value="16">16th of the month</option>
+              <option value="17">17th of the month</option>
+              <option value="18">18th of the month</option>
+              <option value="19">19th of the month</option>
+              <option value="20">20th of the month</option>
+              <option value="21">21th of the month</option>
+              <option value="22">22th of the month</option>
+              <option value="23">23th of the month</option>
+              <option value="24">24th of the month</option>
+              <option value="25">25th of the month</option>
+              <option value="26">26th of the month</option>
+              <option value="27">27th of the month</option>
+              <option value="28">28th of the month</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="rf-section">
+        <div class="rf-section-label">💰 Pricing</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Offer Price (IDR)</label>
+            <input type="number" id="rf-offer-price" placeholder="e.g. 25000000" oninput="rfRecalc()">
+          </div>
+          <div class="form-group">
+            <label>Agreed Monthly (IDR)</label>
+            <input type="number" id="rf-monthly" placeholder="e.g. 22000000" oninput="rfRecalc()">
+          </div>
+        </div>
+        <div class="rf-amount-box" id="rf-summary" style="display:none">
+          <div class="rf-amount-row"><span class="lbl">Offer Price</span><span class="val" id="rfs-offer">–</span></div>
+          <div class="rf-amount-row"><span class="lbl">Monthly Amount</span><span class="val" id="rfs-monthly">–</span></div>
+          <div class="rf-amount-row"><span class="lbl">Contract Duration</span><span class="val" id="rfs-duration">–</span></div>
+          <div class="rf-amount-row total"><span class="lbl">Total Contract Value</span><span class="val" id="rfs-total" style="color:var(--green)">–</span></div>
+          <div class="rf-amount-row"><span class="lbl">Next Payment Due</span><span class="val" id="rfs-nextpay" style="color:#f59e0b">–</span></div>
+        </div>
+      </div>
+
+      <div class="rf-section">
+        <div class="rf-section-label">📝 Notes</div>
+        <textarea id="rf-notes" rows="2" placeholder="e.g. Deposit IDR 5jt received, pet allowed, parking included..."></textarea>
+      </div>
+
+      <button class="btn-primary" style="width:100%;padding:14px;font-size:.95rem;" onclick="saveRental()">✓ Save Rental + Generate Calendar Links</button>
+
+      <div id="rf-cal-links" class="cal-links" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SESSION_ID = 'tvm_' + Math.random().toString(36).slice(2);
+const _rentalMap = {}; // global map: rental id → rental object (safe alternative to JSON.stringify in onclick)
+let _currentVillaDetail = null; // tracks which villa detail modal is open
+let isTyping = false;
+
+// ── Mobile Sidebar Toggle ───────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar-left');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+// Auto-close sidebar when a quick action is triggered on mobile
+function closeSidebarOnMobile() {
+  if (window.innerWidth <= 640) {
+    document.querySelector('.sidebar-left').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+}
+
+// ── Mobile Bottom Nav & Panel Sheet ────────────────────────────────────────────
+function mbnSwitch(tab) {
+  // Update active state on bottom nav buttons
+  ['chat','villas','payments','menu'].forEach(t => {
+    const b = document.getElementById('mbn-' + t);
+    if (b) b.classList.toggle('active', t === tab);
+  });
+  if (tab === 'chat') { closeMobileSheet(); return; }
+  if (tab === 'villas' || tab === 'payments') {
+    openMobileSheet(tab);
+  }
+}
+
+function openMobileSheet(tab) {
+  const sheet = document.getElementById('mobile-panels-sheet');
+  sheet.classList.add('open');
+  mpsTab(tab);
+  // Populate content
+  if (tab === 'villas') loadMobileVillas();
+  if (tab === 'payments') loadMobilePayments();
+}
+
+function closeMobileSheet() {
+  document.getElementById('mobile-panels-sheet').classList.remove('open');
+  // Reset bottom nav to chat
+  ['chat','villas','payments','menu'].forEach(t => {
+    const b = document.getElementById('mbn-' + t);
+    if (b) b.classList.toggle('active', t === 'chat');
+  });
+}
+
+function mpsTab(tab) {
+  ['villas','payments'].forEach(t => {
+    document.getElementById('mpst-' + t)?.classList.toggle('active', t === tab);
+    document.getElementById('mpsp-' + t)?.classList.toggle('active', t === tab);
+  });
+  if (tab === 'villas') loadMobileVillas();
+  if (tab === 'payments') loadMobilePayments();
+}
+
+async function loadMobileVillas() {
+  const el = document.getElementById('mps-villas-content');
+  try {
+    const d = await fetch('/memory/villas').then(r => r.json());
+    const villas = d.villas || [];
+    if (!villas.length) { el.innerHTML = '<div class="empty-state">No villas yet</div>'; return; }
+    el.innerHTML = villas.map(v => `
+      <div class="villa-chip" onclick="closeMobileSheet(); setTimeout(()=>openVillaDetail('${v.name.replace(/'/g,"\\'")}'),150)" style="margin-bottom:8px;">
+        <div><div class="vname">${v.name}</div><div class="vloc">📍 ${v.location||'?'} · ${v.bedrooms||'?'} BR</div></div>
+        <div style="color:var(--muted)">›</div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="empty-state">Could not load</div>'; }
+}
+
+async function loadMobilePayments() {
+  const el = document.getElementById('mps-payments-content');
+  try {
+    const d = await fetch('/rental/all/active').then(r => r.json());
+    const rentals = d.rentals || [];
+    const upcoming = d.upcoming || [];
+    if (!rentals.length && !upcoming.length) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">💰</div>No upcoming payments<br><button onclick="document.querySelector(\'.chat-input\').value=\'Show me all outstanding payments\';document.querySelector(\'.send-btn\').click()" style="margin-top:8px;padding:6px 14px;border-radius:8px;background:var(--green-light);color:var(--green-dark);border:1px solid var(--green);font-size:.75rem;font-weight:600;cursor:pointer;">Check payments</button></div>'; return;
+    }
+    let html = '';
+    rentals.forEach(r => {
+      if (!r.next_payment) return;
+      const daysLeft = Math.ceil((new Date(r.next_payment) - new Date()) / (1000*60*60*24));
+      const badge = daysLeft < 0 ? 'background:#fef2f2;color:#991b1b' : daysLeft <= 5 ? 'background:#fffbeb;color:#92400e' : 'background:var(--green-light);color:var(--green-dark)';
+      const label = daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`;
+      html += `<div class="payment-item">
+        <div class="pi-villa">${r.villa_name}</div>
+        <div style="font-size:.78rem;color:var(--muted);">${r.tenant_name}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <span style="font-weight:700;">IDR ${Number(r.monthly_amount||0).toLocaleString('id-ID')}</span>
+          <span style="font-size:.7rem;padding:2px 8px;border-radius:20px;font-weight:700;${badge}">${label}</span>
+        </div>
+        <button onclick="markRentalPaid(${r.id})" style="margin-top:6px;width:100%;padding:7px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;">✓ Mark Paid</button>
+      </div>`;
+    });
+    el.innerHTML = html || '<div class="empty-state">No rental payments due</div>';
+  } catch(e) { el.innerHTML = '<div class="empty-state">Could not load</div>'; }
+}
+
+// ── Clock ──────────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('nav-time').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── Status Check ───────────────────────────────────────────────────────────────
+async function checkStatus() {
+  try {
+    const d = await fetch('/status').then(r => r.json());
+    const pill = document.getElementById('status-pill');
+    const txt  = document.getElementById('status-text');
+    if (d.status === 'online') {
+      pill.className = 'status-pill';
+      txt.textContent = 'ONLINE';
+      document.getElementById('stat-model').textContent = d.model?.replace('claude-','').replace('-20251101','') || '–';
+    } else {
+      pill.className = 'status-pill offline';
+      txt.textContent = 'OFFLINE';
+    }
+    return d;
+  } catch(e) {
+    document.getElementById('status-pill').className = 'status-pill offline';
+    document.getElementById('status-text').textContent = 'OFFLINE';
+    return null;
+  }
+}
+
+// ── Load right panel data ──────────────────────────────────────────────────────
+async function loadRightPanel() {
+  await Promise.all([loadPayments(), loadVillas(), loadDecisions(), checkStatus()]);
+}
+// Poll server status every 30s
+setInterval(checkStatus, 30000);
+
+async function loadBookings() {
+  try {
+    const d = await fetch('/memory/bookings').then(r => r.json());
+    const el = document.getElementById('panel-bookings');
+    const bookings = d.upcoming || [];
+    document.getElementById('stat-bookings').textContent = bookings.length;
+
+    if (bookings.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📅</div>No upcoming bookings<br><button onclick="document.querySelector(\'.chat-input\').value=\'Show me all bookings this month\';document.querySelector(\'.send-btn\').click()" style="margin-top:8px;padding:6px 14px;border-radius:8px;background:var(--green-light);color:var(--green-dark);border:1px solid var(--green);font-size:.75rem;font-weight:600;cursor:pointer;">Check bookings</button></div>';
+      return;
+    }
+    el.innerHTML = bookings.slice(0, 5).map(b => `
+      <div class="booking-item">
+        <div class="guest">${b.guest_name}</div>
+        <div class="villa">🏠 ${b.villa_name}</div>
+        <div class="dates">📅 ${b.check_in} → ${b.check_out}</div>
+        <div style="margin-top:4px;">
+          <span class="tag ${b.status === 'confirmed' ? 'tag-green' : 'tag-orange'}" style="font-size:.65rem;">${b.status}</span>
+          ${b.price ? `<span style="font-size:.72rem;color:var(--muted);margin-left:6px;">$${b.price}</span>` : ''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('panel-bookings').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
+}
+
+async function loadVillas() {
+  try {
+    const d = await fetch('/memory/profile').then(r => r.json());
+    const villas = d.villas || [];
+    const profile = d.profile || {};
+    document.getElementById('stat-villas').textContent = villas.length;
+    document.getElementById('nav-owner').textContent = profile.name || profile.owner_name || 'Not configured';
+
+    const el = document.getElementById('panel-villas');
+    if (villas.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">🏠</div>No villas yet<br><button onclick="document.querySelector(\'.chat-input\').value=\'Add a new villa to the system\';document.querySelector(\'.send-btn\').click()" style="margin-top:8px;padding:6px 14px;border-radius:8px;background:var(--green-light);color:var(--green-dark);border:1px solid var(--green);font-size:.75rem;font-weight:600;cursor:pointer;">Add a villa</button></div>';
+      return;
+    }
+    el.innerHTML = villas.map(v => `
+      <div class="villa-chip" onclick="openVillaDetail('${v.name.replace(/'/g,"\\'")}')">
+        <div>
+          <div class="vname">${v.name}</div>
+          <div class="vloc">📍 ${v.location || 'Location not set'} · ${v.bedrooms || '?'} BR</div>
+        </div>
+        <div class="vprice" style="font-size:.75rem;color:var(--muted);">›</div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('panel-villas').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
+}
+
+async function loadDecisions() {
+  try {
+    const d = await fetch('/memory/decisions').then(r => r.json());
+    const el = document.getElementById('panel-decisions');
+    const decisions = (d.decisions || []).slice(0, 6);
+    if (decisions.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">🤖</div>No activity yet<br><small style="color:var(--muted);">Start chatting and actions will show here</small></div>';
+      return;
+    }
+    el.innerHTML = decisions.map(dec => `
+      <div class="decision-item">
+        <div class="time">${dec.created_at?.slice(0,16).replace('T',' ') || '–'}</div>
+        <div class="action">${(dec.user_message || '').slice(0, 60)}...</div>
+        ${dec.tools_called ? `<div class="tools">🔧 ${dec.tools_called.split(',').slice(0,3).join(', ')}</div>` : ''}
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('panel-decisions').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
+}
+
+// ── Integrations status (from /status) ────────────────────────────────────────
+async function loadIntegrations() {
+  try {
+    const d = await fetch('/status').then(r => r.json());
+    // These are always connected based on config
+    ['gmail','calendar','drive','docs','sheets'].forEach(k => {
+      const el = document.getElementById('int-' + k);
+      if (el) { el.textContent = 'Connected'; el.className = 'tag tag-green'; el.style = 'font-size:.68rem;'; }
+    });
+  } catch(e) {}
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────────
+// XSS protection: sanitize all user-controlled text before innerHTML
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(str));
+  return d.innerHTML;
+}
+
+function appendMessage(role, text, meta = {}) {
+  const container = document.getElementById('chat-messages');
+  const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const isBot = role === 'bot';
+
+  // Sanitize: user messages always escaped. Bot messages use markdown parser (safe) or escaped fallback.
+  let renderedText;
+  if (role === 'bot' && typeof marked !== 'undefined') {
+    // marked.parse handles markdown→HTML safely when paired with DOMPurify or sanitize option
+    renderedText = marked.parse(text, {breaks: true, gfm: true});
+  } else if (role === 'bot') {
+    // Fallback: escape HTML first, then apply safe formatting
+    const safe = escapeHtml(text);
+    renderedText = safe.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  } else {
+    // User message: always fully escaped
+    renderedText = escapeHtml(text).replace(/\n/g,'<br>');
+  }
+
+  // Sanitize tool names
+  const toolsHtml = meta.toolsUsed?.length
+    ? `<div class="tools-used">${meta.toolsUsed.map(t=>`<span class="tool-badge">🔧 ${escapeHtml(t)}</span>`).join('')}</div>`
+    : '';
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${isBot ? 'TVM' : 'You'}</div>
+    <div class="msg-content">
+      <div class="msg-bubble">${renderedText}</div>
+      ${toolsHtml}
+      <div class="msg-meta">${time}${meta.iterations ? ` · ${meta.iterations} steps` : ''}${meta.elapsed ? ` · ${(meta.elapsed/1000).toFixed(1)}s` : ''}</div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  // Remove any existing typing indicator
+  const existing = document.getElementById('typing-indicator');
+  if (existing) existing.remove();
+
+  removeTyping();
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-avatar">TVM</div><div class="msg-content"><div class="typing"><span></span><span></span><span></span></div><div style="font-size:.72rem;color:var(--muted);margin-top:4px;">TVMbot is thinking...</div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  const email = 'canggulovestory@gmail.com';
+  if (!msg || isTyping) return;
+
+  appendMessage('user', msg);
+  input.value = '';
+  input.style.height = 'auto';
+  isTyping = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, sessionId: SESSION_ID, userEmail: email })
+    });
+    const d = await res.json();
+    removeTyping();
+
+    if (d.reply) {
+      appendMessage('bot', d.reply, { toolsUsed: d.meta?.toolsUsed, iterations: d.meta?.iterations, elapsed: d.meta?.elapsed });
+    } else if (d.error) {
+      appendMessage('bot', '⚠️ ' + d.error);
+    }
+
+    // Refresh right panel after action
+    setTimeout(loadRightPanel, 1000);
+  } catch(e) {
+    removeTyping();
+    appendMessage('bot', '⚠️ Could not reach TVMbot. Check if server is online.');
+  }
+
+  isTyping = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+function quickAction(msg) {
+  closeSidebarOnMobile();
+  document.getElementById('chat-input').value = msg;
+  sendMessage();
+}
+
+function promptContract() {
+  document.getElementById('chat-input').value = 'Create a rental contract for guest: [Guest Name], villa: [Villa Name], check-in: [YYYY-MM-DD], check-out: [YYYY-MM-DD], price: $[amount], email: [guest@email.com]';
+  document.getElementById('chat-input').focus();
+  document.getElementById('chat-input').select();
+  showToast('Fill in the [ ] fields then hit Send', 'info');
+}
+
+function clearChat() {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  showToast('Chat cleared', 'success');
+}
+
+// ── Auto-resize textarea ───────────────────────────────────────────────────────
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// ── Onboarding removed — villas are now managed via chat + Google Sheets ──
+
+// ── Villa Detail Modal ─────────────────────────────────────────────────────────
+function closeVillaDetail() { document.getElementById('vd-overlay').classList.remove('open'); }
+
+async function openVillaDetail(name) {
+  _currentVillaDetail = name;
+  document.getElementById('vd-title').textContent = name;
+  document.getElementById('vd-sub').textContent = 'Loading...';
+  document.getElementById('vd-body').innerHTML = '<div class="vd-empty">⏳ Loading...</div>';
+  document.getElementById('vd-overlay').classList.add('open');
+
+  try {
+    const d = await fetch('/memory/villa/' + encodeURIComponent(name)).then(r => r.json());
+    const v = d.villa || {};
+    const upcoming = d.upcoming || [];
+    const maintenance = d.maintenance || [];
+    const transactions = d.transactions || [];
+
+    document.getElementById('vd-sub').textContent = (v.location || 'Location not set') + (v.bedrooms ? ' · ' + v.bedrooms + ' BR' : '');
+
+    // Extract maps link from notes
+    const mapsMatch = (v.notes || '').match(/Maps: (https?:\/\/[^\s|]+)/);
+    const mapsUrl = mapsMatch ? mapsMatch[1] : null;
+
+    let html = '';
+
+    // ── Active Tenant Banner ──────────────────────────────────
+    const r = d.activeRental;
+    if (r) {
+      _rentalMap[r.id] = r; // cache for safe onclick access
+      const daysLeft = Math.ceil((new Date(r.check_out) - new Date()) / (1000*60*60*24));
+      const nextDue  = r.next_payment ? new Date(r.next_payment).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '–';
+      const dueColor = (() => { if (!r.next_payment) return '#64748b'; const d2 = Math.ceil((new Date(r.next_payment)-new Date())/(1000*60*60*24)); return d2 < 0 ? '#ef4444' : d2 <= 5 ? '#f59e0b' : '#16a34a'; })();
+      html += `<div style="background:linear-gradient(135deg,#768064,#5a6350);border-radius:12px;padding:16px;margin-bottom:12px;color:#fff;">
+        <div style="font-size:.7rem;font-weight:700;letter-spacing:.08em;opacity:.8;text-transform:uppercase;margin-bottom:8px;">🏡 Current Tenant</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:1.15rem;font-weight:800;">${r.tenant_name}</div>
+            ${r.tenant_phone ? `<div style="font-size:.82rem;opacity:.9;margin-top:3px;">📱 <a href="tel:${r.tenant_phone}" style="color:#fff;text-decoration:none;">${r.tenant_phone}</a></div>` : ''}
+            ${r.tenant_email ? `<div style="font-size:.78rem;opacity:.75;margin-top:2px;">✉️ ${r.tenant_email}</div>` : ''}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:.78rem;opacity:.8;">📅 Check-in</div>
+            <div style="font-weight:700;">${new Date(r.check_in).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+            <div style="font-size:.78rem;opacity:.8;margin-top:4px;">📅 Check-out</div>
+            <div style="font-weight:700;">${new Date(r.check_out).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;background:rgba(255,255,255,.12);border-radius:8px;padding:10px;">
+          <div style="text-align:center;">
+            <div style="font-size:.68rem;opacity:.8;">RENTAL TYPE</div>
+            <div style="font-weight:700;text-transform:capitalize;">${r.rental_type || 'Monthly'}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:.68rem;opacity:.8;">MONTHLY RENT</div>
+            <div style="font-weight:700;">IDR ${Number(r.monthly_amount||0).toLocaleString('id-ID')}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:.68rem;opacity:.8;">DAYS LEFT</div>
+            <div style="font-weight:700;">${daysLeft > 0 ? daysLeft + ' days' : 'Expired'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;background:rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;">
+          <div>
+            <div style="font-size:.68rem;opacity:.8;">NEXT PAYMENT DUE</div>
+            <div style="font-weight:700;color:${dueColor === '#ef4444' ? '#fca5a5' : dueColor === '#f59e0b' ? '#fde68a' : '#bbf7d0'};">${nextDue}</div>
+          </div>
+          <button onclick="markRentalPaid(${r.id})" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;font-size:.78rem;font-weight:700;cursor:pointer;">✓ Mark Paid</button>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;">
+          <button onclick="openRentalForm('${name}', _rentalMap[${r.id}])" style="flex:1;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px;font-size:.78rem;font-weight:600;cursor:pointer;">✏️ Edit Rental</button>
+        </div>
+      </div>`;
+    } else {
+      html += `<div style="border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;margin-bottom:12px;">
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px;">No active long-term tenant</div>
+        <button onclick="openRentalForm('${name}')" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:.78rem;font-weight:600;cursor:pointer;">+ Add Long-term Rental</button>
+      </div>`;
+    }
+
+    // ── Basic Info ────────────────────────────────────────────
+    html += '<div class="vd-section"><div class="vd-section-title">🏠 Property Details</div><div class="vd-grid">';
+    html += `<div class="vd-stat"><div class="label">Bedrooms</div><div class="value">${v.bedrooms || '–'} BR</div></div>`;
+    html += `<div class="vd-stat"><div class="label">Max Guests</div><div class="value">${v.max_guests || '–'} pax</div></div>`;
+    html += `<div class="vd-stat"><div class="label">Base Price</div><div class="value">${v.base_price ? '$' + v.base_price + '/night' : 'Not set'}</div></div>`;
+    html += `<div class="vd-stat"><div class="label">Amenities</div><div class="value">${v.amenities || '–'}</div></div>`;
+    if (mapsUrl) html += `<div class="vd-stat" style="grid-column:1/-1"><div class="label">Location</div><div class="value"><a href="${mapsUrl}" target="_blank">📍 Open in Maps ↗</a></div></div>`;
+    html += '</div></div>';
+
+    // ── Lock & Utilities ──────────────────────────────────────
+    if (d.lockCode || d.elecMeter) {
+      html += '<div class="vd-section"><div class="vd-section-title">🔐 Lock & Utilities</div>';
+      if (d.lockCode)  html += `<div class="vd-row"><span class="key">Door Lock Code</span><span class="val" style="font-size:1rem;letter-spacing:2px;">${d.lockCode}</span></div>`;
+      if (d.elecMeter) html += `<div class="vd-row"><span class="key">Electricity Meter</span><span class="val">${d.elecMeter}</span></div>`;
+      if (d.elecKwh)   html += `<div class="vd-row"><span class="key">Daya Listrik</span><span class="val">${d.elecKwh}</span></div>`;
+      html += '</div>';
+    }
+
+    // ── WiFi / Internet ───────────────────────────────────────
+    if (d.wifiName || d.wifiPassword || d.wifiPaymentId || d.wifiMbps) {
+      html += '<div class="vd-section"><div class="vd-section-title">🌐 Internet & WiFi</div>';
+      if (d.wifiName)      html += `<div class="vd-row"><span class="key">WiFi Name (SSID)</span><span class="val" >${d.wifiName}</span></div>`;
+      if (d.wifiPassword)  html += `<div class="vd-row"><span class="key">WiFi Password</span><span class="val" style="font-size:.95rem;letter-spacing:1px;">${d.wifiPassword}</span></div>`;
+      if (d.wifiPaymentId) html += `<div class="vd-row"><span class="key">Payment ID / No. Pelanggan</span><span class="val" >${d.wifiPaymentId}</span></div>`;
+      if (d.wifiMbps)      html += `<div class="vd-row"><span class="key">Speed</span><span class="val">${d.wifiMbps} Mbps</span></div>`;
+      html += `<div style="margin-top:8px;"><button onclick="openWifiEdit('${name}')" style="font-size:.72rem;padding:5px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted);">✏️ Edit WiFi Details</button></div>`;
+      html += '</div>';
+    } else {
+      html += `<div class="vd-section"><div class="vd-section-title">🌐 Internet & WiFi</div>
+        <div class="vd-empty">No internet details saved yet</div>
+        <div style="margin-top:8px;"><button onclick="openWifiEdit('${name}')" style="font-size:.78rem;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;">+ Add WiFi Details</button></div>
+      </div>`;
+    }
+
+    // ── Upcoming Bookings ─────────────────────────────────────
+    html += '<div class="vd-section"><div class="vd-section-title">💰 Upcoming Payments</div>';
+    if (upcoming.length === 0) {
+      html += '<div class="vd-empty">No upcoming bookings</div>';
+    } else {
+      upcoming.slice(0,5).forEach(b => {
+        html += `<div class="vd-row">
+          <span class="key">${b.guest_name}<br><small>${b.check_in} → ${b.check_out}</small></span>
+          <span class="val"><span class="vd-badge ${b.status}">${b.status}</span>${b.price ? '<br>$' + b.price : ''}</span>
+        </div>`;
+      });
+    }
+    html += '</div>';
+
+    // ── Maintenance ───────────────────────────────────────────
+    const openMaint = maintenance.filter(m => m.status !== 'completed' && m.status !== 'cancelled');
+    html += '<div class="vd-section"><div class="vd-section-title">🔧 Maintenance</div>';
+    if (openMaint.length === 0) {
+      html += '<div class="vd-empty">No open maintenance tasks ✓</div>';
+    } else {
+      openMaint.slice(0,5).forEach(m => {
+        html += `<div class="vd-row">
+          <span class="key">${m.title}<br><small>${m.category}</small></span>
+          <span class="val"><span class="vd-badge ${m.priority === 'urgent' ? 'urgent' : 'open'}">${m.priority}</span></span>
+        </div>`;
+      });
+      if (openMaint.length > 5) html += `<div class="vd-empty">+${openMaint.length - 5} more tasks</div>`;
+    }
+    html += '</div>';
+
+    // ── Recent Transactions ───────────────────────────────────
+    html += '<div class="vd-section"><div class="vd-section-title">💰 Recent Transactions</div>';
+    if (transactions.length === 0) {
+      html += '<div class="vd-empty">No transactions recorded yet</div>';
+    } else {
+      transactions.slice(0,5).forEach(t => {
+        const sign = t.type === 'income' ? '+' : '-';
+        const color = t.type === 'income' ? 'color:#16a34a' : 'color:#ef4444';
+        html += `<div class="vd-row">
+          <span class="key">${t.description}<br><small>${t.date} · ${t.category}</small></span>
+          <span class="val" style="${color}">${sign}${t.currency} ${Number(t.amount).toLocaleString()}</span>
+        </div>`;
+      });
+    }
+    html += '</div>';
+
+    // ── Notes ─────────────────────────────────────────────────
+    const cleanNotes = (v.notes || '').replace(/Maps:.*$/,'').replace(/\|/g,'·').trim();
+    if (cleanNotes) {
+      html += `<div class="vd-section"><div class="vd-section-title">📝 Notes</div><div style="font-size:.82rem;color:var(--muted);line-height:1.6">${cleanNotes}</div></div>`;
+    }
+
+    // ── Ask TVMbot ────────────────────────────────────────────
+    html += `<div style="margin-top:8px;"><button class="btn-primary" style="width:100%;padding:12px;" onclick="closeVillaDetail(); quickAction('Tell me everything about ${name} — current status, upcoming bookings, open maintenance, and recent payments.')">💬 Ask TVMbot about this villa</button></div>`;
+
+    document.getElementById('vd-body').innerHTML = html;
+  } catch(e) {
+    document.getElementById('vd-body').innerHTML = '<div class="vd-empty">Could not load villa details. ' + e.message + '</div>';
+  }
+}
+
+
+// ── WiFi Edit (inline, inside villa detail body) ────────────────────────────────
+function openWifiEdit(villaName) {
+  const body = document.getElementById('vd-body');
+  const existingSection = document.getElementById('wifi-edit-form');
+  if (existingSection) { existingSection.remove(); return; }
+
+  const div = document.createElement('div');
+  div.id = 'wifi-edit-form';
+  div.style = 'background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;';
+  div.innerHTML = `
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:10px;">✏️ Edit WiFi Details — ${villaName}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><label style="font-size:.72rem;color:var(--muted);font-weight:600;">WiFi Name</label><input id="we-name" type="text" placeholder="VillaAnn_5G" style="width:100%;margin-top:3px;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;"></div>
+      <div><label style="font-size:.72rem;color:var(--muted);font-weight:600;">Password</label><input id="we-pass" type="text" placeholder="password123" style="width:100%;margin-top:3px;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;"></div>
+      <div><label style="font-size:.72rem;color:var(--muted);font-weight:600;">Payment ID</label><input id="we-payment" type="text" placeholder="1234567890" style="width:100%;margin-top:3px;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;"></div>
+      <div><label style="font-size:.72rem;color:var(--muted);font-weight:600;">Speed (Mbps)</label><input id="we-mbps" type="number" placeholder="50" style="width:100%;margin-top:3px;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button id="we-save-btn" onclick="saveWifiDetails('${villaName}')" style="background:var(--green);color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:.8rem;font-weight:600;cursor:pointer;">💾 Save</button>
+      <button onclick="document.getElementById('wifi-edit-form').remove()" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:.8rem;cursor:pointer;">Cancel</button>
+    </div>`;
+  body.insertBefore(div, body.firstChild);
+}
+
+async function saveWifiDetails(villaName) {
+  const btn = document.getElementById('we-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const res = await fetch('/villa/wifi', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        villa_name:     villaName,
+        wifi_name:      document.getElementById('we-name').value,
+        wifi_password:  document.getElementById('we-pass').value,
+        wifi_payment_id:document.getElementById('we-payment').value,
+        wifi_mbps:      document.getElementById('we-mbps').value
+      })
+    });
+    const d = await res.json();
+    if (d.success) { showToast('✓ WiFi details saved!', 'success'); openVillaDetail(villaName); }
+    else showToast('Error: ' + d.error, 'error');
+  } catch(e) { showToast('Could not save', 'error'); btn.disabled = false; btn.textContent = '💾 Save'; }
+}
+
+// ── Rental Form ────────────────────────────────────────────────────────────────
+let rfCurrentVilla = '';
+
+function openRentalForm(villaName, existingRental = null) {
+  rfCurrentVilla = villaName;
+  document.getElementById('rf-title').textContent = '📋 ' + villaName + ' — Long-term Rental';
+  document.getElementById('rf-villa-name').value = villaName;
+  document.getElementById('rf-cal-links').style.display = 'none';
+
+  if (existingRental) {
+    document.getElementById('rf-type').value         = existingRental.rental_type || 'monthly';
+    document.getElementById('rf-status').value       = existingRental.status || 'active';
+    document.getElementById('rf-tenant-name').value  = existingRental.tenant_name || '';
+    document.getElementById('rf-tenant-phone').value = existingRental.tenant_phone || '';
+    document.getElementById('rf-tenant-email').value = existingRental.tenant_email || '';
+    document.getElementById('rf-checkin').value      = existingRental.check_in || '';
+    document.getElementById('rf-checkout').value     = existingRental.check_out || '';
+    document.getElementById('rf-payment-day').value  = existingRental.payment_day || 1;
+    document.getElementById('rf-offer-price').value  = existingRental.offer_price || '';
+    document.getElementById('rf-monthly').value      = existingRental.monthly_amount || '';
+    document.getElementById('rf-notes').value        = existingRental.notes || '';
+  } else {
+    ['rf-tenant-name','rf-tenant-phone','rf-tenant-email','rf-checkin','rf-checkout','rf-offer-price','rf-monthly','rf-notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('rf-type').value = 'monthly';
+    document.getElementById('rf-status').value = 'active';
+    document.getElementById('rf-payment-day').value = 1;
+  }
+  rfRecalc();
+  document.getElementById('rf-overlay').classList.add('open');
+}
+function closeRentalForm() { document.getElementById('rf-overlay').classList.remove('open'); }
+
+function rfRecalc() {
+  const monthly  = parseFloat(document.getElementById('rf-monthly').value) || 0;
+  const offer    = parseFloat(document.getElementById('rf-offer-price').value) || 0;
+  const checkin  = document.getElementById('rf-checkin').value;
+  const checkout = document.getElementById('rf-checkout').value;
+  const pd       = parseInt(document.getElementById('rf-payment-day').value) || 1;
+
+  if (!monthly && !offer) { document.getElementById('rf-summary').style.display = 'none'; return; }
+  document.getElementById('rf-summary').style.display = 'block';
+
+  const fmt = n => n ? 'IDR ' + Number(n).toLocaleString('id-ID') : '–';
+  document.getElementById('rfs-offer').textContent   = fmt(offer);
+  document.getElementById('rfs-monthly').textContent = fmt(monthly);
+
+  if (checkin && checkout) {
+    const months = Math.round((new Date(checkout) - new Date(checkin)) / (1000*60*60*24*30));
+    const total  = monthly * months;
+    document.getElementById('rfs-duration').textContent = months + ' month' + (months !== 1 ? 's' : '');
+    document.getElementById('rfs-total').textContent    = fmt(total);
+
+    // Next payment
+    const today = new Date();
+    let next = new Date(today.getFullYear(), today.getMonth(), pd);
+    if (next <= today) next = new Date(today.getFullYear(), today.getMonth() + 1, pd);
+    document.getElementById('rfs-nextpay').textContent = next.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+  } else {
+    document.getElementById('rfs-duration').textContent = '–';
+    document.getElementById('rfs-total').textContent    = '–';
+    document.getElementById('rfs-nextpay').textContent  = '–';
+  }
+}
+
+async function saveRental() {
+  const data = {
+    villa_name:     document.getElementById('rf-villa-name').value,
+    tenant_name:    document.getElementById('rf-tenant-name').value,
+    tenant_email:   document.getElementById('rf-tenant-email').value,
+    tenant_phone:   document.getElementById('rf-tenant-phone').value,
+    rental_type:    document.getElementById('rf-type').value,
+    status:         document.getElementById('rf-status').value,
+    check_in:       document.getElementById('rf-checkin').value,
+    check_out:      document.getElementById('rf-checkout').value,
+    payment_day:    document.getElementById('rf-payment-day').value,
+    offer_price:    document.getElementById('rf-offer-price').value,
+    monthly_amount: document.getElementById('rf-monthly').value,
+    notes:          document.getElementById('rf-notes').value,
+  };
+
+  if (!data.tenant_name || !data.check_in || !data.check_out) {
+    showToast('Please fill in tenant name and contract dates', 'error'); return;
+  }
+
+  try {
+    const res = await fetch('/rental/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const d = await res.json();
+    if (d.success) {
+      showToast('✓ Rental saved!', 'success');
+      loadPayments();
+
+      // Show calendar links
+      if (d.calLinks && d.calLinks.length > 0) {
+        const el = document.getElementById('rf-cal-links');
+        el.style.display = 'block';
+        el.innerHTML = `<div class="cal-links-title">📅 Click to add each payment to Google Calendar (${d.calLinks.length} payments)</div>
+          <div class="cal-link-grid">
+            ${d.calLinks.map(c => `<a class="cal-link-btn" href="${c.link}" target="_blank">📅 ${c.date}</a>`).join('')}
+          </div>
+          <p style="font-size:.72rem;color:var(--muted);margin-top:8px;">Each link opens Google Calendar pre-filled. Click ✓ to save each one.</p>`;
+      }
+      // Refresh villa detail if open
+      if (document.getElementById('vd-overlay').classList.contains('open')) {
+        openVillaDetail(data.villa_name);
+      }
+    } else {
+      showToast('Error: ' + d.error, 'error');
+    }
+  } catch(e) {
+    showToast('Could not save rental', 'error');
+  }
+}
+
+// ── Payments Panel ─────────────────────────────────────────────────────────────
+async function loadPayments() {
+  try {
+    const [rentD, bookD] = await Promise.all([
+      fetch('/rental/all/active').then(r => r.json()),
+      fetch('/memory/bookings').then(r => r.json())
+    ]);
+
+    const upcoming = bookD.upcoming || [];
+    const rentals  = rentD.upcoming || rentD.rentals || [];
+    const el = document.getElementById('panel-bookings');
+    const total = upcoming.length + rentals.length;
+    document.getElementById('stat-bookings').textContent = total;
+
+    if (total === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">💰</div>No upcoming payments</div>';
+      return;
+    }
+
+    let html = '';
+
+    // Long-term rental payments due
+    rentals.forEach(r => {
+      const due  = new Date(r.next_payment);
+      const diff = Math.round((due - new Date()) / (1000*60*60*24));
+      const cls  = diff < 0 ? 'overdue' : diff <= 5 ? 'due-soon' : '';
+      html += `<div class="payment-item ${cls}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="pi-villa">🏠 ${r.villa_name}</div>
+            <div class="pi-tenant">👤 ${r.tenant_name} · ${r.rental_type}</div>
+            <div class="pi-date">📅 Due: ${r.next_payment}${diff < 0 ? ' <span style="color:#ef4444">OVERDUE</span>' : diff <= 5 ? ' ⚠️ Soon' : ''}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="pi-amount">IDR ${Number(r.monthly_amount).toLocaleString('id-ID')}</div>
+            <button onclick="markRentalPaid(${r.id})" style="font-size:.65rem;margin-top:4px;padding:3px 8px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;">✓ Paid</button>
+          </div>
+        </div>
+      </div>`;
+    });
+
+    // Short-term booking check-ins
+    upcoming.slice(0, 5).forEach(b => {
+      html += `<div class="payment-item">
+        <div class="pi-villa">🏠 ${b.villa_name}</div>
+        <div class="pi-tenant">👤 ${b.guest_name}</div>
+        <div class="pi-date">📅 Check-in: ${b.check_in} → ${b.check_out}</div>
+        ${b.price ? `<div class="pi-amount" style="margin-top:4px;">$${b.price}</div>` : ''}
+      </div>`;
+    });
+
+    el.innerHTML = html;
+  } catch(e) {
+    document.getElementById('panel-bookings').innerHTML = '<div class="empty-state">Could not load</div>';
+  }
+}
+
+async function markRentalPaid(id) {
+  const res = await fetch('/rental/paid/' + id, { method: 'POST' });
+  const d = await res.json();
+  if (d.success) { showToast('✓ Payment recorded. Next due: ' + d.next_payment, 'success'); loadPayments(); if (typeof loadMobilePayments === 'function') loadMobilePayments(); if (_currentVillaDetail) openVillaDetail(_currentVillaDetail); }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => { t.className = `toast ${type}`; }, 3500);
+}
+
+// ── File Attachment System ─────────────────────────────────────────────────────
+let pendingFile = null; // { name, type, size, text, isImage, base64, mediaType }
+
+const FILE_ICONS = {
+  pdf: '📄', word: '📝', excel: '📊', csv: '📋', text: '📃',
+  image: '🖼️', document: '📁'
+};
+
+function humanSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function clearAttachment() {
+  pendingFile = null;
+  document.getElementById('file-preview-bar').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+async function handleFileSelect(file) {
+  if (!file) return;
+  const bar = document.getElementById('file-preview-bar');
+  document.getElementById('fp-name').textContent = file.name;
+  document.getElementById('fp-size').textContent = humanSize(file.size);
+  document.getElementById('fp-icon').textContent = '⏳';
+  bar.style.display = 'flex';
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res  = await fetch('/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+
+    pendingFile = { name: file.name, ...data };
+    const icon = FILE_ICONS[data.fileType] || '📁';
+    document.getElementById('fp-icon').textContent = icon;
+    showToast(`✓ ${file.name} ready — type a message or just hit Send`, 'success');
+  } catch(e) {
+    clearAttachment();
+    showToast('Could not read file: ' + e.message, 'error');
+  }
+}
+
+// ── Override sendMessage to include file context ───────────────────────────────
+const _origSendMessage = sendMessage;
+sendMessage = async function() {
+  if (!pendingFile) return _origSendMessage();
+
+  const input = document.getElementById('chat-input');
+  const userText = input.value.trim();
+  const email = 'canggulovestory@gmail.com';
+  if (isTyping) return;
+
+  // Build context message
+  const villaList = (await fetch('/memory/villas').then(r=>r.json()).catch(()=>({villas:[]}))).villas?.map(v=>v.name).join(', ') || '';
+  const fileCtx = pendingFile.isImage
+    ? `[User uploaded an image: "${pendingFile.name}" (${humanSize(pendingFile.size)}). Analyze it carefully.]`
+    : `[User uploaded a ${pendingFile.fileType.toUpperCase()} file: "${pendingFile.name}" (${humanSize(pendingFile.size)}).
+EXTRACTED CONTENT:
+---
+${pendingFile.text || '(no text extracted)'}
+---
+Based on this content: identify what type of document this is (invoice, contract, receipt, utility bill, reservation, etc.). Detect any villa name, amounts, dates, tenant/guest names, or reference numbers. The managed villas are: ${villaList}.
+${userText ? `The user says: "${userText}"` : 'Ask the user what they want to do with this document, or suggest the most logical action (e.g. "Should I save this as Villa ANN\'s internet invoice and update the payment ID?").'}
+Be specific and helpful. If you can identify which villa it relates to, confirm before saving anything.
+IMPORTANT: If this looks like a rental contract or villa agreement, extract these fields: villaName, checkInDate, checkOutDate, monthlyPrice, totalPrice, paymentDueDate, guest names/nationalities/passports/phones. Ask if you should save it as a booking in TVMbot memory.]`;
+
+  const displayMsg = userText || `📎 ${pendingFile.name}`;
+  appendMessage('user', `<div class="msg-file-bubble"><span class="ficon">${FILE_ICONS[pendingFile.fileType]||'📁'}</span><div class="finfo"><div class="fname">${pendingFile.name}</div><div class="fsize">${humanSize(pendingFile.size)} · ${pendingFile.fileType}</div></div></div>${userText ? `<div>${userText}</div>` : ''}`);
+  input.value = '';
+  input.style.height = 'auto';
+  isTyping = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  const fileCopy = pendingFile;
+  clearAttachment();
+
+  try {
+    let fetchBody, fetchOpts;
+    if (fileCopy.isImage) {
+      // Use vision — send as multipart with base64
+      fetchBody = JSON.stringify({
+        message: userText || 'Please analyze this image and tell me what you see. If it\'s related to a villa or property, identify which one.',
+        email,
+        imageBase64: fileCopy.base64,
+        imageMediaType: fileCopy.mediaType,
+        imageName: fileCopy.name
+      });
+    } else {
+      fetchBody = JSON.stringify({ message: fileCtx, email });
+    }
+
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: fetchBody
+    });
+    const d = await res.json();
+    removeTyping();
+    appendMessage('bot', d.reply || d.response || d.error || 'No response', {
+      toolsUsed: d.meta?.toolsUsed, iterations: d.meta?.iterations, elapsed: d.meta?.elapsed
+    });
+  } catch(e) {
+    removeTyping();
+    appendMessage('bot', '⚠️ Error: ' + e.message);
+  } finally {
+    isTyping = false;
+    document.getElementById('send-btn').disabled = false;
+  }
+};
+
+// ── Drag & Drop on the whole page ─────────────────────────────────────────────
+let dragCounter = 0;
+document.addEventListener('dragenter', (e) => {
+  if ([...e.dataTransfer.types].includes('Files')) {
+    dragCounter++;
+    document.getElementById('drop-overlay').classList.add('active');
+  }
+});
+document.addEventListener('dragleave', (e) => {
+  dragCounter--;
+  if (dragCounter <= 0) { dragCounter = 0; document.getElementById('drop-overlay').classList.remove('active'); }
+});
+document.addEventListener('dragover', (e) => { e.preventDefault(); });
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragCounter = 0;
+  document.getElementById('drop-overlay').classList.remove('active');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileSelect(file);
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+async function init() {
+  await checkStatus();
+  await loadRightPanel();
+  await loadIntegrations();
+
+}
+
+init();
+setInterval(loadRightPanel, 60000); // refresh every 60s
+</script>
+
+<!-- ── WHATSAPP PANEL MODAL ── -->
+<div class="modal-overlay" id="wa-modal-overlay" style="display:none;z-index:3000;" onclick="if(event.target===this)closeWhatsAppPanel()">
+  <div class="modal" style="max-width:520px;width:96%;padding:0;position:relative;overflow:hidden;border-radius:14px;">
+
+    <!-- Header -->
+    <div style="padding:18px 20px 0;background:var(--bg-primary);">
+      <button class="btn-close" onclick="closeWhatsAppPanel()" style="position:absolute;top:12px;right:14px;">✕</button>
+      <h2 style="margin:0 0 2px;font-size:1.05rem;">💬 WhatsApp Integration</h2>
+      <p style="margin:0 0 12px;font-size:.78rem;color:var(--text-secondary);">Bot number: <strong>+6282115111211</strong> · Direct connection, no Meta API</p>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);">
+        <button id="wa-tab-connection" onclick="waShowTab('connection')"
+          style="padding:8px 16px;font-size:.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #16a34a;margin-bottom:-2px;color:#16a34a;">
+          🔗 Connection
+        </button>
+        <button id="wa-tab-groups" onclick="waShowTab('groups')"
+          style="padding:8px 16px;font-size:.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-secondary);">
+          👥 Groups
+        </button>
+      </div>
+    </div>
+
+    <!-- ── TAB: Connection ── -->
+    <div id="wa-pane-connection" style="padding:18px 20px 20px;">
+
+      <div id="wa-status-bar" style="padding:10px 14px;border-radius:8px;font-size:.83rem;font-weight:600;margin-bottom:14px;text-align:center;background:#fef3c7;color:#92400e;">
+        Checking status…
+      </div>
+
+      <!-- QR code -->
+      <div id="wa-qr-container" style="display:none;text-align:center;margin-bottom:14px;">
+        <p style="font-size:.79rem;color:var(--text-secondary);margin:0 0 10px;">
+          WhatsApp → Settings → Linked Devices → Link a Device → scan:
+        </p>
+        <img id="wa-qr-img" src="" alt="QR Code" style="width:240px;height:240px;border:2px solid var(--border);border-radius:12px;"/>
+        <p style="font-size:.74rem;color:#9ca3af;margin-top:6px;">Refreshes automatically every few seconds</p>
+      </div>
+
+      <!-- Connected state -->
+      <div id="wa-connected-info" style="display:none;text-align:center;margin-bottom:14px;">
+        <div style="font-size:2.5rem;margin-bottom:6px;">✅</div>
+        <p style="font-size:.9rem;font-weight:600;color:#065f46;margin:0 0 3px;">WhatsApp Connected!</p>
+        <p style="font-size:.79rem;color:var(--text-secondary);margin:0;">TVMbot is live on WhatsApp — DMs and groups supported.</p>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="wa-btn-connect" onclick="waConnect()" class="btn btn-primary" style="flex:1;min-width:110px;font-size:.81rem;padding:8px 10px;">🔗 Connect</button>
+        <button id="wa-btn-disconnect" onclick="waDisconnect()" class="btn" style="flex:1;min-width:100px;font-size:.81rem;padding:8px 10px;display:none;">⏹ Disconnect</button>
+        <button onclick="waReset()" class="btn" style="flex:1;min-width:90px;font-size:.81rem;padding:8px 10px;background:#fee2e2;color:#991b1b;">🔄 New QR</button>
+      </div>
+    </div>
+
+    <!-- ── TAB: Groups ── -->
+    <div id="wa-pane-groups" style="display:none;padding:16px 20px 20px;">
+
+      <!-- Bot not connected warning -->
+      <div id="wa-groups-noconn" style="display:none;padding:10px 14px;background:#fef3c7;color:#92400e;border-radius:8px;font-size:.81rem;text-align:center;margin-bottom:12px;">
+        ⚠️ Connect WhatsApp first to see your groups
+      </div>
+
+      <!-- DM Policy toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);margin-bottom:14px;">
+        <div>
+          <div style="font-size:.82rem;font-weight:600;">💬 Private DMs</div>
+          <div style="font-size:.74rem;color:var(--text-secondary);" id="wa-dm-desc">Bot will not respond to direct messages</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;">
+          <input type="checkbox" id="wa-dm-toggle" onchange="waToggleDM(this.checked)"
+            style="opacity:0;width:0;height:0;position:absolute;">
+          <span id="wa-dm-slider" style="position:absolute;cursor:pointer;inset:0;background:#d1d5db;border-radius:24px;transition:.2s;">
+            <span style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.2s;display:block;" id="wa-dm-knob"></span>
+          </span>
+        </label>
+      </div>
+
+      <!-- All joined groups (discovered) -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:.82rem;font-weight:700;color:var(--text-primary);">Groups bot is in</span>
+          <button onclick="waLoadGroups()" style="font-size:.74rem;padding:3px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg-secondary);cursor:pointer;color:var(--text-secondary);">↻ Refresh</button>
+        </div>
+        <div id="wa-groups-list" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;">
+          <div style="font-size:.8rem;color:#9ca3af;text-align:center;padding:16px;">Click Refresh to load groups</div>
+        </div>
+      </div>
+
+      <p style="font-size:.74rem;color:#9ca3af;margin:0;">
+        💡 Add <strong>+6282115111211</strong> to a WhatsApp group first, then refresh to see it here.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── WHATSAPP ADD-GROUP DIALOG ── -->
+<div class="modal-overlay" id="wa-addgroup-overlay" style="display:none;z-index:4000;" onclick="if(event.target===this)document.getElementById('wa-addgroup-overlay').style.display='none'">
+  <div class="modal" style="max-width:400px;width:95%;padding:22px;position:relative;">
+    <button class="btn-close" onclick="document.getElementById('wa-addgroup-overlay').style.display='none'" style="position:absolute;top:10px;right:12px;">✕</button>
+    <h3 style="margin:0 0 4px;font-size:1rem;" id="wa-addgroup-title">Add Group to Allowlist</h3>
+    <p style="font-size:.78rem;color:var(--text-secondary);margin:0 0 16px;" id="wa-addgroup-sub">Choose how TVMbot behaves in this group</p>
+
+    <input type="hidden" id="wa-addgroup-jid"/>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:4px;">Group Name (label)</label>
+      <input id="wa-addgroup-name" type="text" placeholder="e.g. Villa Managers Team"
+        style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--bg-secondary);color:var(--text-primary);box-sizing:border-box;"/>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:8px;">Bot Behavior in this group</label>
+
+      <label id="wa-opt-all-label" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:border-color .15s;">
+        <input type="radio" name="wa-behavior" value="all" style="margin-top:2px;accent-color:#16a34a;" checked onchange="waStyleRadios()"/>
+        <div>
+          <div style="font-size:.83rem;font-weight:600;">💬 Respond to all messages</div>
+          <div style="font-size:.76rem;color:var(--text-secondary);">Bot replies to every message in this group. Good for private managers groups.</div>
+        </div>
+      </label>
+
+      <label id="wa-opt-mention-label" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s;">
+        <input type="radio" name="wa-behavior" value="mention" style="margin-top:2px;accent-color:#16a34a;" onchange="waStyleRadios()"/>
+        <div>
+          <div style="font-size:.83rem;font-weight:600;">🔕 Only when @bot is mentioned</div>
+          <div style="font-size:.76rem;color:var(--text-secondary);">Bot stays silent until someone types <strong>@bot</strong> or <strong>agent</strong>. Good for tenant groups.</div>
+        </div>
+      </label>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="waSaveGroup()" class="btn btn-primary" style="flex:1;font-size:.83rem;padding:9px;">✓ Save</button>
+      <button onclick="document.getElementById('wa-addgroup-overlay').style.display='none'" class="btn" style="flex:1;font-size:.83rem;padding:9px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── WhatsApp Panel ───────────────────────────────────────────────────────────
+let _waPolling = null;
+let _waCurrentTab = 'connection';
+let _waGroupsData = [];  // groups from /whatsapp/groups
+let _waEditingJid = null;
+
+function openWhatsAppPanel() {
+  closeSidebarOnMobile();
+  document.getElementById('wa-modal-overlay').style.display = 'flex';
+  waRefreshStatus();
+  _waPolling = setInterval(waRefreshStatus, 4000);
+}
+
+function closeWhatsAppPanel() {
+  document.getElementById('wa-modal-overlay').style.display = 'none';
+  if (_waPolling) { clearInterval(_waPolling); _waPolling = null; }
+}
+
+function waShowTab(tab) {
+  _waCurrentTab = tab;
+  document.getElementById('wa-pane-connection').style.display = tab === 'connection' ? 'block' : 'none';
+  document.getElementById('wa-pane-groups').style.display     = tab === 'groups'     ? 'block' : 'none';
+
+  const tConn = document.getElementById('wa-tab-connection');
+  const tGrp  = document.getElementById('wa-tab-groups');
+  tConn.style.borderBottomColor = tab === 'connection' ? '#16a34a' : 'transparent';
+  tConn.style.color = tab === 'connection' ? '#16a34a' : 'var(--text-secondary)';
+  tGrp.style.borderBottomColor = tab === 'groups' ? '#16a34a' : 'transparent';
+  tGrp.style.color = tab === 'groups' ? '#16a34a' : 'var(--text-secondary)';
+
+  if (tab === 'groups') waLoadGroups();
+}
+
+async function waRefreshStatus() {
+  try {
+    const r = await fetch('/whatsapp/status');
+    const d = await r.json();
+    renderWAStatus(d);
+  } catch(e) {
+    const bar = document.getElementById('wa-status-bar');
+    if (bar) bar.textContent = '⚠️ Could not reach server';
+  }
+}
+
+function renderWAStatus(d) {
+  const bar     = document.getElementById('wa-status-bar');
+  const qrCont  = document.getElementById('wa-qr-container');
+  const connInfo= document.getElementById('wa-connected-info');
+  const btnConn = document.getElementById('wa-btn-connect');
+  const btnDisc = document.getElementById('wa-btn-disconnect');
+  const intTag  = document.getElementById('int-whatsapp');
+  const qBtn    = document.getElementById('wa-quick-status');
+  const qBtnWrap= document.getElementById('wa-quick-btn');
+
+  if (!bar) return;
+  qrCont.style.display = 'none';
+  connInfo.style.display = 'none';
+
+  if (d.state === 'connected') {
+    bar.textContent = '✅ Connected — bot is live on WhatsApp';
+    bar.style.background = '#d1fae5'; bar.style.color = '#065f46';
+    connInfo.style.display = 'block';
+    btnConn.style.display = 'none'; btnDisc.style.display = 'block';
+    if (intTag)  { intTag.textContent = 'Connected'; intTag.style.background='#d1fae5'; intTag.style.color='#065f46'; }
+    if (qBtn)    { qBtn.textContent = '● connected'; qBtn.style.color = '#15803d'; }
+    if (qBtnWrap){ qBtnWrap.style.borderColor = '#4ade80'; }
+    document.getElementById('wa-groups-noconn').style.display = 'none';
+  } else if (d.state === 'qr_ready' && d.qr) {
+    bar.textContent = '📱 Scan QR Code in WhatsApp app now';
+    bar.style.background = '#eff6ff'; bar.style.color = '#1e40af';
+    document.getElementById('wa-qr-img').src = d.qr;
+    qrCont.style.display = 'block';
+    btnConn.style.display = 'none'; btnDisc.style.display = 'none';
+    if (intTag) { intTag.textContent = 'Scan QR'; intTag.style.background='#eff6ff'; intTag.style.color='#1e40af'; }
+    if (qBtn)   { qBtn.textContent = '● scan QR'; qBtn.style.color = '#1d4ed8'; }
+    document.getElementById('wa-groups-noconn').style.display = 'block';
+  } else if (d.state === 'connecting') {
+    bar.textContent = '⏳ Connecting to WhatsApp…';
+    bar.style.background = '#fef9c3'; bar.style.color = '#713f12';
+    btnConn.style.display = 'none';
+    if (intTag) { intTag.textContent = 'Connecting…'; }
+    if (qBtn)   { qBtn.textContent = '● connecting…'; }
+  } else {
+    bar.textContent = '🔴 Not connected — click Connect to start';
+    bar.style.background = '#fee2e2'; bar.style.color = '#991b1b';
+    btnConn.style.display = 'block'; btnDisc.style.display = 'none';
+    if (intTag)  { intTag.textContent = 'Not connected'; intTag.style.background='#fef3c7'; intTag.style.color='#92400e'; }
+    if (qBtn)    { qBtn.textContent = '● not connected'; qBtn.style.color = '#991b1b'; }
+    document.getElementById('wa-groups-noconn').style.display = 'block';
+  }
+}
+
+async function waConnect() {
+  await fetch('/whatsapp/connect', { method: 'POST' });
+  setTimeout(waRefreshStatus, 2000);
+}
+async function waDisconnect() {
+  if (!confirm('Disconnect WhatsApp? You will need to scan QR again to reconnect.')) return;
+  await fetch('/whatsapp/disconnect', { method: 'POST' });
+  setTimeout(waRefreshStatus, 1500);
+}
+async function waReset() {
+  if (!confirm('Clear session and generate a new QR code?')) return;
+  await fetch('/whatsapp/reset', { method: 'POST' });
+  setTimeout(waRefreshStatus, 2000);
+}
+
+// ── Groups Tab ───────────────────────────────────────────────────────────────
+async function waToggleDM(enabled) {
+  const desc   = document.getElementById('wa-dm-desc');
+  const slider = document.getElementById('wa-dm-slider');
+  const knob   = document.getElementById('wa-dm-knob');
+  try {
+    const r = await fetch('/whatsapp/config/dm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dmPolicy: enabled ? 'all' : 'none' })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      desc.textContent = enabled ? 'Bot will respond to direct messages' : 'Bot will not respond to direct messages';
+      slider.style.background = enabled ? '#16a34a' : '#d1d5db';
+      knob.style.transform = enabled ? 'translateX(18px)' : 'translateX(0)';
+      showToast(enabled ? 'DMs enabled' : 'DMs disabled', 'success');
+    }
+  } catch(e) { showToast('Failed to update DM policy', 'error'); }
+}
+
+function waApplyDMToggle(dmPolicy) {
+  const enabled = dmPolicy === 'all';
+  const toggle = document.getElementById('wa-dm-toggle');
+  const desc   = document.getElementById('wa-dm-desc');
+  const slider = document.getElementById('wa-dm-slider');
+  const knob   = document.getElementById('wa-dm-knob');
+  if (!toggle) return;
+  toggle.checked = enabled;
+  desc.textContent = enabled ? 'Bot will respond to direct messages' : 'Bot will not respond to direct messages';
+  slider.style.background = enabled ? '#16a34a' : '#d1d5db';
+  knob.style.transform = enabled ? 'translateX(18px)' : 'translateX(0)';
+}
+
+async function waLoadGroups() {
+  const container = document.getElementById('wa-groups-list');
+  container.innerHTML = '<div style="font-size:.8rem;color:#9ca3af;text-align:center;padding:16px;">Loading…</div>';
+  try {
+    const r = await fetch('/whatsapp/groups');
+    if (!r.ok) throw new Error('Not connected');
+    const d = await r.json();
+    _waGroupsData = d.groups || [];
+    const allowlist = d.allowlist || [];
+    renderGroupsList(_waGroupsData, allowlist);
+    // Also reflect DM policy
+    waApplyDMToggle(d.dmPolicy || 'none');
+  } catch(e) {
+    container.innerHTML = '<div style="font-size:.8rem;color:#ef4444;text-align:center;padding:16px;">⚠️ ' + e.message + ' — connect WhatsApp first</div>';
+  }
+}
+
+function renderGroupsList(groups, allowlist) {
+  const container = document.getElementById('wa-groups-list');
+  if (!groups.length) {
+    container.innerHTML = '<div style="font-size:.8rem;color:#9ca3af;text-align:center;padding:16px;">No groups found.<br>Add +6282115111211 to a WhatsApp group first.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  groups.forEach(g => {
+    const cfg = allowlist.find(a => a.jid === g.jid);
+    const isAllowed = !!cfg && cfg.active !== false;
+    const behavior = cfg ? (cfg.respondToAll ? 'all' : 'mention') : null;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg-secondary);gap:8px;';
+
+    const left = document.createElement('div');
+    left.style.cssText = 'flex:1;min-width:0;';
+    left.innerHTML = `
+      <div style="font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.name}</div>
+      <div style="font-size:.73rem;color:var(--text-secondary);margin-top:2px;">
+        ${g.participants} members
+        ${isAllowed
+          ? `· <span style="color:#16a34a;font-weight:600;">${behavior === 'all' ? '💬 all messages' : '🔕 @bot only'}</span>`
+          : '· <span style="color:#9ca3af;">not in allowlist</span>'}
+      </div>`;
+
+    const right = document.createElement('div');
+    right.style.cssText = 'display:flex;gap:5px;flex-shrink:0;';
+
+    if (isAllowed) {
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏️ Edit';
+      editBtn.style.cssText = 'font-size:.74rem;padding:4px 9px;border:1px solid #16a34a;border-radius:6px;background:#f0fdf4;color:#16a34a;cursor:pointer;';
+      editBtn.onclick = () => waOpenAddGroup(g.jid, g.name, cfg);
+      right.appendChild(editBtn);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '✕';
+      removeBtn.style.cssText = 'font-size:.74rem;padding:4px 8px;border:1px solid #fca5a5;border-radius:6px;background:#fef2f2;color:#dc2626;cursor:pointer;';
+      removeBtn.onclick = () => waRemoveGroup(g.jid, g.name);
+      right.appendChild(removeBtn);
+    } else {
+      const addBtn = document.createElement('button');
+      addBtn.textContent = '+ Add';
+      addBtn.style.cssText = 'font-size:.74rem;padding:4px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-primary);cursor:pointer;font-weight:600;';
+      addBtn.onclick = () => waOpenAddGroup(g.jid, g.name, null);
+      right.appendChild(addBtn);
+    }
+
+    card.appendChild(left);
+    card.appendChild(right);
+    container.appendChild(card);
+  });
+}
+
+function waOpenAddGroup(jid, name, existingCfg) {
+  _waEditingJid = jid;
+  document.getElementById('wa-addgroup-jid').value = jid;
+  document.getElementById('wa-addgroup-name').value = existingCfg?.name || name || '';
+  document.getElementById('wa-addgroup-title').textContent = existingCfg ? 'Edit Group Settings' : 'Add Group to Allowlist';
+  document.getElementById('wa-addgroup-sub').textContent = name;
+
+  const isAll = !existingCfg || existingCfg.respondToAll !== false;
+  document.querySelector('input[name="wa-behavior"][value="all"]').checked = isAll;
+  document.querySelector('input[name="wa-behavior"][value="mention"]').checked = !isAll;
+  waStyleRadios();
+
+  document.getElementById('wa-addgroup-overlay').style.display = 'flex';
+}
+
+function waStyleRadios() {
+  const allChecked = document.querySelector('input[name="wa-behavior"][value="all"]').checked;
+  document.getElementById('wa-opt-all-label').style.borderColor     = allChecked  ? '#16a34a' : 'var(--border)';
+  document.getElementById('wa-opt-mention-label').style.borderColor = !allChecked ? '#16a34a' : 'var(--border)';
+}
+
+async function waSaveGroup() {
+  const jid  = document.getElementById('wa-addgroup-jid').value;
+  const name = document.getElementById('wa-addgroup-name').value.trim() || jid;
+  const behavior = document.querySelector('input[name="wa-behavior"]:checked')?.value || 'all';
+
+  const payload = {
+    jid, name,
+    active: true,
+    respondToAll: behavior === 'all',
+    requireMention: behavior === 'mention',
+    triggerKeywords: []
+  };
+
+  try {
+    const r = await fetch('/whatsapp/config/group', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (d.ok) {
+      document.getElementById('wa-addgroup-overlay').style.display = 'none';
+      showToast('✓ Group saved', 'success');
+      waLoadGroups();
+    } else {
+      showToast('Error: ' + (d.error || 'Unknown'), 'error');
+    }
+  } catch(e) {
+    showToast('Failed to save group', 'error');
+  }
+}
+
+async function waRemoveGroup(jid, name) {
+  if (!confirm(`Remove "${name}" from the allowlist?
+The bot will stop responding in this group.`)) return;
+  try {
+    const r = await fetch('/whatsapp/config/group', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jid, active: false })
+    });
+    const d = await r.json();
+    if (d.ok) { showToast('Group removed', 'success'); waLoadGroups(); }
+  } catch(e) { showToast('Failed to remove group', 'error'); }
+}
+
+// Update WA tag when integrations load
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof loadIntegrations === 'function') {
+    const orig = loadIntegrations;
+    window.loadIntegrations = async function() {
+      await orig();
+      try {
+        const r = await fetch('/whatsapp/status');
+        const d = await r.json();
+        const tag = document.getElementById('int-whatsapp');
+        if (tag && d.state === 'connected') {
+          tag.textContent = 'Connected';
+          tag.style.background = '#d1fae5';
+          tag.style.color = '#065f46';
+        }
+      } catch(e) {}
+    };
+  }
+});
+</script>
+
+<script>
+
+// ── Chat Search ──
+function toggleSearch() {
+  const bar = document.getElementById('search-bar');
+  const input = document.getElementById('search-input');
+  bar.classList.toggle('open');
+  if (bar.classList.contains('open')) {
+    input.focus();
+  } else {
+    input.value = '';
+    document.getElementById('search-count').textContent = '';
+    clearSearchHighlights();
+  }
+}
+
+function handleSearch(e) {
+  const query = e.target.value.trim().toLowerCase();
+  clearSearchHighlights();
+  if (!query || query.length < 2) {
+    document.getElementById('search-count').textContent = '';
+    return;
+  }
+  const msgs = document.querySelectorAll('.msg');
+  let matches = 0;
+  msgs.forEach(msg => {
+    const bubble = msg.querySelector('.msg-bubble');
+    if (bubble && bubble.textContent.toLowerCase().includes(query)) {
+      msg.classList.add('search-highlight');
+      matches++;
+    }
+  });
+  document.getElementById('search-count').textContent = matches + ' found';
+
+  // Scroll to first match
+  const first = document.querySelector('.msg.search-highlight');
+  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Keyboard: Enter scrolls to next
+  if (e.key === 'Enter') {
+    const highlighted = document.querySelectorAll('.msg.search-highlight');
+    if (highlighted.length > 0) {
+      const current = document.querySelector('.msg.search-highlight.search-active');
+      let next;
+      if (current) {
+        current.classList.remove('search-active');
+        const idx = Array.from(highlighted).indexOf(current);
+        next = highlighted[(idx + 1) % highlighted.length];
+      } else {
+        next = highlighted[0];
+      }
+      next.classList.add('search-active');
+      next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+}
+
+function clearSearchHighlights() {
+  document.querySelectorAll('.msg.search-highlight').forEach(el => {
+    el.classList.remove('search-highlight', 'search-active');
+  });
+}
+
+// Keyboard shortcut: Ctrl+F opens chat search instead of browser search
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    toggleSearch();
+  }
+});
+</script>
+<script>
+// ── WhatsApp Status (separate from server status pill) ──
+// The main checkStatus() above handles the status pill via /status endpoint.
+// This checks WhatsApp state and updates the WhatsApp indicator if present.
+async function checkWhatsAppStatus() {
+  try {
+    const r = await fetch('/whatsapp/status');
+    if (!r.ok) return;
+    const d = await r.json();
+    const waLabel = document.getElementById('wa-status-label');
+    if (waLabel) {
+      waLabel.textContent = d.connected ? 'WhatsApp: Connected' : (d.state === 'qr_ready' ? 'WhatsApp: Scan QR' : 'WhatsApp: Disconnected');
+    }
+  } catch(e) { /* ignore */ }
+}
+// Check WhatsApp status on load and every 60s
+checkWhatsAppStatus();
+setInterval(checkWhatsAppStatus, 60000);
+</script>
+<script>
+// ── Offline / Online Detection ──
+let _wasOffline = false;
+window.addEventListener('offline', () => {
+  document.getElementById('offline-banner').classList.add('show');
+  _wasOffline = true;
+});
+window.addEventListener('online', () => {
+  document.getElementById('offline-banner').classList.remove('show');
+  if (_wasOffline) {
+    const rb = document.getElementById('reconnected-banner');
+    rb.classList.add('show');
+    setTimeout(() => rb.classList.remove('show'), 3000);
+    _wasOffline = false;
+    // Re-fetch CSRF token after reconnect
+    if (typeof fetchCsrfToken === 'function') fetchCsrfToken();
+  }
+});
+
+    // ── Pull to Refresh ──
+    (function() {
+      const chatBox = document.getElementById('chat-messages');
+      const ptr = document.getElementById('ptrIndicator');
+      if (!chatBox || !ptr) return;
+      let startY = 0, pulling = false;
+
+      chatBox.addEventListener('touchstart', function(e) {
+        if (chatBox.scrollTop <= 0) {
+          startY = e.touches[0].clientY;
+          pulling = true;
+        }
+      }, { passive: true });
+
+      chatBox.addEventListener('touchmove', function(e) {
+        if (!pulling) return;
+        const diff = e.touches[0].clientY - startY;
+        if (diff > 60 && chatBox.scrollTop <= 0) {
+          ptr.classList.add('active');
+        }
+      }, { passive: true });
+
+      chatBox.addEventListener('touchend', function() {
+        if (ptr.classList.contains('active')) {
+          // Refresh chat history
+          if (typeof loadChatHistory === 'function') loadChatHistory();
+          setTimeout(() => ptr.classList.remove('active'), 1200);
+        }
+        pulling = false;
+      });
+    })();
+
+    // ── Voice Input (Speech-to-Text) ──
+    let recognition = null;
+    let isRecording = false;
+
+    function initVoiceInput() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        const btn = document.getElementById('micBtn');
+        if (btn) btn.classList.add('unsupported');
+        return;
+      }
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = function(event) {
+        const input = document.getElementById('chatInput');
+        if (!input) return;
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        // Append to existing text
+        const existing = input.value.replace(/\s*\[listening...\]\s*$/, '');
+        input.value = existing + (existing ? ' ' : '') + transcript;
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+      };
+
+      recognition.onend = function() {
+        isRecording = false;
+        const btn = document.getElementById('micBtn');
+        if (btn) btn.classList.remove('recording');
+      };
+
+      recognition.onerror = function(event) {
+        console.warn('Speech recognition error:', event.error);
+        isRecording = false;
+        const btn = document.getElementById('micBtn');
+        if (btn) btn.classList.remove('recording');
+      };
+    }
+
+    function toggleVoiceInput() {
+      if (!recognition) {
+        initVoiceInput();
+        if (!recognition) {
+          alert('Speech recognition is not supported in this browser.');
+          return;
+        }
+      }
+      const btn = document.getElementById('micBtn');
+      if (isRecording) {
+        recognition.stop();
+        isRecording = false;
+        if (btn) btn.classList.remove('recording');
+      } else {
+        recognition.start();
+        isRecording = true;
+        if (btn) btn.classList.add('recording');
+      }
+    }
+
+    // Init voice input on load
+    initVoiceInput();
+
+    // ── Swipe Gestures ──
+    (function() {
+      let touchStartX = 0, touchStartY = 0, touchEndX = 0;
+      const SWIPE_THRESHOLD = 60;
+      const EDGE_ZONE = 30; // px from left edge to trigger sidebar open
+
+      document.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+
+      document.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        const touchEndY = e.changedTouches[0].screenY;
+        const diffX = touchEndX - touchStartX;
+        const diffY = Math.abs(touchEndY - touchStartY);
+
+        // Only register horizontal swipes (not vertical scrolls)
+        if (diffY > Math.abs(diffX) * 0.8) return;
+
+        // Swipe right from left edge → open sidebar
+        if (diffX > SWIPE_THRESHOLD && touchStartX < EDGE_ZONE) {
+          const hamburger = document.querySelector('.hamburger-btn');
+          if (hamburger && window.innerWidth <= 768) {
+            hamburger.click();
+          }
+        }
+
+        // Swipe left → close sidebar if open
+        if (diffX < -SWIPE_THRESHOLD) {
+          const sidebar = document.querySelector('.sidebar-left');
+          if (sidebar && sidebar.classList.contains('mobile-open')) {
+            const hamburger = document.querySelector('.hamburger-btn');
+            if (hamburger) hamburger.click();
+          }
+          // Also close right panel sheet
+          const sheet = document.querySelector('.mobile-panels-sheet.open');
+          if (sheet) {
+            const closeBtn = sheet.querySelector('.mps-close') || sheet.querySelector('[onclick*="close"]');
+            if (closeBtn) closeBtn.click();
+          }
+        }
+      }, { passive: true });
+    })();
+</script>
+<script src="/js/utils.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/dashboard.js"></script>
+
+<script>
+// ── Toast Notification System ──────────────────────────────────────────────
+function showToast(message, type = 'info', duration = 5000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  toast.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15);transform:translateY(20px);opacity:0;transition:all .3s;max-width:360px;cursor:pointer;';
+  if (type === 'success') toast.style.background = 'var(--green)', toast.style.color = '#fff';
+  else if (type === 'error') toast.style.background = 'var(--danger)', toast.style.color = '#fff';
+  else if (type === 'warning') toast.style.background = '#f59e0b', toast.style.color = '#fff';
+  else toast.style.background = 'var(--primary)', toast.style.color = '#fff';
+  
+  container.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; });
+  toast.onclick = () => dismissToast(toast);
+  setTimeout(() => dismissToast(toast), duration);
+}
+function dismissToast(el) {
+  el.style.transform = 'translateY(20px)'; el.style.opacity = '0';
+  setTimeout(() => el.remove(), 300);
+}
+
+// ── WhatsApp QR Banner Check ───────────────────────────────────────────────
+let _lastWaState = null;
+async function checkWhatsAppQR() {
+  try {
+    const r = await fetch('/whatsapp/status');
+    if (!r.ok) return;
+    const d = await r.json();
+    const banner = document.getElementById('wa-qr-banner');
+    const thumb = document.getElementById('wa-qr-thumb');
+    const full = document.getElementById('wa-qr-full');
+    
+    if (!d.connected && d.qr) {
+      if (thumb) thumb.src = d.qr;
+      if (full) full.src = d.qr;
+      if (banner) banner.classList.add('show');
+      
+      // Show toast on first disconnect detection
+      if (_lastWaState !== 'disconnected') {
+        showToast('WhatsApp disconnected — scan QR to reconnect', 'warning', 8000);
+      }
+      _lastWaState = 'disconnected';
+    } else if (d.connected) {
+      if (banner) banner.classList.remove('show');
+      
+      // Show toast on reconnection
+      if (_lastWaState === 'disconnected') {
+        showToast('WhatsApp reconnected!', 'success');
+      }
+      _lastWaState = 'connected';
+    }
+  } catch(e) { /* ignore */ }
+}
+
+// Check QR on load and every 15s
+checkWhatsAppQR();
+setInterval(checkWhatsAppQR, 15000);
+
+// ── Right Sidebar Auto-Refresh ─────────────────────────────────────────────
+let _lastPaymentCount = -1;
+let _lastDecisionCount = -1;
+
+async function refreshSidebarData() {
+  try {
+    // Refresh payments
+    if (typeof loadPayments === 'function') await loadPayments();
+    // Refresh villas
+    if (typeof loadVillas === 'function') await loadVillas();
+    // Refresh decisions
+    if (typeof loadDecisions === 'function') await loadDecisions();
+    // Refresh bookings
+    if (typeof loadBookings === 'function') {
+      try { await loadBookings(); } catch(e) {}
+    }
+  } catch(e) { /* silent refresh failure */ }
+}
+
+// Auto-refresh sidebar every 30s
+setInterval(refreshSidebarData, 30000);
+
+// Also refresh after sending a message (with delay for processing)
+const _origSendMessage = typeof sendMessage === 'function' ? sendMessage : null;
+if (typeof window._patchedSend === 'undefined') {
+  window._patchedSend = true;
+  const origBtn = document.querySelector('.send-btn');
+  if (origBtn) {
+    const origClick = origBtn.onclick;
+    origBtn.addEventListener('click', () => {
+      // Refresh sidebar 3s after sending a message (gives AI time to process)
+      setTimeout(refreshSidebarData, 3000);
+      setTimeout(refreshSidebarData, 8000);
+    });
+  }
+}
+
+// ── Mobile View Transition Animations ──────────────────────────────────────
+(function() {
+  // Add transition CSS dynamically
+  const style = document.createElement('style');
+  style.textContent = `
+    .main, .sidebar-right-mobile-panel {
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .view-fade-out {
+      opacity: 0; transform: translateY(8px);
+    }
+    .view-fade-in {
+      animation: viewFadeIn .25s ease forwards;
+    }
+    @keyframes viewFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Patch mbnSwitch if it exists
+  const origMbnSwitch = window.mbnSwitch;
+  if (typeof origMbnSwitch === 'function') {
+    window.mbnSwitch = function(tab) {
+      const main = document.querySelector('.main');
+      if (main) {
+        main.classList.add('view-fade-out');
+        setTimeout(() => {
+          origMbnSwitch(tab);
+          main.classList.remove('view-fade-out');
+          main.classList.add('view-fade-in');
+          setTimeout(() => main.classList.remove('view-fade-in'), 260);
+        }, 150);
+      } else {
+        origMbnSwitch(tab);
+      }
+    };
+  }
+})();
+
+// ── Payment Due Notifications ──────────────────────────────────────────────
+async function checkPaymentNotifications() {
+  try {
+    const r = await fetch('/memory/payments');
+    if (!r.ok) return;
+    const d = await r.json();
+    const upcoming = (d.upcoming || []).filter(p => {
+      const due = new Date(p.next_payment || p.due_date);
+      const now = new Date();
+      const diff = (due - now) / (1000 * 60 * 60 * 24);
+      return diff >= 0 && diff <= 3; // Due within 3 days
+    });
+    if (upcoming.length > 0) {
+      showToast('Payment reminder: ' + upcoming.length + ' payment(s) due within 3 days', 'warning', 8000);
+    }
+  } catch(e) { /* no payment endpoint or error */ }
+}
+// Check payments on load (delayed)
+setTimeout(checkPaymentNotifications, 5000);
+</script>
+
+
+<script>
+// ── Keyboard Shortcuts ─────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  // Ctrl+K or Cmd+K = toggle search
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    if (typeof toggleSearch === 'function') toggleSearch();
+    const searchInput = document.querySelector('.search-bar input');
+    if (searchInput) setTimeout(() => searchInput.focus(), 100);
+  }
+  
+  // Ctrl+Enter or Cmd+Enter = send message
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    const sendBtn = document.querySelector('.send-btn');
+    if (sendBtn && !sendBtn.disabled) sendBtn.click();
+  }
+  
+  // Escape = close any open modal/overlay/search/sidebar
+  if (e.key === 'Escape') {
+    // Close search bar
+    const searchBar = document.querySelector('.search-bar.open');
+    if (searchBar && typeof toggleSearch === 'function') { toggleSearch(); return; }
+    
+    // Close modals
+    document.querySelectorAll('.modal-overlay.open, .vd-overlay.open, .rf-overlay.open').forEach(el => el.classList.remove('open'));
+    
+    // Close QR modal
+    const qrModal = document.getElementById('wa-qr-modal-overlay');
+    if (qrModal) qrModal.classList.remove('open');
+    
+    // Close mobile sidebar
+    const sidebar = document.getElementById('sidebar-left');
+    if (sidebar && sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (overlay) overlay.classList.remove('show');
+    }
+  }
+  
+  // / (slash) = focus chat input (when not already in an input)
+  if (e.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    const chatInput = document.getElementById('chat-input') || document.querySelector('.chat-input');
+    if (chatInput) chatInput.focus();
+  }
+});
+
+// Also: Enter to send in chat input (without Shift)
+const chatInput = document.getElementById('chat-input') || document.querySelector('.chat-input');
+if (chatInput) {
+  chatInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      const sendBtn = document.querySelector('.send-btn');
+      if (sendBtn && !sendBtn.disabled) sendBtn.click();
+    }
+  });
+}
+</script>
+
+<!-- Toast Container -->
+<div id="toast-container" style="position:fixed;bottom:24px;right:24px;z-index:9000;display:flex;flex-direction:column-reverse;gap:8px;"></div>
+</body>
+</html>

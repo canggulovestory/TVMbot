@@ -1,0 +1,32 @@
+{
+  "models": {
+    "fast": "claude-haiku-4-5-20251001",
+    "standard": "claude-sonnet-4-5-20250929",
+    "advanced": "claude-opus-4-5-20251101"
+  },
+  "routes": {
+    "read_only": "fast",
+    "single_write": "standard",
+    "multi_write": "standard",
+    "error_recovery": "advanced"
+  },
+  "readKeywords": [
+    "status", "check", "show", "list", "what", "how many", "balance",
+    "total", "pending", "overdue", "schedule", "upcoming", "today",
+    "summary", "report", "count", "display", "view", "get", "fetch",
+    "look up", "find", "search", "who", "when", "where", "which"
+  ],
+  "writeKeywords": [
+    "log", "add", "update", "record", "mark", "set", "change",
+    "enter", "submit", "save", "complete", "done", "finish",
+    "assign", "create", "new", "book", "register"
+  ],
+  "multiWriteKeywords": [
+    "sync", "transfer", "reconcile", "migrate", "onboard",
+    "month-end", "close", "bulk", "all villas", "full update"
+  ],
+  "errorKeywords": [
+    "fix", "resolve", "rollback", "undo", "revert", "broken",
+    "error", "wrong", "mistake", "incorrect", "failed", "crash"
+  ]
+}
