@@ -2692,10 +2692,13 @@ async function handleBotCommand(text, groupJid, senderJid, replyJid) {
       const fullSenderJid = senderJid.includes('@') ? senderJid : `${senderJid}@s.whatsapp.net`;
       isAdmin = await whatsapp.isGroupAdmin(groupJid, fullSenderJid);
     } catch(e) {}
-    if (!isAdmin) return '❌ Only group admins can change bot settings.\nType *@bot status* to see current settings.';
+    // Non-admin attempting a config command → return null so the caller
+    // falls through to normal AI handling instead of refusing the user.
+    if (!isAdmin) return null;
   }
-  const arg1 = parts[2]?.toLowerCase();
-  const arg2 = parts[3]?.toLowerCase();
+  // parts[0]=cmd, parts[1]=arg1, parts[2]=arg2 (previous indexing was off by one)
+  const arg1 = parts[1]?.toLowerCase();
+  const arg2 = parts[2]?.toLowerCase();
 
   const ACTION_LABELS = {
     reply: '💬 reply',
@@ -2785,12 +2788,15 @@ function checkGroupAction(action, groupJid) {
         // IMPORTANT: only intercept known config commands, NOT general @bot questions
         // Regular @bot questions (e.g. "@bot what is the check-in time?") go to AI
         if (isGroup && /^@bot\b/i.test(text.trim())) {
-          const BOT_CMD_RE = /^@bot\s+(on|off|mode|allow|deny|status)\b/i;
+          // Match ONLY well-formed config commands (avoids false positives on
+          // natural language like "@bot allow me to check in early").
+          const BOT_CMD_RE = /^@bot\s+(status|help|on|off|(?:mode|allow|deny)\s+\S+)\s*$/i;
           if (BOT_CMD_RE.test(text.trim())) {
-            return await handleBotCommand(text.trim(), groupJid, senderPhone, replyJid);
+            const botReply = await handleBotCommand(text.trim(), groupJid, senderPhone, replyJid);
+            if (botReply) return botReply;
+            // handleBotCommand returned null → non-admin attempt, fall through to AI
           }
-          // Not a config command — strip the @bot prefix and pass full text to AI
-          // (falls through to normal AI handling below)
+          // Not a config command — falls through to normal AI handling below
         }
 
         // ── Group action context: set global + inject restriction hint ────

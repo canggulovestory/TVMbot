@@ -624,9 +624,14 @@ async function executeTool(toolName, toolInput, userEmail = 'unknown') {
 
         const previewText =
           '📤 *WhatsApp send preview*\n' +
-          'To: ' + normalized + '\n' +
-          'Message:\n' + messageText + '\n\n' +
-          'Send this message? (yes/no)';
+          '━━━━━━━━━━━━━━━━━━━\n' +
+          '*To:* ' + normalized + '\n' +
+          '*Message:*\n' + messageText + '\n' +
+          '━━━━━━━━━━━━━━━━━━━\n\n' +
+          '⚠️ *Nothing is sent yet.* Confirm below:\n\n' +
+          '✅ Reply *`yes`* to send now\n' +
+          '❌ Reply *`no`* to cancel\n\n' +
+          '_(Must be exactly the word `yes` or `no` — anything else will be treated as a new question.)_';
 
         result = {
           pending_direct_send: true,
