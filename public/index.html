@@ -2879,8 +2879,40 @@ function clearAttachment() {
   document.getElementById('file-input').value = '';
 }
 
+// Downscale large images client-side before upload: caps the long edge at 1600px
+// and JPEG-encodes at q=0.82. Keeps PDFs/DOCX/etc untouched. Invoices and
+// screenshots stay readable for Claude vision while payloads shrink ~5-10x.
+async function maybeDownscaleImage(file) {
+  try {
+    if (!file || !file.type || !file.type.startsWith('image/')) return file;
+    if (file.size < 400 * 1024) return file; // small enough, don't bother
+    const bmp = await createImageBitmap(file).catch(() => null);
+    if (!bmp) return file;
+    const MAX = 1600;
+    let { width: w, height: h } = bmp;
+    const scale = Math.min(1, MAX / Math.max(w, h));
+    if (scale >= 1) { bmp.close?.(); return file; }
+    w = Math.round(w * scale); h = Math.round(h * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close?.();
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
+    if (!blob || blob.size >= file.size) return file;
+    const newName = file.name.replace(/\.(png|webp|heic|heif|bmp|tiff)$/i, '.jpg');
+    console.log(`[ImageResize] ${file.name} ${humanSize(file.size)} → ${humanSize(blob.size)} (${w}x${h})`);
+    return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+  } catch (e) {
+    console.warn('[ImageResize] Failed, uploading original:', e);
+    return file;
+  }
+}
+
 async function handleFileSelect(file) {
   if (!file) return;
+  // Downscale oversized images before the multipart upload
+  file = await maybeDownscaleImage(file);
   const bar = document.getElementById('file-preview-bar');
   document.getElementById('fp-name').textContent = file.name;
   document.getElementById('fp-size').textContent = humanSize(file.size);
@@ -2964,7 +2996,10 @@ IMPORTANT: If this looks like a rental contract or villa agreement, extract thes
     try { d = await res.json(); } catch(_) { d = {}; }
     removeTyping();
     if (!res.ok) {
-      const errMsg = d.error || d.reply || `Server error ${res.status}`;
+      let errMsg = d.error || d.reply || `Server error ${res.status}`;
+      if (res.status === 413) {
+        errMsg = 'Image too large to send. Try a smaller screenshot or crop the image, then try again.';
+      }
       console.error('[FileChat] Server error:', res.status, errMsg);
       appendMessage('bot', `⚠️ ${errMsg}`);
     } else {

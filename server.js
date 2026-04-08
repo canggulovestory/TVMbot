@@ -123,7 +123,19 @@ const upload = multer({
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
+// Return JSON (not HTML) on oversized payloads, with a user-friendly message
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.too.large' || err.status === 413)) {
+    console.warn('[413] Payload too large on', req.path, '—', err.message);
+    return res.status(413).json({
+      error: 'Image or file too large. Please try a smaller image (under 20 MB) or crop it first.',
+      code: 'payload_too_large'
+    });
+  }
+  return next(err);
+});
 
 // ─── Input Sanitization (XSS Protection) ───────────────────────────────────────
 function sanitizeInput(str) {
