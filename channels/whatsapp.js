@@ -28,7 +28,7 @@ async function start() {
 }
 
 async function createConnection() {
-  const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore } = await baileysModule;
+  const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore, Browsers } = await baileysModule;
   clearTimeout(reconnectTimer);
   status = 'connecting';
   pairingReadyPromise = new Promise(resolve => {
@@ -45,7 +45,7 @@ async function createConnection() {
       keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
     logger,
-    browser: ['TVM Digital HQ', 'Chrome', '5.0.0'],
+    browser: Browsers.macOS('Google Chrome'),
     syncFullHistory: false,
     generateHighQualityLinkPreview: false,
   });

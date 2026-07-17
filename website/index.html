@@ -8,7 +8,7 @@
   <title>The Villa Managers | Villas & The Bali Furniture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
     :root {
       --paper: #f7f4ee;
@@ -22,13 +22,14 @@
       --muted: #736a60;
       --white: #fffdf9;
       --line: rgba(63, 51, 42, .16);
-      --display: "Bodoni Moda", Didot, Georgia, serif;
-      --sans: "Bodoni Moda", Didot, Georgia, serif;
+      --athena: "Athena", "Raleway", Arial, sans-serif;
+      --display: var(--athena);
+      --sans: var(--athena);
       --content: 1260px;
       --gutter: clamp(20px, 4vw, 64px);
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; font-family: var(--athena) !important; }
     html { scroll-behavior: smooth; font-size: 17px; }
     body {
       margin: 0;
