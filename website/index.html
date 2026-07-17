@@ -221,6 +221,13 @@
       transition: transform .25s ease;
     }
     .nav-list a:hover::after { transform: scaleX(1); transform-origin: left; }
+    .nav-list a.nav-business {
+      padding: 10px 14px;
+      border: 1px solid var(--cocoa);
+      color: var(--cocoa);
+    }
+    .nav-list a.nav-business::after { display: none; }
+    .nav-list a.nav-business:hover { color: var(--white); background: var(--cocoa); }
     .menu-button {
       display: none;
       width: 42px;
@@ -285,6 +292,69 @@
     .hero-scroll::after { width: 1px; height: 48px; background: rgba(255,255,255,.6); content: ""; }
 
     @keyframes hero-in { from { opacity: .3; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+
+    /* Two business routes */
+    .business-routes { background: var(--espresso); }
+    .business-routes-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .business-route {
+      min-height: 280px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-content: center;
+      gap: 0 25px;
+      padding: clamp(45px, 6vw, 82px) var(--gutter);
+    }
+    .business-route--management { color: var(--ink); background: var(--paper-deep); }
+    .business-route--furniture { color: var(--white); background: var(--cocoa); }
+    .business-route-number {
+      grid-row: 1 / span 3;
+      padding-top: 6px;
+      font-size: .7rem;
+      font-weight: 500;
+      letter-spacing: .15em;
+      opacity: .7;
+    }
+    .business-route small {
+      margin-bottom: 10px;
+      font-size: .7rem;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      opacity: .75;
+    }
+    .business-route h2 { margin-bottom: 14px; font-size: clamp(2rem, 3.2vw, 3.4rem); }
+    .business-route p { max-width: 520px; margin-bottom: 23px; font-size: .96rem; opacity: .82; }
+    .business-route .text-link { justify-self: start; }
+
+    /* Brand handoff */
+    .business-handoff { padding-block: clamp(80px, 10vw, 140px); color: var(--paper); background: var(--espresso); }
+    .business-handoff-grid {
+      display: grid;
+      grid-template-columns: .35fr 1.2fr .8fr;
+      align-items: center;
+      gap: clamp(35px, 6vw, 90px);
+    }
+    .handoff-index {
+      align-self: start;
+      color: var(--sand);
+      font-size: .72rem;
+      font-weight: 500;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+    .business-handoff h2 { margin: 0; font-size: clamp(3rem, 6.5vw, 7rem); }
+    .business-handoff h2 span { display: block; color: var(--sand); font-size: .34em; letter-spacing: .18em; text-transform: uppercase; }
+    .business-handoff-copy { padding-left: 35px; border-left: 1px solid rgba(255,255,255,.2); }
+    .business-handoff-copy strong {
+      display: block;
+      margin-bottom: 16px;
+      color: var(--white);
+      font-family: var(--display);
+      font-size: 1.65rem;
+      font-weight: 400;
+    }
+    .business-handoff-copy p { margin-bottom: 25px; color: #cdbfb2; font-size: 1rem; }
+    .business-handoff .text-link { color: var(--white); }
 
     /* Villas */
     .villas { padding-block: clamp(90px, 12vw, 170px); }
@@ -527,6 +597,8 @@
       .menu-scrim { display: block; }
       .menu-scrim.open { visibility: visible; opacity: 1; }
       .chapter-head, .about-grid, .furniture-intro, .contact-grid { grid-template-columns: 1fr; gap: 38px; }
+      .business-handoff-grid { grid-template-columns: .3fr 1fr; }
+      .business-handoff-copy { grid-column: 2; padding: 25px 0 0; border-top: 1px solid rgba(255,255,255,.2); border-left: 0; }
       .about-image { width: min(82%, 560px); }
       .about-stamp { right: -50px; }
       .service-row { grid-template-columns: 54px minmax(190px,.7fr) 1.3fr 30px; gap: 20px; }
@@ -552,6 +624,11 @@
       .hero-scroll { display: none; }
       .button { min-height: 48px; padding-inline: 19px; }
       .hero-actions { align-items: stretch; flex-direction: column; width: min(100%, 290px); }
+      .business-routes-grid { grid-template-columns: 1fr; }
+      .business-route { min-height: 0; grid-template-columns: 38px 1fr; padding-block: 48px; }
+      .business-handoff-grid { grid-template-columns: 1fr; }
+      .handoff-index { margin-bottom: -12px; }
+      .business-handoff-copy { grid-column: 1; padding-top: 28px; }
       .villas { padding-top: 90px; }
       .chapter-head { margin-bottom: 48px; }
       .villa-grid { display: block; }
@@ -596,7 +673,7 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="top-note">The Villa Managers &amp; The Bali Furniture · Canggu, Bali</div>
+  <div class="top-note">Two dedicated Bali businesses · Villa management + furniture</div>
 
   <header class="site-header" id="site-header">
     <nav class="nav shell" aria-label="Primary navigation">
@@ -610,7 +687,7 @@
         <small>The Villa Managers</small>
       </a>
       <ul class="nav-list">
-        <li><a href="#furniture">The Bali Furniture</a></li>
+        <li><a class="nav-business" href="#furniture">The Bali Furniture</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
@@ -638,11 +715,30 @@
         <h1 id="hero-title">Your Bali villa,<br>beautifully managed.</h1>
         <p class="hero-copy">We care for distinctive homes with local knowledge, clear communication, and an eye for every detail—from daily operations to the spaces within.</p>
         <div class="hero-actions">
-          <a class="button button--light" href="#villas">Explore our villas <span class="arrow">→</span></a>
-          <a class="button" href="#contact">Talk to our team <span class="arrow">→</span></a>
+          <a class="button button--light" href="#contact" data-interest="The Villa Managers — Villa management">Manage my villa <span class="arrow">→</span></a>
+          <a class="button" href="#villas">View managed villas <span class="arrow">→</span></a>
         </div>
       </div>
       <a class="hero-scroll" href="#villas">Scroll to discover</a>
+    </section>
+
+    <section class="business-routes" aria-label="Choose a TVM business">
+      <div class="business-routes-grid">
+        <article class="business-route business-route--management">
+          <span class="business-route-number">01</span>
+          <small>For villa owners</small>
+          <h2>The Villa Managers</h2>
+          <p>Professional villa operations, tenant care, maintenance, payments, and trusted local oversight.</p>
+          <a class="text-link" href="#management">Explore villa management <span>→</span></a>
+        </article>
+        <article class="business-route business-route--furniture">
+          <span class="business-route-number">02</span>
+          <small>For furniture buyers</small>
+          <h2>The Bali Furniture</h2>
+          <p>Furniture to order for villas, homes, and hospitality projects—with customization and delivery available.</p>
+          <a class="text-link" href="#furniture">Shop furniture by room <span>→</span></a>
+        </article>
+      </div>
     </section>
 
     <section class="villas" id="villas" aria-labelledby="villas-title">
@@ -707,7 +803,7 @@
           <a class="text-link" href="#management">Discover how we work <span>→</span></a>
           <div class="metrics" aria-label="TVM in numbers">
             <div class="metric"><strong>11+</strong><span>Villas managed</span></div>
-            <div class="metric"><strong>50+</strong><span>Furniture pieces</span></div>
+            <div class="metric"><strong>4</strong><span>Management pillars</span></div>
             <div class="metric"><strong>24/7</strong><span>Local coordination</span></div>
           </div>
         </div>
@@ -744,51 +840,12 @@
       </div>
     </section>
 
-    <section class="furniture" id="furniture" aria-labelledby="furniture-title">
-      <div class="shell">
-        <div class="furniture-intro reveal">
-          <div>
-            <span class="eyebrow">The Bali Furniture</span>
-            <h2 class="chapter-title" id="furniture-title">Pieces made for the way your villa lives.</h2>
-          </div>
-          <div>
-            <p class="lead">The Bali Furniture creates custom pieces, sourcing, and styling with trusted local artisans—designed for your space, your guests, and the island climate.</p>
-            <a class="text-link" href="#contact">Start a furniture project <span>→</span></a>
-          </div>
-        </div>
-
-        <div class="furniture-grid">
-          <article class="furniture-card reveal">
-            <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="Custom neutral sofa and living room furniture" loading="lazy">
-            <div class="furniture-label"><h3>Living</h3><p>Sofas · Daybeds · Loungers</p></div>
-          </article>
-          <article class="furniture-card reveal">
-            <img src="https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="The Bali Furniture timber dining collection" loading="lazy">
-            <div class="furniture-label"><h3>Dining</h3><p>Tables · Chairs · Outdoor sets</p></div>
-          </article>
-          <article class="furniture-card reveal">
-            <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&amp;fit=crop&amp;w=800&amp;q=85" alt="Warm, handcrafted bedroom furniture" loading="lazy">
-            <div class="furniture-label"><h3>Bedroom</h3><p>Beds · Wardrobes · Bedside</p></div>
-          </article>
-          <article class="furniture-card reveal">
-            <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&amp;fit=crop&amp;w=800&amp;q=85" alt="Decorative objects and interior styling" loading="lazy">
-            <div class="furniture-label"><h3>Styling</h3><p>Lighting · Decor · Finishing</p></div>
-          </article>
-        </div>
-
-        <div class="furniture-note reveal">
-          <div><h3>Designed to fit</h3><p>Proportions, materials, and finishes considered specifically for your rooms.</p></div>
-          <div><h3>Made in Bali</h3><p>Produced with trusted local craftspeople and carefully selected materials.</p></div>
-          <div><h3>One point of contact</h3><p>TVM coordinates design, production, delivery, installation, and final styling.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="testimonial" aria-label="Client testimonial">
+    <section class="testimonial" aria-label="Villa management client testimonial">
       <div class="shell">
         <div class="testimonial-grid reveal">
           <img class="testimonial-image" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="Serene villa lounge with natural materials" loading="lazy">
           <div class="testimonial-copy">
+            <span class="eyebrow">Villa management review</span>
             <div class="quote-mark">“</div>
             <blockquote>TVM transformed how we manage our Bali properties. Their attention to detail makes the entire experience feel personal and effortless.</blockquote>
             <div class="quote-author"><strong>James W.</strong><span>Villa owner · Australia</span></div>
@@ -797,12 +854,64 @@
       </div>
     </section>
 
+    <section class="business-handoff" id="furniture" aria-labelledby="furniture-brand-title">
+      <div class="business-handoff-grid shell">
+        <span class="handoff-index">Business 02</span>
+        <h2 id="furniture-brand-title"><span>Now entering</span>The Bali Furniture</h2>
+        <div class="business-handoff-copy">
+          <strong>A dedicated furniture business.</strong>
+          <p>This is where you buy or commission furniture. Choose pieces by room, request custom dimensions and finishes, then arrange delivery and installation.</p>
+          <a class="text-link" href="#furniture-collection">View furniture collection <span>→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="furniture" id="furniture-collection" aria-labelledby="furniture-title">
+      <div class="shell">
+        <div class="furniture-intro reveal">
+          <div>
+            <span class="eyebrow">Furniture shop &amp; custom orders</span>
+            <h2 class="chapter-title" id="furniture-title">Furniture to buy. Pieces made your way.</h2>
+          </div>
+          <div>
+            <p class="lead">The Bali Furniture sells made-to-order pieces for villas, homes, and hospitality projects. Select a category, then ask us about sizing, finishes, pricing, and delivery.</p>
+            <a class="text-link" href="#contact" data-interest="The Bali Furniture — Furniture order">Request a furniture quote <span>→</span></a>
+          </div>
+        </div>
+
+        <div class="furniture-grid">
+          <article class="furniture-card reveal">
+            <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="Custom neutral sofa and living room furniture" loading="lazy">
+            <div class="furniture-label"><h3>Living</h3><p>Sofas · Daybeds · Made to order</p></div>
+          </article>
+          <article class="furniture-card reveal">
+            <img src="https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="The Bali Furniture timber dining collection" loading="lazy">
+            <div class="furniture-label"><h3>Dining</h3><p>Tables · Chairs · Custom sizes</p></div>
+          </article>
+          <article class="furniture-card reveal">
+            <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&amp;fit=crop&amp;w=800&amp;q=85" alt="Warm, handcrafted bedroom furniture" loading="lazy">
+            <div class="furniture-label"><h3>Bedroom</h3><p>Beds · Wardrobes · Bedside pieces</p></div>
+          </article>
+          <article class="furniture-card reveal">
+            <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&amp;fit=crop&amp;w=800&amp;q=85" alt="Decorative objects and interior styling" loading="lazy">
+            <div class="furniture-label"><h3>Styling</h3><p>Lighting · Decor · Project packages</p></div>
+          </article>
+        </div>
+
+        <div class="furniture-note reveal">
+          <div><h3>01 · Choose</h3><p>Select living, dining, bedroom, outdoor, or a complete project package.</p></div>
+          <div><h3>02 · Customize</h3><p>Confirm dimensions, materials, colors, finishes, quantity, and quotation.</p></div>
+          <div><h3>03 · Deliver</h3><p>We coordinate production, quality checks, delivery, installation, and styling.</p></div>
+        </div>
+      </div>
+    </section>
+
     <section class="contact" id="contact" aria-labelledby="contact-title">
       <div class="contact-grid shell">
         <div class="contact-copy reveal">
           <span class="eyebrow">Begin a conversation</span>
-          <h2 id="contact-title">Let’s care for something beautiful.</h2>
-          <p>Tell us about your villa or furniture project. The form opens a prepared WhatsApp message so you can speak directly with our team.</p>
+          <h2 id="contact-title">Which business can we help with?</h2>
+          <p>Choose The Villa Managers for property operations, or The Bali Furniture to purchase and customize furniture. Your enquiry goes directly to the right conversation.</p>
           <ul class="contact-details">
             <li><small>WhatsApp</small><a href="https://wa.me/6282122922252" target="_blank" rel="noopener">+62 821 2292 2252</a></li>
             <li><small>Email</small><a href="mailto:hello@thevillamanagers.com">hello@thevillamanagers.com</a></li>
@@ -815,8 +924,8 @@
           <div class="field"><label for="last-name">Last name</label><input id="last-name" name="lastName" autocomplete="family-name"></div>
           <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
           <div class="field"><label for="phone">Phone / WhatsApp</label><input id="phone" name="phone" type="tel" autocomplete="tel"></div>
-          <div class="field field--full"><label for="interest">I’m interested in</label><select id="interest" name="interest" required><option value="">Select a service</option><option>Villa management</option><option>Villa rental</option><option>Maintenance</option><option>The Bali Furniture</option><option>Interior styling</option></select></div>
-          <div class="field field--full"><label for="message">Tell us about your property</label><textarea id="message" name="message" required></textarea></div>
+          <div class="field field--full"><label for="interest">Choose a business</label><select id="interest" name="interest" required><option value="">Select villa management or furniture</option><optgroup label="The Villa Managers"><option>The Villa Managers — Villa management</option><option>The Villa Managers — Villa rental</option><option>The Villa Managers — Maintenance</option></optgroup><optgroup label="The Bali Furniture"><option>The Bali Furniture — Furniture order</option><option>The Bali Furniture — Custom furniture</option><option>The Bali Furniture — Styling</option></optgroup></select></div>
+          <div class="field field--full"><label for="message">Tell us what you need</label><textarea id="message" name="message" required></textarea></div>
           <button class="button" type="submit">Send via WhatsApp <span class="arrow">→</span></button>
           <p class="form-note">You’ll review your message in WhatsApp before sending.</p>
         </form>
@@ -829,13 +938,13 @@
       <div class="footer-main">
         <div class="footer-brand">
           <a class="brand" href="#top"><strong>TVM</strong><small>The Villa Managers</small></a>
-          <p>Thoughtful villa management, local property care, and custom pieces by The Bali Furniture.</p>
+          <p>Two dedicated Bali businesses: property care by The Villa Managers and furniture sales by The Bali Furniture.</p>
         </div>
-        <div class="footer-col"><h3>Explore</h3><ul><li><a href="#villas">Our villas</a></li><li><a href="#about">About TVM</a></li><li><a href="#management">How it works</a></li></ul></div>
-        <div class="footer-col"><h3>Services</h3><ul><li><a href="#services">Villa management</a></li><li><a href="#services">Maintenance</a></li><li><a href="#furniture">The Bali Furniture</a></li><li><a href="#furniture">Styling</a></li></ul></div>
+        <div class="footer-col"><h3>The Villa Managers</h3><ul><li><a href="#villas">Managed villas</a></li><li><a href="#management">Management services</a></li><li><a href="#services">Maintenance</a></li><li><a href="#about">About TVM</a></li></ul></div>
+        <div class="footer-col"><h3>The Bali Furniture</h3><ul><li><a href="#furniture-collection">Living furniture</a></li><li><a href="#furniture-collection">Dining furniture</a></li><li><a href="#furniture-collection">Custom orders</a></li><li><a href="#contact" data-interest="The Bali Furniture — Furniture order">Request a quote</a></li></ul></div>
         <div class="footer-col"><h3>Contact</h3><ul><li><a href="https://wa.me/6282122922252" target="_blank" rel="noopener">WhatsApp</a></li><li><a href="mailto:hello@thevillamanagers.com">Email us</a></li><li><a href="#contact">Send an enquiry</a></li></ul></div>
       </div>
-      <div class="footer-bottom"><span>© <span id="year">2026</span> The Villa Managers. All rights reserved.</span><div class="footer-social"><a href="#contact">Instagram</a><a href="#contact">Facebook</a></div></div>
+      <div class="footer-bottom"><span>© <span id="year">2026</span> The Villa Managers &amp; The Bali Furniture.</span><div class="footer-social"><a href="#contact">Instagram</a><a href="#contact">Facebook</a></div></div>
     </div>
   </footer>
 
@@ -883,7 +992,20 @@
         const message = document.getElementById('message');
         const interest = document.getElementById('interest');
         if (message && !message.value) message.value = `I’d like to know more about ${card.dataset.villa}.`;
-        if (interest) interest.value = 'Villa rental';
+        if (interest) interest.value = 'The Villa Managers — Villa rental';
+      });
+    });
+
+    document.querySelectorAll('[data-interest]').forEach(link => {
+      link.addEventListener('click', () => {
+        const interest = document.getElementById('interest');
+        const message = document.getElementById('message');
+        if (interest) interest.value = link.dataset.interest;
+        if (message && !message.value) {
+          message.value = link.dataset.interest.startsWith('The Bali Furniture')
+            ? 'I’d like a furniture quotation. Please tell me about options, customization, and delivery.'
+            : 'I’d like to discuss villa management for my property.';
+        }
       });
     });
 
