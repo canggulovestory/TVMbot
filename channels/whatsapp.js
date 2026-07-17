@@ -18,6 +18,8 @@ let status = 'disconnected';
 let lastError = '';
 let lastConnectedAt = null;
 let qrAvailable = false;
+let pairingReadyPromise = Promise.resolve();
+let pairingReadyResolve = null;
 
 async function start() {
   if (starting) return starting;
@@ -29,6 +31,10 @@ async function createConnection() {
   const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore } = await baileysModule;
   clearTimeout(reconnectTimer);
   status = 'connecting';
+  pairingReadyPromise = new Promise(resolve => {
+    pairingReadyResolve = resolve;
+    setTimeout(resolve, 5000);
+  });
   const sessionPath = process.env.WA_SESSION_PATH || './wa-session';
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   const logger = pino({ level: 'silent' });
@@ -48,6 +54,10 @@ async function createConnection() {
 
   sock.ev.on('connection.update', update => {
     const { connection, lastDisconnect, qr } = update;
+    if (connection === 'connecting' || qr) {
+      pairingReadyResolve?.();
+      pairingReadyResolve = null;
+    }
     if (qr) {
       qrAvailable = true;
       status = 'pairing_required';
@@ -112,6 +122,7 @@ async function createConnection() {
 async function requestPairingCode(phone) {
   if (connected) return { connected: true, message: 'WhatsApp is already connected.' };
   if (!sock) await start();
+  await pairingReadyPromise;
   if (!sock || typeof sock.requestPairingCode !== 'function') {
     throw new Error('Pairing is not ready. Restart the bot and try again.');
   }
