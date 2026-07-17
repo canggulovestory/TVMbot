@@ -1,7 +1,7 @@
 {
   "name": "tvmbot-v4",
-  "version": "4.0.0",
-  "description": "TVM Task Assistant — WhatsApp + Telegram bot backed by Notion",
+  "version": "5.0.0",
+  "description": "TVM digital HQ — public sites, protected operations, WhatsApp, Telegram, and Notion",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -11,9 +11,9 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@notionhq/client": "^2.2.15",
     "baileys": "^6.7.16",
-    "node-telegram-bot-api": "^0.66.0",
-    "node-cron": "^3.0.3",
     "dotenv": "^16.4.7",
+    "node-cron": "^4.6.0",
+    "node-telegram-bot-api": "^1.2.0",
     "pino": "^9.6.0"
   }
 }

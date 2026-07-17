@@ -909,7 +909,7 @@
           <div class="field field--full"><label for="interest">Choose a business</label><select id="interest" name="interest" required><option value="">Select villa management or furniture</option><optgroup label="The Villa Managers"><option>The Villa Managers — Villa management</option><option>The Villa Managers — Villa rental</option><option>The Villa Managers — Maintenance</option></optgroup><optgroup label="The Bali Furniture"><option>The Bali Furniture — Furniture order</option><option>The Bali Furniture — Custom furniture</option><option>The Bali Furniture — Styling</option></optgroup></select></div>
           <div class="field field--full"><label for="message">Tell us what you need</label><textarea id="message" name="message" required></textarea></div>
           <button class="button" type="submit">Send via WhatsApp <span class="arrow">→</span></button>
-          <p class="form-note">You’ll review your message in WhatsApp before sending.</p>
+          <p class="form-note">Your enquiry is saved to TVM HQ, then opens in WhatsApp for review.</p>
         </form>
       </div>
     </section>
@@ -924,7 +924,7 @@
         </div>
         <div class="footer-col"><h3>The Villa Managers</h3><ul><li><a href="#villas">Managed villas</a></li><li><a href="#management">Management services</a></li><li><a href="#services">Maintenance</a></li><li><a href="#about">About TVM</a></li></ul></div>
         <div class="footer-col"><h3>The Bali Furniture</h3><ul><li><a href="#furniture">Living furniture</a></li><li><a href="#furniture">Dining furniture</a></li><li><a href="#furniture">Custom orders</a></li><li><a href="#contact" data-interest="The Bali Furniture — Furniture order">Request a quote</a></li></ul></div>
-        <div class="footer-col"><h3>Contact</h3><ul><li><a href="https://wa.me/6282122922252" target="_blank" rel="noopener">WhatsApp</a></li><li><a href="mailto:hello@thevillamanagers.com">Email us</a></li><li><a href="#contact">Send an enquiry</a></li></ul></div>
+        <div class="footer-col"><h3>Contact</h3><ul><li><a href="https://wa.me/6282122922252" target="_blank" rel="noopener">WhatsApp</a></li><li><a href="mailto:hello@thevillamanagers.com">Email us</a></li><li><a href="#contact">Send an enquiry</a></li><li><a href="/afni/">Afni’s portfolio</a></li></ul></div>
       </div>
       <div class="footer-bottom"><span>© <span id="year">2026</span> The Villa Managers &amp; The Bali Furniture.</span><div class="footer-social"><a href="#contact">Instagram</a><a href="#contact">Facebook</a></div></div>
     </div>
@@ -991,7 +991,7 @@
       });
     });
 
-    document.getElementById('contact-form').addEventListener('submit', event => {
+    document.getElementById('contact-form').addEventListener('submit', async event => {
       event.preventDefault();
       const data = new FormData(event.currentTarget);
       const fullName = `${data.get('firstName')} ${data.get('lastName') || ''}`.trim();
@@ -1005,6 +1005,22 @@
         '',
         data.get('message')
       ].filter(Boolean).join('\n');
+      try {
+        await fetch('/api/public/enquiries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source: 'tvm',
+            business: data.get('interest'),
+            name: fullName,
+            email: data.get('email'),
+            phone: data.get('phone'),
+            message: data.get('message')
+          })
+        });
+      } catch (_) {
+        // WhatsApp remains available if the HQ capture service is temporarily offline.
+      }
       window.open(`https://wa.me/6282122922252?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     });
 

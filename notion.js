@@ -74,6 +74,15 @@ async function completeTask(searchText) {
   return match;
 }
 
+async function completeTaskById(pageId) {
+  if (!pageId) throw new Error('Task ID is required');
+  await notion.pages.update({
+    page_id: pageId,
+    properties: { 'Completed': { checkbox: true } },
+  });
+  return { id: pageId, done: true };
+}
+
 // ─── PROJECTS ───────────────────────────────────────────────────────────────────
 
 async function getProjects() {
@@ -159,6 +168,19 @@ async function markPaid(villaSearch) {
   return match;
 }
 
+async function markPaymentPaidById(pageId) {
+  if (!pageId) throw new Error('Payment ID is required');
+  const today = new Date().toISOString().split('T')[0];
+  await notion.pages.update({
+    page_id: pageId,
+    properties: {
+      'Status': { select: { name: 'Paid' } },
+      'Payment Date': { date: { start: today } },
+    },
+  });
+  return { id: pageId, status: 'Paid' };
+}
+
 async function getPaymentsDueSoon(daysAhead = 3) {
   const now = new Date();
   const currentDay = now.getDate();
@@ -175,7 +197,7 @@ async function getPaymentsDueSoon(daysAhead = 3) {
 
 module.exports = {
   init,
-  createTask, getTasks, completeTask,
+  createTask, getTasks, completeTask, completeTaskById,
   getProjects, findProject,
-  createPayment, getPayments, markPaid, getPaymentsDueSoon,
+  createPayment, getPayments, markPaid, markPaymentPaidById, getPaymentsDueSoon,
 };

@@ -4,20 +4,37 @@
  */
 'use strict';
 
-const TelegramBot = require('node-telegram-bot-api');
+const TelegramBot = require('node-telegram-bot-api').default;
 const brain = require('../brain');
 
 let bot = null;
+let running = false;
+let botName = '';
+let lastError = '';
 
-function start() {
+async function start() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     console.log('[TG] No TELEGRAM_BOT_TOKEN — Telegram disabled');
-    return;
+    lastError = 'Telegram token is not configured';
+    return false;
   }
 
   bot = new TelegramBot(token, { polling: true });
-  console.log('[TG] Bot started (polling)');
+  try {
+    const profile = await bot.getMe();
+    running = true;
+    botName = profile.username || profile.first_name || '';
+    lastError = '';
+    console.log(`[TG] @${botName} started (polling)`);
+  } catch (error) {
+    running = false;
+    lastError = error.message;
+    console.error('[TG] Start failed:', error.message);
+    try { await bot.stopPolling(); } catch (_) {}
+    bot = null;
+    return false;
+  }
 
   bot.on('message', async (msg) => {
     try {
@@ -48,8 +65,12 @@ function start() {
   });
 
   bot.on('polling_error', (err) => {
+    running = false;
+    lastError = err.message;
     console.error('[TG] Polling error:', err.code || err.message);
   });
+
+  return true;
 }
 
 async function sendToChat(chatId, text) {
@@ -66,6 +87,15 @@ async function sendToChat(chatId, text) {
   }
 }
 
-function isRunning() { return !!bot; }
+function isRunning() { return running; }
 
-module.exports = { start, sendToChat, isRunning };
+function getStatus() {
+  return {
+    configured: !!process.env.TELEGRAM_BOT_TOKEN,
+    running,
+    botName,
+    lastError,
+  };
+}
+
+module.exports = { start, sendToChat, isRunning, getStatus };

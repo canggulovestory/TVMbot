@@ -1,0 +1,9 @@
+[Unit]
+Description=Synchronize and deploy TVM from GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/root/tvmbot-v4/ops/sync-and-deploy.sh
+User=root

@@ -9,6 +9,7 @@ const Anthropic = require('@anthropic-ai/sdk').default;
 const notion = require('./notion');
 
 let claude;
+const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
 function init() {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not set');
@@ -180,7 +181,7 @@ async function processMessage({ text, phone, telegramId }) {
 
   try {
     const response = await claude.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODEL,
       max_tokens: 500,
       system: buildPrompt(user),
       tools: TOOLS,
@@ -208,7 +209,7 @@ async function processMessage({ text, phone, telegramId }) {
       messages.push({ role: 'user', content: toolResults });
 
       assistantMsg = await claude.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: MODEL,
         max_tokens: 500,
         system: buildPrompt(user),
         tools: TOOLS,
