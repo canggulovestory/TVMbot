@@ -5,9 +5,10 @@
  */
 'use strict';
 
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore } = require('baileys');
 const pino = require('pino');
 const brain = require('../brain');
+
+const baileysModule = import('baileys');
 
 let sock = null;
 let connected = false;
@@ -25,6 +26,7 @@ async function start() {
 }
 
 async function createConnection() {
+  const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore } = await baileysModule;
   clearTimeout(reconnectTimer);
   status = 'connecting';
   const sessionPath = process.env.WA_SESSION_PATH || './wa-session';

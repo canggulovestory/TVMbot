@@ -10,7 +10,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@notionhq/client": "^2.2.15",
-    "baileys": "^6.7.16",
+    "baileys": "^7.0.0-rc13",
     "dotenv": "^16.4.7",
     "node-cron": "^4.6.0",
     "node-telegram-bot-api": "^1.2.0",
