@@ -13,6 +13,7 @@ const http = require('http');
 const path = require('path');
 const cron = require('node-cron');
 const notion = require('./notion');
+const assistant = require('./assistant');
 const brain = require('./brain');
 const villaData = require('./villa-data');
 const whatsapp = require('./channels/whatsapp');
@@ -325,10 +326,27 @@ async function sendMorningDMs() {
   }
 }
 
+async function deliverDueReminders() {
+  try {
+    const due = await assistant.collectDueReminders();
+    for (const reminder of due) {
+      const user = brain.USERS[reminder.userKey];
+      if (!user) continue;
+      const message = `⏰ *Reminder:* ${reminder.text}`;
+      const waSent = await whatsapp.sendToPhone(user.phone, message).catch(() => false);
+      const tgSent = user.telegramId ? await telegram.sendToChat(user.telegramId, message).catch(() => false) : false;
+      console.log(`[Reminder] ${user.name}: "${reminder.text}" WA=${waSent} TG=${tgSent}`);
+    }
+  } catch (error) {
+    console.error('[Reminder] Delivery failed:', error.message);
+  }
+}
+
 async function boot() {
-  console.log('=== TVM Digital HQ v5.1 starting ===');
+  console.log('=== TVM Digital HQ v5.2 starting ===');
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
   villaData.init(DATA_DIR);
+  assistant.init(DATA_DIR);
   notion.init();
   brain.init();
   if (process.env.DISABLE_CHANNELS !== 'true') {
@@ -336,8 +354,9 @@ async function boot() {
     await telegram.start();
   }
   cron.schedule('0 9 * * *', sendMorningDMs, { timezone: 'Asia/Makassar' });
+  cron.schedule('* * * * *', deliverDueReminders); // minute-level reminder delivery
   server.listen(PORT, '127.0.0.1', () => console.log(`[HTTP] http://127.0.0.1:${PORT}`));
-  console.log('=== TVM Digital HQ v5.1 running ===');
+  console.log('=== TVM Digital HQ v5.2 running ===');
 }
 
 boot().catch(error => {

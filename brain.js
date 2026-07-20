@@ -7,6 +7,7 @@
 
 const Anthropic = require('@anthropic-ai/sdk').default;
 const notion = require('./notion');
+const assistant = require('./assistant');
 
 let claude;
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
@@ -52,10 +53,12 @@ function isAllowed({ phone, telegramId }) {
 
 // ─── System prompt ──────────────────────────────────────────────────────────────
 
-function buildPrompt(user) {
+function buildPrompt(user, memoryFacts = []) {
+  const nowWita = assistant.epochToWitaString(Date.now());
   let prompt = `You are TVMbot, a task assistant for The Villa Managers team.
 You are talking to ${user.name}. Be brief — max 3-4 lines per response.
 Never ask permission. Just do it and confirm.
+Current date/time: ${nowWita} WITA (Asia/Makassar).
 
 You can help with:
 - Adding tasks: "todo: [task]" or "urgent: [task]"
@@ -63,9 +66,17 @@ You can help with:
 - Listing tasks: "tasks" or "list"
 - Payment tracking: "paid [villa]"
 - Maintenance: "maintenance: [issue] at [location]"
+- Reminders: "remind me [when] [what]" — use the set_reminder tool
+- Memory: "remember [fact]" — use the remember_fact tool
+- Villa ops: recurring cleaning/pool/maintenance schedules — use add_ops_schedule
 
 Always save everything to Notion. Confirm with one line.
 Respond in the same language the user writes in (English or Indonesian).`;
+
+  if (memoryFacts.length) {
+    prompt += `\n\nKnown facts about ${user.name} (from memory):\n` +
+      memoryFacts.slice(0, 20).map(e => `- ${e.fact}`).join('\n');
+  }
 
   if (user.key === 'afni') {
     prompt += `\n\nAfni's work buckets: ${user.buckets.join(', ')}.
@@ -128,12 +139,86 @@ const TOOLS = [
       required: ['villa'],
     },
   },
+  {
+    name: 'set_reminder',
+    description: 'Set a reminder delivered by WhatsApp/Telegram at a specific WITA time. Supports one-off and recurring.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string', description: 'What to remind about' },
+        datetime: { type: 'string', description: 'WITA time as "YYYY-MM-DD HH:MM"' },
+        recurrence: { type: 'string', enum: ['', 'daily', 'weekly:1', 'weekly:2', 'weekly:3', 'weekly:4', 'weekly:5', 'weekly:6', 'weekly:7', 'monthly:1', 'monthly:15', 'monthly:25'], description: 'Empty for one-off. weekly:N uses Mon=1..Sun=7. monthly:D = day of month.' },
+      },
+      required: ['text', 'datetime'],
+    },
+  },
+  {
+    name: 'list_reminders',
+    description: 'List pending reminders for this user.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'cancel_reminder',
+    description: 'Cancel a pending reminder by partial text match.',
+    input_schema: {
+      type: 'object',
+      properties: { search: { type: 'string' } },
+      required: ['search'],
+    },
+  },
+  {
+    name: 'remember_fact',
+    description: 'Store a lasting fact about this user (preferences, contacts, decisions, context).',
+    input_schema: {
+      type: 'object',
+      properties: { fact: { type: 'string' } },
+      required: ['fact'],
+    },
+  },
+  {
+    name: 'add_ops_schedule',
+    description: 'Add a recurring villa operations schedule (cleaning, pool service, maintenance). Appears in the morning briefing on matching days.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        villa: { type: 'string' },
+        task: { type: 'string' },
+        frequency: { type: 'string', description: 'daily | weekly:1..7 (Mon=1) | monthly:1..31' },
+        assignee: { type: 'string', description: 'Optional staff name' },
+      },
+      required: ['villa', 'task', 'frequency'],
+    },
+  },
 ];
 
 // ─── Tool execution ─────────────────────────────────────────────────────────────
 
-async function executeTool(name, input) {
+async function executeTool(name, input, user) {
   switch (name) {
+    case 'set_reminder': {
+      const m = String(input.datetime || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})/);
+      if (!m) return 'Invalid datetime — need "YYYY-MM-DD HH:MM" (WITA)';
+      const at = assistant.witaToEpoch(+m[1], +m[2], +m[3], +m[4], +m[5]);
+      const r = await assistant.addReminder({ userKey: user.key, text: input.text, at, recurrence: input.recurrence || '' });
+      return `Reminder set: "${r.text}" — ${assistant.epochToWitaString(r.at)} WITA${r.recurrence ? ` (${r.recurrence.replace(':', ' ')})` : ''}`;
+    }
+    case 'list_reminders': {
+      const list = await assistant.listReminders(user.key);
+      if (!list.length) return 'No reminders set.';
+      return list.slice(0, 15).map((r, i) => `${i + 1}. ${assistant.epochToWitaString(r.at)} — ${r.text}`).join('\n');
+    }
+    case 'cancel_reminder': {
+      const target = await assistant.cancelReminder(user.key, input.search);
+      return target ? `Cancelled: "${target.text}"` : 'No matching reminder found.';
+    }
+    case 'remember_fact': {
+      const entry = await assistant.remember(user.key, input.fact);
+      return `Remembered: "${entry.fact}"`;
+    }
+    case 'add_ops_schedule': {
+      const entry = await assistant.addOpsSchedule(input);
+      return `Ops schedule added: ${entry.villa} — ${entry.task} (${entry.frequency.replace(':', ' ')})`;
+    }
     case 'create_task': {
       const result = await notion.createTask({
         name: input.name,
@@ -179,11 +264,17 @@ async function processMessage({ text, phone, telegramId }) {
   const user = identifyUser({ phone, telegramId });
   if (!user) return null;
 
+  // Structured commands (/remind, /remember, /ops…) work with ZERO AI credits.
+  const commandReply = await assistant.tryCommand(text, user.key);
+  if (commandReply) return commandReply;
+
   try {
+    const memoryFacts = await assistant.getMemory(user.key).catch(() => []);
+    const systemPrompt = buildPrompt(user, memoryFacts);
     const response = await claude.messages.create({
       model: MODEL,
       max_tokens: 500,
-      system: buildPrompt(user),
+      system: systemPrompt,
       tools: TOOLS,
       messages: [{ role: 'user', content: text }],
     });
@@ -198,7 +289,7 @@ async function processMessage({ text, phone, telegramId }) {
       const toolResults = [];
       for (const block of assistantMsg.content) {
         if (block.type === 'tool_use') {
-          const result = await executeTool(block.name, block.input);
+          const result = await executeTool(block.name, block.input, user);
           toolResults.push({
             type: 'tool_result',
             tool_use_id: block.id,
@@ -211,7 +302,7 @@ async function processMessage({ text, phone, telegramId }) {
       assistantMsg = await claude.messages.create({
         model: MODEL,
         max_tokens: 500,
-        system: buildPrompt(user),
+        system: systemPrompt,
         tools: TOOLS,
         messages,
       });
@@ -282,6 +373,9 @@ async function buildMorningDM(userKey) {
       });
     }
 
+    const extras = await assistant.buildMorningExtras('afni').catch(() => '');
+    if (extras) msg += `\n${extras}\n`;
+
     msg += '\nWorkout + journal + prayer';
     return msg;
   }
@@ -326,6 +420,9 @@ async function buildMorningDM(userKey) {
         msg += `- ${p.villa} Rp ${p.amount.toLocaleString('id-ID')} (${diff === 0 ? 'TODAY' : `in ${diff}d`})\n`;
       });
     }
+
+    const extras = await assistant.buildMorningExtras('syifa').catch(() => '');
+    if (extras) msg += `\n${extras}`;
 
     return msg;
   }
