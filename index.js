@@ -185,7 +185,7 @@ async function adminOverview() {
     projects: value(1),
     payments: value(2),
     enquiries: value(3),
-    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [] }),
+    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], villaTasks: [] }),
     bots: { whatsapp: whatsapp.getStatus(), telegram: telegram.getStatus() },
     errors: results.map((result, index) => result.status === 'rejected'
       ? ['tasks', 'projects', 'payments', 'enquiries', 'villa records'][index]
@@ -267,21 +267,26 @@ async function handleAdminApi(req, res, url) {
     await notion.markPaymentPaidById(clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
+  const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks'];
   if (url.pathname === '/api/admin/records' && req.method === 'POST') {
     const body = await readBody(req);
     const collection = clean(body.collection, 40);
-    if (!['villas', 'tenancies', 'installments', 'deposits', 'documents'].includes(collection)) {
+    if (!RECORD_TYPES.includes(collection)) {
       return sendJson(res, 422, { error: 'Unknown record type.' });
     }
     const record = collection === 'tenancies'
       ? await villaData.createTenancyBundle(body.record || {})
       : await villaData.upsert(collection, body.record || {});
+    // Auto-book rent income when an installment is marked Paid
+    if (collection === 'installments' && record.status === 'Paid') {
+      await villaData.recordPaymentIncome(record).catch(err => console.error('[Finance] auto-income failed:', err.message));
+    }
     return sendJson(res, 201, { ok: true, record });
   }
   if (url.pathname === '/api/admin/records/delete' && req.method === 'POST') {
     const body = await readBody(req);
     const collection = clean(body.collection, 40);
-    if (!['villas', 'tenancies', 'installments', 'deposits', 'documents'].includes(collection)) {
+    if (!RECORD_TYPES.includes(collection)) {
       return sendJson(res, 422, { error: 'Unknown record type.' });
     }
     const removed = await villaData.remove(collection, clean(body.id, 80));

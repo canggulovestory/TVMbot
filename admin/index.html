@@ -207,6 +207,7 @@
         <button data-view="payments"><i class="icon">💳</i>Payments<span class="count" id="n-payments">0</span></button>
         <button data-view="deposits"><i class="icon">🔒</i>Deposits<span class="count" id="n-deposits">0</span></button>
         <button data-view="documents"><i class="icon">📄</i>Documents<span class="count" id="n-documents">0</span></button>
+        <button data-view="finance"><i class="icon">📊</i>Finance<span class="count" id="n-finance">0</span></button>
         <div class="g-label">Workspace</div>
         <button data-view="tasks"><i class="icon">✓</i>Tasks<span class="count" id="n-tasks">0</span></button>
         <button data-view="enquiries"><i class="icon">✉</i>Enquiries<span class="count" id="n-enquiries">0</span></button>
@@ -267,10 +268,12 @@
           <div class="stats" id="vd-stats"></div>
           <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
           <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
-          <div class="grid-2">
+          <div class="grid-2 section-gap">
             <div class="card"><div class="card-head"><h3>Deposits</h3></div><div class="table-wrap"><table><thead><tr><th>Amount</th><th>Refund due</th><th>Refundable</th><th>Status</th><th></th></tr></thead><tbody id="vd-deposits"></tbody></table></div></div>
             <div class="card"><div class="card-head"><h3>Documents</h3><button class="btn sm secondary" id="vd-add-doc">+ Add</button></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>File</th><th></th></tr></thead><tbody id="vd-documents"></tbody></table></div></div>
           </div>
+          <div class="card section-gap"><div class="card-head"><h3>Tasks & maintenance</h3><button class="btn sm" id="vd-add-task">+ Add task</button></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Category</th><th>Assignee</th><th>Due</th><th>Cost</th><th>Status</th><th></th></tr></thead><tbody id="vd-tasks"></tbody></table></div></div>
+          <div class="card"><div class="card-head"><h3>Finance — income & expenses</h3><div style="display:flex;gap:8px;align-items:center"><span id="vd-net" style="font-weight:700;font-size:.85rem"></span><button class="btn sm" id="vd-add-txn">+ Add</button></div></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody id="vd-finance"></tbody></table></div></div>
         </section>
 
         <!-- STAYS -->
@@ -295,6 +298,17 @@
         <section class="view" id="view-documents">
           <div class="page-head"><div><h2>Contracts & documents</h2><p>Private Google Drive links — never shown on the public website.</p></div><button class="btn" data-open="documents">+ Add document</button></div>
           <div class="card table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>Villa</th><th>Guest</th><th>Signed</th><th>Expiry</th><th>File</th><th></th></tr></thead><tbody id="t-documents"></tbody></table></div>
+        </section>
+
+        <!-- FINANCE -->
+        <section class="view" id="view-finance">
+          <div class="page-head"><div><h2>Finance</h2><p>Income and expenses across all villas. Rent is booked automatically when a payment is marked paid.</p></div><button class="btn" data-open="transactions">+ Add transaction</button></div>
+          <div class="stats">
+            <div class="stat"><div class="s-ico">↑</div><div class="label">Income (this month)</div><div class="value" id="f-income" style="font-size:1.25rem">—</div><div class="sub" id="f-income-all"></div></div>
+            <div class="stat"><div class="s-ico">↓</div><div class="label">Expenses (this month)</div><div class="value" id="f-expense" style="font-size:1.25rem">—</div><div class="sub" id="f-expense-all"></div></div>
+            <div class="stat"><div class="s-ico">Σ</div><div class="label">Net (this month)</div><div class="value" id="f-net" style="font-size:1.25rem">—</div><div class="sub" id="f-net-all"></div></div>
+          </div>
+          <div class="card table-wrap"><table><thead><tr><th>Date</th><th>Villa</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Proof</th><th></th></tr></thead><tbody id="t-finance"></tbody></table></div>
         </section>
 
         <!-- TASKS -->
@@ -451,6 +465,38 @@
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="documents">Cancel</button><button class="btn" type="submit">Save document</button></div></form>
   </dialog>
 
+  <dialog id="dlg-transactions"><div class="modal-head"><h3 id="ttl-transactions">Add transaction</h3><button class="modal-close" data-close="transactions">✕</button></div>
+    <form id="form-transactions"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id"><input type="hidden" name="sourceId">
+      <div class="f"><label>Type *</label><select name="type"><option>Income</option><option>Expense</option></select></div>
+      <div class="f"><label>Category</label><select name="category"><option>Rent</option><option>Deposit</option><option>Cleaning</option><option>Repairs</option><option>Utilities</option><option>Pool service</option><option>Garden</option><option>Staff</option><option>Supplies</option><option>Commission</option><option>Marketing</option><option>Other</option></select></div>
+      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+      <div class="f"><label>Stay (optional)</label><select name="tenancyId" data-tenancy-select></select></div>
+      <div class="f full"><label>Description *</label><input name="description" required placeholder="e.g. AC repair bedroom 2"></div>
+      <div class="f"><label>Amount *</label><input name="amount" type="number" min="0" required></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Date *</label><input name="date" type="date" required></div>
+      <div class="f"><label>Reference code</label><input name="code" placeholder="optional"></div>
+      <div class="f full"><label>Receipt / proof (Drive link)</label><input name="proofUrl" type="url"></div>
+      <div class="f full"><label>Notes</label><textarea name="notes"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="transactions">Cancel</button><button class="btn" type="submit">Save transaction</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-villaTasks"><div class="modal-head"><h3 id="ttl-villaTasks">Add villa task</h3><button class="modal-close" data-close="villaTasks">✕</button></div>
+    <form id="form-villaTasks"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="f full"><label>Task *</label><input name="title" required placeholder="e.g. Fix pool pump"></div>
+      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+      <div class="f"><label>Category</label><select name="category"><option>Maintenance</option><option>Cleaning</option><option>Repairs</option><option>Inspection</option><option>Guest request</option><option>Admin</option><option>Other</option></select></div>
+      <div class="f"><label>Priority</label><select name="priority"><option>High</option><option selected>Mid</option><option>Low</option></select></div>
+      <div class="f"><label>Status</label><select name="status"><option>Open</option><option>In progress</option><option>Done</option></select></div>
+      <div class="f"><label>Due date</label><input name="dueDate" type="date"></div>
+      <div class="f"><label>Assignee</label><input name="assignee" placeholder="e.g. Pak Made"></div>
+      <div class="f"><label>Estimated / actual cost</label><input name="cost" type="number" min="0"></div>
+      <div class="f full"><label>Notes</label><textarea name="notes"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villaTasks">Cancel</button><button class="btn" type="submit">Save task</button></div></form>
+  </dialog>
+
   <dialog id="dlg-task"><div class="modal-head"><h3>Add task</h3><button class="modal-close" data-close="task">✕</button></div>
     <form id="form-task"><div class="modal-body"><div class="form-grid">
       <div class="f full"><label>Task *</label><input name="name" required></div>
@@ -462,7 +508,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[]}};
+    const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],villaTasks:[]}};
     let currentVillaId=null;
     const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
     const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -482,7 +528,7 @@
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
 
     // ── Navigation ──
-    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots'};
+    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Finance',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots'};
     function show(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
       $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
       $('#page-title').textContent=TITLES[name]||name;$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');$('#search').value='';applySearch('');scrollTo(0,0)}
@@ -507,7 +553,7 @@
       fillSelects();
       if(record)Object.entries(record).forEach(([k,v])=>{const i=form.elements[k];if(!i)return;if(i.type==='checkbox')i.checked=Boolean(v);else i.value=v??''});
       if(prefill)Object.entries(prefill).forEach(([k,v])=>{const i=form.elements[k];if(i)i.value=v});
-      const ttl=$(`#ttl-${name}`);if(ttl)ttl.textContent=(record?'Edit ':'Add ')+({villas:'villa',tenancies:'guest stay',installments:'payment',deposits:'deposit',documents:'document'}[name]||name);
+      const ttl=$(`#ttl-${name}`);if(ttl)ttl.textContent=(record?'Edit ':'Add ')+({villas:'villa',tenancies:'guest stay',installments:'payment',deposits:'deposit',documents:'document',transactions:'transaction',villaTasks:'villa task'}[name]||name);
       dlg.showModal()}
     document.addEventListener('click',e=>{
       const o=e.target.closest('[data-open]');if(o)openModal(o.dataset.open);
@@ -516,6 +562,8 @@
     $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
     $('#vd-add-stay').addEventListener('click',()=>openModal('tenancies',null,{villaId:currentVillaId}));
     $('#vd-add-doc').addEventListener('click',()=>openModal('documents',null,{villaId:currentVillaId}));
+    $('#vd-add-task').addEventListener('click',()=>openModal('villaTasks',null,{villaId:currentVillaId}));
+    $('#vd-add-txn').addEventListener('click',()=>openModal('transactions',null,{villaId:currentVillaId,date:new Date().toISOString().slice(0,10)}));
 
     function fillSelects(){const vo='<option value="">Choose villa</option>'+state.villaData.villas.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
       const so='<option value="">Choose stay</option>'+state.villaData.tenancies.map(t=>`<option value="${esc(t.id)}">${esc(t.code||t.guestName)}</option>`).join('');
@@ -524,7 +572,7 @@
     // ── Save / actions ──
     function formData(f){const d=Object.fromEntries(new FormData(f));f.querySelectorAll('input[type=checkbox]').forEach(i=>d[i.name]=i.checked);return d}
     async function save(coll,rec){await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:rec})});await load()}
-    ['villas','tenancies','installments','deposits','documents'].forEach(coll=>{
+    ['villas','tenancies','installments','deposits','documents','transactions','villaTasks'].forEach(coll=>{
       $(`#form-${coll}`).addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
         try{await save(coll,formData(e.target));$(`#dlg-${coll}`).close();toast('Saved.')}catch(err){toast(err.message)}finally{btn.disabled=false}})});
     $('#form-task').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/admin/tasks',{method:'POST',body:JSON.stringify(formData(e.target))});$('#dlg-task').close();await load();toast('Task added.')}catch(err){toast(err.message)}});
@@ -538,6 +586,7 @@
         if(t.dataset.pay){const r=state.villaData.installments.find(x=>x.id===t.dataset.pay);await save('installments',{...r,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});toast('Marked paid.');return}
         if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
         if(t.dataset.completeTask){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:t.dataset.completeTask})});await load();toast('Task completed.');return}
+        if(t.dataset.doneVtask){const r=state.villaData.villaTasks.find(x=>x.id===t.dataset.doneVtask);await save('villaTasks',{...r,status:'Done'});toast('Task done.');return}
         const vc=t.closest('[data-villa-open]');if(vc&&!t.closest('button')){openVilla(vc.dataset.villaOpen)}
       }catch(err){toast(err.message)}
     });
@@ -577,6 +626,15 @@
       $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(p.code||p.period||'—')}</strong><span class="sub">${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
       $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No deposits.</td></tr>';
       $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'PDF')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
+      // villa tasks
+      const vtasks=d.villaTasks.filter(x=>x.villaId===v.id).sort((a,b)=>(a.status==='Done')-(b.status==='Done')||(a.dueDate||'9').localeCompare(b.dueDate||'9'));
+      $('#vd-tasks').innerHTML=vtasks.map(x=>`<tr><td><strong>${esc(x.title)}</strong>${x.notes?`<span class="sub">${esc(x.notes.slice(0,60))}</span>`:''}</td><td>${esc(x.category||'—')}</td><td>${esc(x.assignee||'—')}</td><td>${fdate(x.dueDate)}</td><td>${money(x.cost,'IDR')}</td><td>${badge(x.status==='Done'?'Paid':x.status==='In progress'?'Due':'Scheduled').replace(/>(.*?)</,`>${esc(x.status)}<`)}</td><td><div class="row-actions">${x.status!=='Done'?`<button class="btn sm" data-done-vtask="${esc(x.id)}">Done</button>`:''}<button class="btn secondary sm" data-edit="villaTasks:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="villaTasks:${esc(x.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No tasks for this villa — add cleaning, repairs, or maintenance.</td></tr>';
+      // villa finance
+      const vtxns=d.transactions.filter(x=>x.villaId===v.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      const vin=vtxns.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0),0);
+      const vout=vtxns.filter(x=>x.type==='Expense').reduce((s,x)=>s+Number(x.amount||0),0);
+      $('#vd-net').innerHTML=`<span style="color:var(--green)">+${money(vin)}</span> · <span style="color:var(--red)">−${money(vout)}</span> · Net <span style="color:${vin-vout>=0?'var(--green)':'var(--red)'}">${money(vin-vout)}</span>`;
+      $('#vd-finance').innerHTML=vtxns.slice(0,25).map(x=>`<tr><td>${fdate(x.date)}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No transactions yet. Rent income books automatically when payments are marked paid.</td></tr>';
     }
 
     // ── Render everything ──
@@ -651,6 +709,19 @@
         return`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${esc(v.name||'—')}</td><td>${esc(t.guestName||'—')}</td>
         <td>${x.signed?`Yes<span class="sub">${fdate(x.signedDate)}</span>`:'No'}</td><td>${fdate(x.expiryDate)}</td><td>${flink(x.driveUrl,'Open PDF')}</td>
         <td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="documents:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No documents yet — click “+ Add document”.</td></tr>';
+      // finance view
+      const month=today.slice(0,7);
+      const tin=d.transactions.filter(x=>x.type==='Income');const tout=d.transactions.filter(x=>x.type==='Expense');
+      const sum=a=>a.reduce((s,x)=>s+Number(x.amount||0),0);
+      const inM=sum(tin.filter(x=>(x.date||'').startsWith(month))),outM=sum(tout.filter(x=>(x.date||'').startsWith(month)));
+      $('#n-finance').textContent=d.transactions.length;
+      $('#f-income').textContent=money(inM);$('#f-income-all').textContent=`all time ${money(sum(tin))}`;
+      $('#f-expense').textContent=money(outM);$('#f-expense-all').textContent=`all time ${money(sum(tout))}`;
+      const netM=inM-outM,netAll=sum(tin)-sum(tout);
+      $('#f-net').textContent=money(netM);$('#f-net').style.color=netM>=0?'var(--green)':'var(--red)';
+      $('#f-net-all').textContent=`all time ${money(netAll)}`;
+      $('#t-finance').innerHTML=d.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(x=>{const v=V[x.villaId]||{};
+        return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'—')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — click “+ Add transaction”, or mark a payment paid to auto-book rent income.</td></tr>';
       // tasks & enquiries
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
       $('#t-enquiries').innerHTML=state.enquiries.map(x=>`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:420px">${esc(x.message)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No enquiries yet.</td></tr>';

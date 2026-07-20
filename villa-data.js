@@ -8,22 +8,24 @@ const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
 
-const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents'];
-const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC' };
+const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks'];
+const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC', transactions: 'TRX', villaTasks: 'VTK' };
 const FIELDS = {
   villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes'],
   tenancies: ['code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'nationality', 'idDocumentUrl', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'guestCount', 'rentAmount', 'currency', 'paymentFrequency', 'source', 'agencyCommissionPercent', 'contractUrl', 'notes'],
   installments: ['code', 'tenancyId', 'villaId', 'installmentNumber', 'installmentTotal', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'gracePeriodDays', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'lateFee', 'ownerPayoutStatus'],
   deposits: ['code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'deductionNotes', 'refundDate', 'refundProofUrl', 'inventoryUrl'],
   documents: ['title', 'type', 'villaId', 'tenancyId', 'driveUrl', 'signed', 'signedDate', 'expiryDate', 'notes'],
+  transactions: ['code', 'villaId', 'tenancyId', 'type', 'category', 'description', 'amount', 'currency', 'date', 'proofUrl', 'notes', 'sourceId'],
+  villaTasks: ['title', 'villaId', 'category', 'priority', 'status', 'dueDate', 'assignee', 'cost', 'notes'],
 };
-const NUMBER_FIELDS = new Set(['bedrooms', 'bathrooms', 'maxGuests', 'monthlyRate', 'yearlyRate', 'guestCount', 'rentAmount', 'agencyCommissionPercent', 'installmentNumber', 'installmentTotal', 'amount', 'gracePeriodDays', 'lateFee', 'deductions']);
+const NUMBER_FIELDS = new Set(['bedrooms', 'bathrooms', 'maxGuests', 'monthlyRate', 'yearlyRate', 'guestCount', 'rentAmount', 'agencyCommissionPercent', 'installmentNumber', 'installmentTotal', 'amount', 'gracePeriodDays', 'lateFee', 'deductions', 'cost']);
 const BOOLEAN_FIELDS = new Set(['pool', 'signed']);
 let filePath;
 let writeQueue = Promise.resolve();
 
 function emptyStore() {
-  return { version: 1, villas: [], tenancies: [], installments: [], deposits: [], documents: [] };
+  return { version: 1, villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], villaTasks: [] };
 }
 
 function init(dataDir) {
@@ -240,6 +242,28 @@ async function getAll() {
   return enrich(await read());
 }
 
+/** Auto-create an income transaction when an installment is marked Paid (deduped by sourceId). */
+async function recordPaymentIncome(installment) {
+  if (!installment || installment.status !== 'Paid') return null;
+  return mutate(store => {
+    if (store.transactions.some(t => t.sourceId === installment.id)) return null;
+    const now = new Date().toISOString();
+    const txn = {
+      id: `TRX-${crypto.randomUUID()}`,
+      code: `INC-${installment.code || installment.id.slice(0, 12)}`,
+      villaId: installment.villaId || '', tenancyId: installment.tenancyId || '',
+      type: 'Income', category: 'Rent',
+      description: `Rent received — ${installment.period || installment.code || 'installment'}`,
+      amount: Number(installment.amount || 0), currency: installment.currency || 'IDR',
+      date: installment.paidDate || now.slice(0, 10),
+      proofUrl: installment.proofUrl || '', notes: '', sourceId: installment.id,
+      createdAt: now, updatedAt: now,
+    };
+    store.transactions.unshift(txn);
+    return txn;
+  });
+}
+
 async function getActionSummary() {
   const store = await getAll();
   const today = new Date().toISOString().slice(0, 10);
@@ -257,7 +281,11 @@ async function getActionSummary() {
     .filter(item => item.expiryDate && item.expiryDate >= today && item.expiryDate <= addDays(today, 30))
     .sort((a, b) => a.expiryDate.localeCompare(b.expiryDate))
     .slice(0, 5);
-  if (!paymentActions.length && !refundActions.length && !documentActions.length) return '';
+  const taskActions = store.villaTasks
+    .filter(item => item.status !== 'Done' && item.dueDate && item.dueDate <= today)
+    .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
+    .slice(0, 6);
+  if (!paymentActions.length && !refundActions.length && !documentActions.length && !taskActions.length) return '';
   const lines = ['TVM villa follow-ups:'];
   for (const item of paymentActions) {
     const villa = villas[item.villaId]?.name || 'Villa';
@@ -272,6 +300,10 @@ async function getActionSummary() {
   for (const item of documentActions) {
     const villa = villas[item.villaId]?.name || 'General';
     lines.push(`• Contract renewal: ${item.title} / ${villa}, ${item.expiryDate}`);
+  }
+  for (const item of taskActions) {
+    const villa = villas[item.villaId]?.name || 'Villa';
+    lines.push(`• ${item.category || 'Task'}: ${villa} — ${item.title}${item.assignee ? ` (${item.assignee})` : ''}, due ${item.dueDate}`);
   }
   return lines.join('\n');
 }
@@ -291,4 +323,4 @@ async function remove(collection, id) {
   });
 }
 
-module.exports = { init, getAll, getActionSummary, upsert, remove, createTenancyBundle, stayLength, addDays, addMonths };
+module.exports = { init, getAll, getActionSummary, upsert, remove, recordPaymentIncome, createTenancyBundle, stayLength, addDays, addMonths };
