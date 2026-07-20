@@ -14,6 +14,7 @@ const path = require('path');
 const cron = require('node-cron');
 const notion = require('./notion');
 const brain = require('./brain');
+const villaData = require('./villa-data');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
 
@@ -174,6 +175,7 @@ async function adminOverview() {
     notion.getProjects(),
     notion.getPayments(),
     readEnquiries(),
+    villaData.getAll(),
   ]);
   const value = (index, fallback = []) => results[index].status === 'fulfilled' ? results[index].value : fallback;
   return {
@@ -182,9 +184,10 @@ async function adminOverview() {
     projects: value(1),
     payments: value(2),
     enquiries: value(3),
+    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [] }),
     bots: { whatsapp: whatsapp.getStatus(), telegram: telegram.getStatus() },
     errors: results.map((result, index) => result.status === 'rejected'
-      ? ['tasks', 'projects', 'payments', 'enquiries'][index]
+      ? ['tasks', 'projects', 'payments', 'enquiries', 'villa records'][index]
       : null).filter(Boolean),
   };
 }
@@ -251,6 +254,17 @@ async function handleAdminApi(req, res, url) {
     await notion.markPaymentPaidById(clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
+  if (url.pathname === '/api/admin/records' && req.method === 'POST') {
+    const body = await readBody(req);
+    const collection = clean(body.collection, 40);
+    if (!['villas', 'tenancies', 'installments', 'deposits', 'documents'].includes(collection)) {
+      return sendJson(res, 422, { error: 'Unknown record type.' });
+    }
+    const record = collection === 'tenancies'
+      ? await villaData.createTenancyBundle(body.record || {})
+      : await villaData.upsert(collection, body.record || {});
+    return sendJson(res, 201, { ok: true, record });
+  }
   if (url.pathname === '/api/admin/bots/whatsapp/pair' && req.method === 'POST') {
     const body = await readBody(req);
     const phone = clean(body.phone, 30).replace(/\D/g, '');
@@ -266,7 +280,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/health' && req.method === 'GET') {
       return sendJson(res, 200, {
-        status: 'ok', version: '5.0.0',
+        status: 'ok', version: '5.1.0',
         whatsapp: whatsapp.isConnected(), telegram: telegram.isRunning(),
         uptime: Math.floor(process.uptime()),
       });
@@ -297,7 +311,9 @@ async function sendMorningDMs() {
   console.log('[Cron] Sending morning DMs...');
   for (const userKey of ['afni', 'syifa']) {
     try {
-      const message = await brain.buildMorningDM(userKey);
+      const briefing = await brain.buildMorningDM(userKey);
+      const villaActions = await villaData.getActionSummary();
+      const message = [briefing, villaActions].filter(Boolean).join('\n\n');
       if (!message) continue;
       const user = brain.USERS[userKey];
       const waSent = await whatsapp.sendToPhone(user.phone, message);
@@ -310,8 +326,9 @@ async function sendMorningDMs() {
 }
 
 async function boot() {
-  console.log('=== TVM Digital HQ v5 starting ===');
+  console.log('=== TVM Digital HQ v5.1 starting ===');
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
+  villaData.init(DATA_DIR);
   notion.init();
   brain.init();
   if (process.env.DISABLE_CHANNELS !== 'true') {
@@ -320,7 +337,7 @@ async function boot() {
   }
   cron.schedule('0 9 * * *', sendMorningDMs, { timezone: 'Asia/Makassar' });
   server.listen(PORT, '127.0.0.1', () => console.log(`[HTTP] http://127.0.0.1:${PORT}`));
-  console.log('=== TVM Digital HQ v5 running ===');
+  console.log('=== TVM Digital HQ v5.1 running ===');
 }
 
 boot().catch(error => {
