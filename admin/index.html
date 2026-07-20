@@ -290,7 +290,7 @@
 
         <!-- DEPOSITS -->
         <section class="view" id="view-deposits">
-          <div class="page-head"><div><h2>Deposits</h2><p>Collection, deductions, refundable balance, and refund deadline.</p></div></div>
+          <div class="page-head"><div><h2>Deposits</h2><p>Collection, deductions, refundable balance, and refund deadline.</p></div><button class="btn" data-open="deposits">+ Add deposit</button></div>
           <div class="card table-wrap"><table><thead><tr><th>Villa / guest</th><th>Amount</th><th>Collected</th><th>Refund due</th><th>Deductions</th><th>Refundable</th><th>Status</th><th></th></tr></thead><tbody id="t-deposits"></tbody></table></div>
         </section>
 
@@ -553,6 +553,7 @@
       fillSelects();
       if(record)Object.entries(record).forEach(([k,v])=>{const i=form.elements[k];if(!i)return;if(i.type==='checkbox')i.checked=Boolean(v);else i.value=v??''});
       if(prefill)Object.entries(prefill).forEach(([k,v])=>{const i=form.elements[k];if(i)i.value=v});
+      if(name==='transactions'&&!record&&!form.elements.date.value)form.elements.date.value=new Date().toISOString().slice(0,10);
       const ttl=$(`#ttl-${name}`);if(ttl)ttl.textContent=(record?'Edit ':'Add ')+({villas:'villa',tenancies:'guest stay',installments:'payment',deposits:'deposit',documents:'document',transactions:'transaction',villaTasks:'villa task'}[name]||name);
       dlg.showModal()}
     document.addEventListener('click',e=>{
@@ -688,7 +689,7 @@
         <td>${flink(t.contractUrl,'Contract')}</td><td>${badge(t.bookingStatus)}</td>
         <td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">No stays yet — click “+ Add stay”.</td></tr>';
       // payments table
-      $('#t-payments').innerHTML=d.installments.sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
+      $('#t-payments').innerHTML=d.installments.slice().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
         return`<tr><td><strong>${esc(p.code||p.period||'—')}</strong><span class="sub">${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td>
         <td>${esc(v.name||'—')}<span class="sub">${esc(t.guestName||'')}</span></td>
         <td>${money(p.amount,p.currency)}${p.lateFee?`<span class="sub">+ late fee ${money(p.lateFee,p.currency)}</span>`:''}</td>

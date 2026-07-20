@@ -289,9 +289,14 @@ async function handleAdminApi(req, res, url) {
     if (!RECORD_TYPES.includes(collection)) {
       return sendJson(res, 422, { error: 'Unknown record type.' });
     }
-    const removed = await villaData.remove(collection, clean(body.id, 80));
-    if (!removed) return sendJson(res, 404, { error: 'Record not found.' });
-    return sendJson(res, 200, { ok: true });
+    try {
+      const removed = await villaData.remove(collection, clean(body.id, 80));
+      if (!removed) return sendJson(res, 404, { error: 'Record not found.' });
+      return sendJson(res, 200, { ok: true });
+    } catch (error) {
+      if (error.statusCode === 409) return sendJson(res, 409, { error: error.message });
+      throw error;
+    }
   }
   if (url.pathname === '/api/admin/bots/whatsapp/pair' && req.method === 'POST') {
     const body = await readBody(req);
@@ -357,13 +362,10 @@ async function sendMorningDMs() {
 
 async function deliverDueReminders() {
   try {
-    // If no channel can deliver, leave reminders queued — they send (late) once
-    // a channel reconnects instead of being silently marked sent and lost.
-    if (!whatsapp.isConnected() && !telegram.isRunning()) return;
-    const due = await assistant.collectDueReminders();
+    const due = await assistant.peekDueReminders();
     for (const reminder of due) {
       const user = brain.USERS[reminder.userKey];
-      if (!user) continue;
+      if (!user) { await assistant.confirmReminderDelivered(reminder.id); continue; }
       const lateMs = Date.now() - reminder.at;
       const lateNote = lateMs > 60 * 60 * 1000
         ? `\n_(scheduled ${assistant.epochToWitaString(reminder.at)} WITA — delivered late, channel was offline)_`
@@ -371,10 +373,33 @@ async function deliverDueReminders() {
       const message = `⏰ *Reminder:* ${reminder.text}${lateNote}`;
       const waSent = await whatsapp.sendToPhone(user.phone, message).catch(() => false);
       const tgSent = user.telegramId ? await telegram.sendToChat(user.telegramId, message).catch(() => false) : false;
-      console.log(`[Reminder] ${user.name}: "${reminder.text}" WA=${waSent} TG=${tgSent}`);
+      // Only consume the reminder once at least one channel actually delivered it.
+      if (waSent || tgSent) {
+        await assistant.confirmReminderDelivered(reminder.id);
+        console.log(`[Reminder] ${user.name}: "${reminder.text}" WA=${waSent} TG=${tgSent}`);
+      }
     }
   } catch (error) {
     console.error('[Reminder] Delivery failed:', error.message);
+  }
+}
+
+async function backupData() {
+  try {
+    const { execFile } = require('child_process');
+    const backupDir = '/root/tvm-backups';
+    const stamp = new Date().toISOString().slice(0, 10);
+    await fs.mkdir(backupDir, { recursive: true, mode: 0o700 });
+    await new Promise((resolve, reject) => {
+      execFile('tar', ['-czf', `${backupDir}/data-${stamp}.tar.gz`, '-C', DATA_DIR, '.'],
+        err => err ? reject(err) : resolve());
+    });
+    // Keep the last 14 nightly data backups
+    const files = (await fs.readdir(backupDir)).filter(f => f.startsWith('data-')).sort();
+    for (const old of files.slice(0, -14)) await fs.unlink(`${backupDir}/${old}`).catch(() => {});
+    console.log(`[Backup] data-${stamp}.tar.gz written (${files.length} kept)`);
+  } catch (error) {
+    console.error('[Backup] failed:', error.message);
   }
 }
 
@@ -391,6 +416,7 @@ async function boot() {
   }
   cron.schedule('0 9 * * *', sendMorningDMs, { timezone: 'Asia/Makassar' });
   cron.schedule('* * * * *', deliverDueReminders); // minute-level reminder delivery
+  cron.schedule('0 2 * * *', backupData, { timezone: 'Asia/Makassar' }); // nightly data backup
   server.listen(PORT, '127.0.0.1', () => console.log(`[HTTP] http://127.0.0.1:${PORT}`));
   console.log('=== TVM Digital HQ v5.2 running ===');
 }

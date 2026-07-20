@@ -81,13 +81,15 @@ async function write(store) {
 }
 
 function mutate(work) {
-  writeQueue = writeQueue.then(async () => {
+  const task = writeQueue.then(async () => {
     const store = await read();
     const result = await work(store);
     await write(store);
     return result;
   });
-  return writeQueue;
+  // Keep the queue healthy even if this task throws (e.g. delete protection).
+  writeQueue = task.catch(() => {});
+  return task;
 }
 
 function newId(collection) {
@@ -313,6 +315,16 @@ async function remove(collection, id) {
   return mutate(store => {
     const index = store[collection].findIndex(item => item.id === id);
     if (index < 0) return null;
+    // Protect villas with linked history — orphaned stays/finance would be unreachable.
+    if (collection === 'villas') {
+      const linked = ['tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks']
+        .filter(coll => store[coll].some(item => item.villaId === id));
+      if (linked.length) {
+        const err = new Error(`This villa still has linked ${linked.join(', ')}. Delete those first, or set the villa to Off-market instead.`);
+        err.statusCode = 409;
+        throw err;
+      }
+    }
     const [removed] = store[collection].splice(index, 1);
     // Cascade: deleting a tenancy also removes its installments and deposits
     if (collection === 'tenancies') {

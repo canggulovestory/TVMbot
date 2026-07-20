@@ -33,7 +33,7 @@ async function read() {
 }
 
 function mutate(work) {
-  writeQueue = writeQueue.then(async () => {
+  const task = writeQueue.then(async () => {
     const store = await read();
     const result = await work(store);
     const temp = `${filePath}.tmp`;
@@ -41,7 +41,8 @@ function mutate(work) {
     await fs.rename(temp, filePath);
     return result;
   });
-  return writeQueue;
+  writeQueue = task.catch(() => {});
+  return task;
 }
 
 // ─── WITA time helpers ──────────────────────────────────────────────────────────
@@ -116,23 +117,34 @@ function nextOccurrence(reminder, fromEpoch) {
   return null;
 }
 
-/** Due reminders; marks one-offs sent and advances recurring ones. */
-async function collectDueReminders() {
+/** Read-only list of due, unsent reminders. Does NOT consume them. */
+async function peekDueReminders() {
+  const now = Date.now();
+  const store = await read();
+  return store.reminders.filter(r => !r.sent && r.at <= now).map(r => ({ ...r }));
+}
+
+/** Confirm a reminder was delivered: one-offs are marked sent, recurring ones advance. */
+async function confirmReminderDelivered(id) {
   const now = Date.now();
   return mutate(store => {
-    const due = [];
-    for (const r of store.reminders) {
-      if (r.sent || r.at > now) continue;
-      due.push({ ...r });
-      if (r.recurrence) {
-        const next = nextOccurrence(r, now);
-        if (next) r.at = next; else r.sent = true;
-      } else {
-        r.sent = true;
-      }
+    const r = store.reminders.find(item => item.id === id);
+    if (!r) return null;
+    if (r.recurrence) {
+      const next = nextOccurrence(r, now);
+      if (next) r.at = next; else r.sent = true;
+    } else {
+      r.sent = true;
     }
-    return due;
+    return { ...r };
   });
+}
+
+/** Back-compat: consume-all variant (used by tests). Prefer peek + confirm. */
+async function collectDueReminders() {
+  const due = await peekDueReminders();
+  for (const r of due) await confirmReminderDelivered(r.id);
+  return due;
 }
 
 // ─── Memory ─────────────────────────────────────────────────────────────────────
@@ -396,6 +408,7 @@ async function tryCommand(text, userKey) {
 module.exports = {
   init, tryCommand, buildMorningExtras,
   addReminder, listReminders, cancelReminder, collectDueReminders,
+  peekDueReminders, confirmReminderDelivered,
   remember, forget, getMemory,
   addOpsSchedule, removeOpsSchedule, listOpsSchedules, todaysOps,
   epochToWitaString, witaToEpoch, parseWhen,
