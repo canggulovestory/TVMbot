@@ -164,6 +164,23 @@
     .f-check{display:flex;align-items:center;gap:8px;font-size:.83rem;padding-top:20px}
     .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 22px;border-top:1px solid var(--line);background:#faf8f4;border-radius:0 0 16px 16px}
     .hint{grid-column:1/-1;background:var(--gold-soft);border:1px solid #e5d9c3;border-radius:9px;padding:10px 13px;font-size:.78rem;color:#7a6748}
+    /* ── Availability calendar ── */
+    .cal-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;padding:16px}
+    .cal-month{font-size:.72rem}
+    .cal-month h4{margin:0 0 7px;font-size:.78rem;text-align:center;color:var(--muted)}
+    .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+    .cal-d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.62rem;color:var(--muted);background:#f4f1ec}
+    .cal-d.booked{background:var(--espresso);color:#fff;font-weight:600}
+    .cal-d.today{outline:2px solid var(--gold)}
+    .cal-d.blank{background:transparent}
+    .cal-legend{display:flex;gap:14px;padding:0 16px 14px;font-size:.72rem;color:var(--muted)}
+    .cal-legend .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
+    /* ── Statement ── */
+    .stmt{padding:16px 18px;font-size:.85rem}
+    .stmt-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)}
+    .stmt-row.total{border-bottom:0;border-top:2px solid var(--ink);font-weight:700;font-size:.95rem;margin-top:4px}
+    .stmt-controls{display:flex;gap:8px;align-items:center}
+    .stmt-controls input{padding:6px 9px;border:1px solid #ddd5c8;border-radius:8px;font:inherit;font-size:.8rem}
     /* ── Toast ── */
     .toast{position:fixed;bottom:20px;right:20px;z-index:100;background:var(--espresso);color:#fff;padding:12px 18px;border-radius:11px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
     .toast.show{opacity:1;transform:none}
@@ -266,6 +283,10 @@
           <button class="back" id="villa-back">← All villas</button>
           <div class="vd-head" id="vd-head"></div>
           <div class="stats" id="vd-stats"></div>
+          <div class="grid-2 section-gap">
+            <div class="card"><div class="card-head"><h3>Availability — next 6 months</h3></div><div class="cal-wrap" id="vd-calendar"></div><div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span><span><span class="dot" style="background:#fff;outline:2px solid var(--gold)"></span>Today</span></div></div>
+            <div class="card"><div class="card-head"><h3>Owner statement</h3><div class="stmt-controls"><input type="month" id="vd-month"><button class="btn secondary sm" id="vd-copy-stmt">Copy for WhatsApp</button></div></div><div class="stmt" id="vd-statement"></div></div>
+          </div>
           <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
           <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
           <div class="grid-2 section-gap">
@@ -273,7 +294,7 @@
             <div class="card"><div class="card-head"><h3>Documents</h3><button class="btn sm secondary" id="vd-add-doc">+ Add</button></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>File</th><th></th></tr></thead><tbody id="vd-documents"></tbody></table></div></div>
           </div>
           <div class="card section-gap"><div class="card-head"><h3>Tasks & maintenance</h3><button class="btn sm" id="vd-add-task">+ Add task</button></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Category</th><th>Assignee</th><th>Due</th><th>Cost</th><th>Status</th><th></th></tr></thead><tbody id="vd-tasks"></tbody></table></div></div>
-          <div class="card"><div class="card-head"><h3>Finance — income & expenses</h3><div style="display:flex;gap:8px;align-items:center"><span id="vd-net" style="font-weight:700;font-size:.85rem"></span><button class="btn sm" id="vd-add-txn">+ Add</button></div></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody id="vd-finance"></tbody></table></div></div>
+          <div class="card"><div class="card-head"><h3>Finance — income & expenses</h3><div style="display:flex;gap:8px;align-items:center"><span id="vd-net" style="font-weight:700;font-size:.85rem"></span><button class="btn secondary sm" id="vd-csv">CSV</button><button class="btn sm" id="vd-add-txn">+ Add</button></div></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody id="vd-finance"></tbody></table></div></div>
         </section>
 
         <!-- STAYS -->
@@ -302,7 +323,7 @@
 
         <!-- FINANCE -->
         <section class="view" id="view-finance">
-          <div class="page-head"><div><h2>Finance</h2><p>Income and expenses across all villas. Rent is booked automatically when a payment is marked paid.</p></div><button class="btn" data-open="transactions">+ Add transaction</button></div>
+          <div class="page-head"><div><h2>Finance</h2><p>Income and expenses across all villas. Rent is booked automatically when a payment is marked paid.</p></div><div style="display:flex;gap:9px"><button class="btn secondary" id="fin-csv">Export CSV</button><button class="btn" data-open="transactions">+ Add transaction</button></div></div>
           <div class="stats">
             <div class="stat"><div class="s-ico">↑</div><div class="label">Income (this month)</div><div class="value" id="f-income" style="font-size:1.25rem">—</div><div class="sub" id="f-income-all"></div></div>
             <div class="stat"><div class="s-ico">↓</div><div class="label">Expenses (this month)</div><div class="value" id="f-expense" style="font-size:1.25rem">—</div><div class="sub" id="f-expense-all"></div></div>
@@ -320,7 +341,7 @@
         <!-- ENQUIRIES -->
         <section class="view" id="view-enquiries">
           <div class="page-head"><div><h2>Enquiries</h2><p>Villa submissions and requests from the public websites.</p></div></div>
-          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
+          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
         </section>
 
         <!-- BOTS -->
@@ -565,6 +586,40 @@
     $('#vd-add-doc').addEventListener('click',()=>openModal('documents',null,{villaId:currentVillaId}));
     $('#vd-add-task').addEventListener('click',()=>openModal('villaTasks',null,{villaId:currentVillaId}));
     $('#vd-add-txn').addEventListener('click',()=>openModal('transactions',null,{villaId:currentVillaId,date:new Date().toISOString().slice(0,10)}));
+    // ── CSV export ──
+    function exportCSV(rows,filename){if(!rows.length)return toast('Nothing to export.');
+      const cols=['date','type','category','description','amount','currency','villa','guest','code','notes'];
+      const V=vMap(),S=sMap();
+      const lines=[cols.join(',')].concat(rows.map(x=>{const rec={...x,villa:V[x.villaId]?.name||'',guest:S[x.tenancyId]?.guestName||''};
+        return cols.map(c=>`"${String(rec[c]??'').replace(/"/g,'""')}"`).join(',')}));
+      const blob=new Blob([lines.join('\n')],{type:'text/csv'});const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);toast('CSV downloaded.')}
+    $('#fin-csv').addEventListener('click',()=>exportCSV(state.villaData.transactions,'tvm-finance-all.csv'));
+    $('#vd-csv').addEventListener('click',()=>{const v=vMap()[currentVillaId];exportCSV(state.villaData.transactions.filter(x=>x.villaId===currentVillaId),`tvm-finance-${(v?.name||'villa').toLowerCase().replace(/\s+/g,'-')}.csv`)});
+    // ── Owner statement ──
+    let vdMonth=new Date().toISOString().slice(0,7);
+    $('#vd-month').addEventListener('change',e=>{vdMonth=e.target.value||vdMonth;renderVilla()});
+    function villaStatement(villaId,month){const d=state.villaData,S=sMap();
+      const txns=d.transactions.filter(x=>x.villaId===villaId&&(x.date||'').startsWith(month));
+      const income=txns.filter(x=>x.type==='Income');const expenses=txns.filter(x=>x.type==='Expense');
+      const sumA=a=>a.reduce((s,x)=>s+Number(x.amount||0),0);
+      const commission=income.reduce((s,x)=>{const pct=Number(S[x.tenancyId]?.agencyCommissionPercent||0);return s+Number(x.amount||0)*pct/100},0);
+      return {income:sumA(income),expenses:sumA(expenses),commission,payout:sumA(income)-commission-sumA(expenses),txns};}
+    $('#vd-copy-stmt').addEventListener('click',()=>{const v=vMap()[currentVillaId];if(!v)return;
+      const s=villaStatement(currentVillaId,vdMonth);
+      const txt=`*${v.name} — Owner Statement ${vdMonth}*\n`+
+        `Income: ${money(s.income,v.currency)}\n`+
+        `Agency commission: −${money(s.commission,v.currency)}\n`+
+        `Expenses: −${money(s.expenses,v.currency)}\n`+
+        `*Owner payout: ${money(s.payout,v.currency)}*\n\n`+
+        s.txns.map(x=>`${x.date} · ${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)} ${x.description||x.category}`).join('\n')+
+        `\n\n— The Villa Managers`;
+      navigator.clipboard.writeText(txt).then(()=>toast('Statement copied — paste into WhatsApp.')).catch(()=>toast('Copy failed.'))});
+    // ── Enquiry → stay conversion ──
+    document.addEventListener('click',e=>{const b=e.target.closest('[data-enquiry-stay]');if(!b)return;
+      const q=state.enquiries.find(x=>x.id===b.dataset.enquiryStay);if(!q)return;
+      openModal('tenancies',null,{guestName:q.name||'',guestPhone:q.phone||'',guestEmail:q.email||'',source:'Website',notes:`From enquiry ${fdate(q.createdAt)}: ${(q.message||'').slice(0,300)}`});
+      toast('Stay form pre-filled from enquiry — choose villa and dates.')});
 
     function fillSelects(){const vo='<option value="">Choose villa</option>'+state.villaData.villas.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
       const so='<option value="">Choose stay</option>'+state.villaData.tenancies.map(t=>`<option value="${esc(t.id)}">${esc(t.code||t.guestName)}</option>`).join('');
@@ -627,6 +682,28 @@
       $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(p.code||p.period||'—')}</strong><span class="sub">${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
       $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No deposits.</td></tr>';
       $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'PDF')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
+      // availability calendar (next 6 months)
+      const bookings=stays.filter(t=>!['Cancelled','Enquiry'].includes(t.bookingStatus)&&t.checkIn&&t.checkOut);
+      const todayISO=new Date().toISOString().slice(0,10);
+      let calHTML='';const base=new Date();
+      for(let m=0;m<6;m+=1){const y=base.getFullYear(),mo=base.getMonth()+m;
+        const first=new Date(y,mo,1);const label=first.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+        const daysIn=new Date(y,mo+1,0).getDate();const startDow=(first.getDay()+6)%7;
+        let cells='';for(let b=0;b<startDow;b+=1)cells+='<span class="cal-d blank"></span>';
+        for(let day=1;day<=daysIn;day+=1){const iso=`${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const bk=bookings.find(t=>t.checkIn<=iso&&iso<t.checkOut);
+          cells+=`<span class="cal-d${bk?' booked':''}${iso===todayISO?' today':''}"${bk?` title="${esc(bk.guestName||'Booked')}"`:''}>${day}</span>`}
+        calHTML+=`<div class="cal-month"><h4>${esc(label)}</h4><div class="cal-days">${cells}</div></div>`}
+      $('#vd-calendar').innerHTML=calHTML;
+      // owner statement
+      if(!$('#vd-month').value)$('#vd-month').value=vdMonth;
+      const st=villaStatement(v.id,vdMonth);
+      $('#vd-statement').innerHTML=`
+        <div class="stmt-row"><span>Income</span><span style="color:var(--green);font-weight:600">+${money(st.income,v.currency)}</span></div>
+        <div class="stmt-row"><span>Agency commission</span><span style="color:var(--red)">−${money(st.commission,v.currency)}</span></div>
+        <div class="stmt-row"><span>Expenses (${st.txns.filter(x=>x.type==='Expense').length})</span><span style="color:var(--red)">−${money(st.expenses,v.currency)}</span></div>
+        <div class="stmt-row total"><span>Owner payout</span><span style="color:${st.payout>=0?'var(--green)':'var(--red)'}">${money(st.payout,v.currency)}</span></div>
+        ${st.txns.length===0?'<p style="color:var(--muted);font-size:.78rem;margin:10px 0 0">No transactions in this month yet.</p>':''}`;
       // villa tasks
       const vtasks=d.villaTasks.filter(x=>x.villaId===v.id).sort((a,b)=>(a.status==='Done')-(b.status==='Done')||(a.dueDate||'9').localeCompare(b.dueDate||'9'));
       $('#vd-tasks').innerHTML=vtasks.map(x=>`<tr><td><strong>${esc(x.title)}</strong>${x.notes?`<span class="sub">${esc(x.notes.slice(0,60))}</span>`:''}</td><td>${esc(x.category||'—')}</td><td>${esc(x.assignee||'—')}</td><td>${fdate(x.dueDate)}</td><td>${money(x.cost,'IDR')}</td><td>${badge(x.status==='Done'?'Paid':x.status==='In progress'?'Due':'Scheduled').replace(/>(.*?)</,`>${esc(x.status)}<`)}</td><td><div class="row-actions">${x.status!=='Done'?`<button class="btn sm" data-done-vtask="${esc(x.id)}">Done</button>`:''}<button class="btn secondary sm" data-edit="villaTasks:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="villaTasks:${esc(x.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No tasks for this villa — add cleaning, repairs, or maintenance.</td></tr>';
@@ -725,7 +802,7 @@
         return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'—')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — click “+ Add transaction”, or mark a payment paid to auto-book rent income.</td></tr>';
       // tasks & enquiries
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
-      $('#t-enquiries').innerHTML=state.enquiries.map(x=>`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:420px">${esc(x.message)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No enquiries yet.</td></tr>';
+      $('#t-enquiries').innerHTML=state.enquiries.map(x=>`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:420px">${esc(x.message)}</td><td><div class="row-actions"><button class="btn sm" data-enquiry-stay="${esc(x.id)}">→ Create stay</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No enquiries yet.</td></tr>';
       // bots
       const wa=state.bots.whatsapp||{},tg=state.bots.telegram||{};
       $('#wa-badge').className=`badge ${wa.connected?'green':'red'}`;$('#wa-badge').textContent=wa.connected?'Connected':'Offline';
