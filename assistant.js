@@ -332,12 +332,16 @@ async function tryCommand(text, userKey) {
     }
 
     if (lower === '/cancel') {
-      const target = await cancelReminder(userKey, rest.join(' '));
+      const search = rest.join(' ').trim();
+      if (!search) return 'Which reminder? /cancel [part of the text]';
+      const target = await cancelReminder(userKey, search);
       return target ? `Cancelled: "${target.text}"` : 'No matching reminder found.';
     }
 
     if (lower === '/remember' || lower === '/ingat') {
-      const entry = await remember(userKey, rest.join(' '));
+      const fact = rest.join(' ').trim();
+      if (!fact) return 'What should I remember? /remember [fact]';
+      const entry = await remember(userKey, fact);
       return `Remembered: "${entry.fact}"`;
     }
 
@@ -348,7 +352,9 @@ async function tryCommand(text, userKey) {
     }
 
     if (lower === '/forget' || lower === '/lupakan') {
-      const target = await forget(userKey, rest.join(' '));
+      const search = rest.join(' ').trim();
+      if (!search) return 'Which memory? /forget [part of the fact]';
+      const target = await forget(userKey, search);
       return target ? `Forgot: "${target.fact}"` : 'No matching memory found.';
     }
 
@@ -374,7 +380,9 @@ async function tryCommand(text, userKey) {
         ).join('\n');
       }
       if (sub === 'remove') {
-        const target = await removeOpsSchedule(rest.slice(1).join(' '));
+        const search = rest.slice(1).join(' ').trim();
+        if (!search) return 'Which schedule? /ops remove [part of villa or task name]';
+        const target = await removeOpsSchedule(search);
         return target ? `Removed: ${target.villa} — ${target.task}` : 'No matching schedule found.';
       }
       return 'Ops commands: /ops add · /ops list · /ops remove (see /help)';

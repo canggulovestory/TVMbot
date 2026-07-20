@@ -193,7 +193,19 @@ async function adminOverview() {
   };
 }
 
+const enquiryHits = new Map();
+function enquiryRateLimited(ip) {
+  const now = Date.now();
+  const recent = (enquiryHits.get(ip) || []).filter(t => now - t < 60 * 60 * 1000);
+  recent.push(now);
+  enquiryHits.set(ip, recent);
+  if (enquiryHits.size > 5000) enquiryHits.clear(); // memory guard
+  return recent.length > 10;
+}
+
 async function handlePublicEnquiry(req, res) {
+  const ip = clean((req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0], 80);
+  if (enquiryRateLimited(ip)) return sendJson(res, 429, { error: 'Too many submissions. Please try again later.' });
   const body = await readBody(req);
   const name = clean(body.name, 120);
   const message = clean(body.message, 2000);
@@ -266,6 +278,16 @@ async function handleAdminApi(req, res, url) {
       : await villaData.upsert(collection, body.record || {});
     return sendJson(res, 201, { ok: true, record });
   }
+  if (url.pathname === '/api/admin/records/delete' && req.method === 'POST') {
+    const body = await readBody(req);
+    const collection = clean(body.collection, 40);
+    if (!['villas', 'tenancies', 'installments', 'deposits', 'documents'].includes(collection)) {
+      return sendJson(res, 422, { error: 'Unknown record type.' });
+    }
+    const removed = await villaData.remove(collection, clean(body.id, 80));
+    if (!removed) return sendJson(res, 404, { error: 'Record not found.' });
+    return sendJson(res, 200, { ok: true });
+  }
   if (url.pathname === '/api/admin/bots/whatsapp/pair' && req.method === 'POST') {
     const body = await readBody(req);
     const phone = clean(body.phone, 30).replace(/\D/g, '');
@@ -281,7 +303,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/health' && req.method === 'GET') {
       return sendJson(res, 200, {
-        status: 'ok', version: '5.1.0',
+        status: 'ok', version: require('./package.json').version,
         whatsapp: whatsapp.isConnected(), telegram: telegram.isRunning(),
         uptime: Math.floor(process.uptime()),
       });
@@ -302,7 +324,9 @@ const server = http.createServer(async (req, res) => {
     }
     return sendJson(res, 404, { error: 'Not found.' });
   } catch (error) {
-    console.error('[HTTP] Request failed:', error.message);
+    if (!/Connection Closed|ECONNRESET|aborted/i.test(error.message)) {
+      console.error('[HTTP] Request failed:', error.message);
+    }
     const status = error.message === 'Request too large' ? 413 : 500;
     return sendJson(res, status, { error: status === 500 ? 'Request failed.' : error.message });
   }
@@ -328,11 +352,18 @@ async function sendMorningDMs() {
 
 async function deliverDueReminders() {
   try {
+    // If no channel can deliver, leave reminders queued — they send (late) once
+    // a channel reconnects instead of being silently marked sent and lost.
+    if (!whatsapp.isConnected() && !telegram.isRunning()) return;
     const due = await assistant.collectDueReminders();
     for (const reminder of due) {
       const user = brain.USERS[reminder.userKey];
       if (!user) continue;
-      const message = `⏰ *Reminder:* ${reminder.text}`;
+      const lateMs = Date.now() - reminder.at;
+      const lateNote = lateMs > 60 * 60 * 1000
+        ? `\n_(scheduled ${assistant.epochToWitaString(reminder.at)} WITA — delivered late, channel was offline)_`
+        : '';
+      const message = `⏰ *Reminder:* ${reminder.text}${lateNote}`;
       const waSent = await whatsapp.sendToPhone(user.phone, message).catch(() => false);
       const tgSent = user.telegramId ? await telegram.sendToChat(user.telegramId, message).catch(() => false) : false;
       console.log(`[Reminder] ${user.name}: "${reminder.text}" WA=${waSent} TG=${tgSent}`);

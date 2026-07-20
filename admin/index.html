@@ -4,122 +4,676 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>TVM HQ · Villa Agency Operations</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <title>TVM Admin</title>
   <style>
-    :root{--paper:#f5f2ec;--white:#fff;--ink:#29241f;--muted:#746c64;--espresso:#29221d;--cocoa:#5c4739;--clay:#ad7e5c;--green:#4d6a56;--amber:#a66d35;--red:#a34e44;--line:rgba(54,44,37,.13);--shadow:0 15px 45px rgba(46,37,31,.06);--athena:"Athena","Raleway",Arial,sans-serif}
-    *,*::before,*::after{box-sizing:border-box;font-family:var(--athena)!important}html{font-size:16px}body{margin:0;color:var(--ink);background:var(--paper);font-family:var(--athena);line-height:1.55}.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:34px 22px;color:#d9cdc3;background:var(--espresso)}.brand strong{display:block;color:#fff;font-size:1.2rem;font-weight:400;letter-spacing:.15em}.brand span{color:#9e8c7d;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}.nav{display:grid;gap:4px;margin-top:45px}.nav button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:0;color:#b8a89b;background:transparent;font-size:.72rem;letter-spacing:.06em;text-align:left;cursor:pointer}.nav button:hover,.nav button.active{color:#fff;background:rgba(255,255,255,.08)}.nav i{width:20px;color:#a98469;font-style:normal;text-align:center}.sidebar-foot{margin-top:auto;padding-top:25px;border-top:1px solid rgba(255,255,255,.1);color:#968577;font-size:.7rem}.main{min-width:0}.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,56px);border-bottom:1px solid var(--line);background:rgba(245,242,236,.94);backdrop-filter:blur(12px)}.topbar-title{font-size:1rem;font-weight:400;letter-spacing:.03em}.topbar-actions{display:flex;align-items:center;gap:18px;color:var(--muted);font-size:.72rem}.logout{padding:8px 12px;border:1px solid var(--line);background:transparent;cursor:pointer}.content{max-width:1580px;margin:auto;padding:clamp(28px,4vw,54px)}.view{display:none}.view.active{display:block}.view-head{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:30px}.eyebrow{display:block;margin-bottom:8px;color:var(--clay);font-size:.65rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase}.view-head h1{margin:0;font-size:clamp(2.1rem,4vw,3.8rem);font-weight:300;line-height:1}.view-head p{max-width:560px;margin:0;color:var(--muted)}.button{min-height:40px;padding:0 15px;border:1px solid var(--espresso);color:#fff;background:var(--espresso);font-size:.66rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;cursor:pointer}.button:hover{background:var(--cocoa)}.button.secondary{color:var(--ink);background:transparent}.button.small{min-height:31px;padding:0 10px;font-size:.58rem}.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:22px}.metric{padding:20px;border:1px solid var(--line);background:var(--white);box-shadow:var(--shadow)}.metric span{display:block;color:var(--muted);font-size:.61rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase}.metric strong{display:block;margin-top:12px;font-size:2.2rem;font-weight:300}.metric small{color:var(--muted);font-size:.68rem}.dashboard-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.panel{min-width:0;padding:23px;border:1px solid var(--line);background:var(--white);box-shadow:var(--shadow)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:17px}.panel h2{margin:0;font-size:1.35rem;font-weight:400}.list{display:grid}.list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--line)}.list-row:first-child{border-top:0}.list-row strong{display:block;font-size:.84rem}.list-row small{display:block;color:var(--muted)}.status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:20px;color:var(--muted);background:#eee;font-size:.6rem;font-weight:600;text-transform:uppercase}.status:before{width:6px;height:6px;border-radius:50%;background:#999;content:""}.status.online,.status.Paid,.status.Refunded,.status.Confirmed,.status.Checked-in{color:var(--green);background:#e7eee9}.status.online:before,.status.Paid:before,.status.Refunded:before,.status.Confirmed:before,.status.Checked-in:before{background:var(--green)}.status.offline,.status.Overdue,.status.Late,.status.Forfeited{color:var(--red);background:#f4e8e6}.status.offline:before,.status.Overdue:before,.status.Late:before,.status.Forfeited:before{background:var(--red)}.status.Reminded,.status.Due,.status.Held{color:var(--amber);background:#f4ecdf}.status.Reminded:before,.status.Due:before,.status.Held:before{background:var(--amber)}.priority{font-size:.62rem;font-weight:600;text-transform:uppercase}.priority.High{color:var(--red)}.priority.Mid{color:var(--amber)}.priority.Low{color:var(--green)}.table-wrap{overflow:auto;border:1px solid var(--line);background:var(--white);box-shadow:var(--shadow)}table{width:100%;min-width:760px;border-collapse:collapse}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);background:#faf8f4;font-size:.6rem;letter-spacing:.11em;text-transform:uppercase}td{font-size:.78rem}tr:last-child td{border-bottom:0}.empty{padding:32px;color:var(--muted);text-align:center}.record-form{margin-bottom:18px;border:1px solid var(--line);background:#efe9df}.record-form summary{padding:17px 21px;font-size:.7rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}.record-form[open] summary{border-bottom:1px solid var(--line)}.record-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;padding:22px}.field.span-2{grid-column:span 2}.field.span-4{grid-column:1/-1}.field label{display:block;margin-bottom:6px;color:var(--muted);font-size:.59rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase}.field input,.field select,.field textarea{width:100%;min-height:40px;padding:9px 10px;border:1px solid var(--line);border-radius:0;background:#fff;font:inherit}.field textarea{min-height:85px;resize:vertical}.check{display:flex;align-items:center;gap:9px;padding-top:22px;color:var(--muted);font-size:.75rem}.check input{width:auto}.form-actions{grid-column:1/-1;display:flex;gap:10px}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.record-card{min-width:0;padding:22px;border:1px solid var(--line);background:var(--white);box-shadow:var(--shadow)}.card-head{display:flex;align-items:start;justify-content:space-between;gap:20px;margin-bottom:17px}.card-head h2{margin:0 0 3px;font-size:1.35rem;font-weight:400}.card-head p{margin:0;color:var(--muted);font-size:.7rem}.card-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.detail{min-width:0;padding-top:10px;border-top:1px solid var(--line)}.detail span{display:block;color:var(--muted);font-size:.55rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase}.detail strong,.detail a{display:block;margin-top:3px;overflow-wrap:anywhere;font-size:.76rem;font-weight:500}.detail a{text-decoration:underline;text-underline-offset:3px}.card-note{margin:15px 0 0;padding-top:13px;border-top:1px solid var(--line);color:var(--muted);font-size:.72rem}.subhead{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:30px 0 14px}.subhead h2{margin:0;font-size:1.45rem;font-weight:400}.document-link{display:inline-flex;align-items:center;gap:7px;color:var(--cocoa);font-size:.64rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.notice{display:none;margin-bottom:18px;padding:12px 15px;border-left:3px solid var(--clay);color:var(--cocoa);background:#efe7df;font-size:.8rem}.notice.show{display:block}.bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.bot-card{padding:28px;border:1px solid var(--line);background:var(--white)}.bot-card h2{margin:18px 0 7px;font-size:1.8rem;font-weight:300}.pair-form{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:22px}.pair-form input{min-width:0;height:42px;padding:0 12px;border:1px solid var(--line)}.pair-code{display:none;margin-top:16px;padding:18px;color:#fff;background:var(--espresso);text-align:center}.pair-code strong{display:block;font-size:1.8rem;letter-spacing:.13em}.menu-toggle{display:none;border:0;background:transparent;font-size:1.3rem}.mobile-scrim{display:none}
-    @media(max-width:1250px){.metrics{grid-template-columns:repeat(3,1fr)}.record-grid{grid-template-columns:repeat(2,1fr)}.field.span-4{grid-column:1/-1}.cards{grid-template-columns:1fr}}
-    @media(max-width:900px){.app{display:block}.sidebar{position:fixed;z-index:30;width:270px;transform:translateX(-102%);transition:.25s}.sidebar.open{transform:none}.mobile-scrim{position:fixed;inset:0;z-index:20;display:block;visibility:hidden;background:rgba(30,25,21,.45);opacity:0;transition:.25s}.mobile-scrim.open{visibility:visible;opacity:1}.menu-toggle{display:block}.topbar-title{display:none}.dashboard-grid,.bot-grid{grid-template-columns:1fr}}
-    @media(max-width:620px){.topbar{height:68px;padding:0 17px}.topbar-actions span{display:none}.content{padding:28px 15px}.view-head{align-items:start;flex-direction:column}.metrics{grid-template-columns:1fr 1fr}.record-grid{grid-template-columns:1fr;padding:18px}.field.span-2,.field.span-4{grid-column:auto}.detail-grid{grid-template-columns:1fr 1fr}.form-actions{grid-column:auto;flex-direction:column}.form-actions .button{width:100%}}
+    :root{
+      --bg:#edebe7;--card:#ffffff;--ink:#191713;--muted:#8b8478;--line:#e7e3db;
+      --gold:#b49164;--gold-soft:#f3ecdf;--espresso:#1c1915;
+      --green:#3e7d54;--green-bg:#e3f2e7;--red:#b0483c;--red-bg:#f9ecea;--amber:#a9702c;--amber-bg:#f8f0e2;--blue:#4c6b94;--blue-bg:#eaf0f7;
+      --radius:18px;--shadow:0 1px 2px rgba(27,24,19,.03),0 10px 30px rgba(27,24,19,.06);
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
+    .app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+    /* ── Sidebar ── */
+    .sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:var(--card);border-right:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:11px;padding:20px}
+    .brand-logo{width:36px;height:36px;border-radius:11px;background:var(--espresso);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;letter-spacing:.03em}
+    .brand strong{display:block;font-size:.95rem}.brand small{color:var(--muted);font-size:.72rem}
+    .nav{padding:6px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+    .nav button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 13px;border:0;border-radius:12px;background:transparent;color:#5d574d;font:inherit;font-size:.85rem;text-align:left;cursor:pointer}
+    .nav button:hover{background:#f2f0eb}
+    .nav button.active{background:var(--espresso);color:#fff;font-weight:600}
+    .nav .icon{width:19px;text-align:center;font-style:normal;font-size:.95rem}
+    .nav .count{margin-left:auto;background:#f1ede6;color:var(--muted);border-radius:10px;padding:0 7px;font-size:.7rem;font-weight:600}
+    .nav button.active .count{background:rgba(255,255,255,.18);color:#fff}
+    .nav .chev{margin-left:auto;color:var(--muted);font-size:.72rem;transition:transform .18s}
+    .nav .group.open>.g-head .chev{transform:rotate(90deg)}
+    .nav .g-items{display:none;position:relative;margin:2px 0 4px 20px;padding-left:12px;border-left:1.5px solid var(--line)}
+    .nav .group.open .g-items{display:flex;flex-direction:column;gap:1px}
+    .nav .g-items button{padding:7px 11px;font-size:.8rem;border-radius:9px}
+    .nav .g-items button.active{background:var(--gold-soft);color:var(--espresso)}
+    .nav .g-label{padding:12px 13px 4px;color:var(--muted);font-size:.66rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+    .sidebar-foot{margin-top:auto;padding:16px 20px;border-top:1px solid var(--line);font-size:.76rem;color:var(--muted)}
+    /* ── Topbar ── */
+    .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 26px;background:rgba(246,243,238,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+    .tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+    .topbar h1{margin:0;font-size:1.08rem;white-space:nowrap}
+    .topbar .hello{color:var(--muted);font-size:.78rem;white-space:nowrap}
+    .search{display:flex;align-items:center;gap:8px;flex:0 1 320px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 12px}
+    .search input{border:0;outline:none;font:inherit;width:100%;background:transparent}
+    .search .sicon{color:var(--muted)}
+    .tb-right{display:flex;align-items:center;gap:12px}
+    .avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem}
+    .updated{color:var(--muted);font-size:.75rem;white-space:nowrap}
+    .menu-toggle{display:none;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:1rem;cursor:pointer}
+    /* ── Buttons ── */
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px solid transparent;border-radius:10px;background:var(--espresso);color:#fff;font:inherit;font-weight:600;font-size:.82rem;cursor:pointer}
+    .btn:hover{background:#3a332b}
+    .btn.secondary{background:#fff;color:var(--ink);border-color:var(--line)}
+    .btn.secondary:hover{background:#f6f3ee}
+    .btn.danger{background:#fff;color:var(--red);border-color:#eccfca}
+    .btn.danger:hover{background:var(--red-bg)}
+    .btn.sm{padding:5px 11px;font-size:.75rem;font-weight:500;border-radius:8px}
+    /* ── Layout ── */
+    .content{padding:24px 26px;max-width:1460px}
+    .view{display:none}.view.active{display:block}
+    .page-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+    .page-head h2{margin:0;font-size:1.3rem}
+    .page-head p{margin:3px 0 0;color:var(--muted);font-size:.82rem}
+    /* ── Stat cards ── */
+    .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+    .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;position:relative}
+    .stat .s-ico{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;font-size:.9rem}
+    .stat .label{color:var(--muted);font-size:.74rem;font-weight:600}
+    .stat .value{font-size:1.65rem;font-weight:700;margin-top:5px;letter-spacing:-.02em}
+    .stat .sub{color:var(--muted);font-size:.74rem;margin-top:2px}
+    .stat .sub.warn{color:var(--red);font-weight:600}
+    /* ── Cards / panels ── */
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .grid-3{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;border-bottom:1px solid var(--line)}
+    .card-head h3{margin:0;font-size:.95rem}
+    .card-head .link{font-size:.78rem;color:var(--gold);cursor:pointer;background:none;border:none;font-weight:600}
+    /* ── Tables ── */
+    .table-wrap{overflow-x:auto;border-radius:0 0 var(--radius) var(--radius)}
+    table{width:100%;border-collapse:collapse;font-size:.84rem}
+    th{background:#faf8f4;color:var(--muted);font-size:.69rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+    td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+    tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fbf9f5}
+    tbody tr.click{cursor:pointer}
+    td .sub{display:block;color:var(--muted);font-size:.75rem}
+    .empty{padding:34px;text-align:center;color:var(--muted)}
+    .row-actions{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+    /* ── Badges ── */
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;background:#f1ede6;color:var(--muted)}
+    .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .badge.green{background:var(--green-bg);color:var(--green)}
+    .badge.amber{background:var(--amber-bg);color:var(--amber)}
+    .badge.red{background:var(--red-bg);color:var(--red)}
+    .badge.blue{background:var(--blue-bg);color:var(--blue)}
+    /* ── Filter chips ── */
+    .chips{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .chip{padding:7px 15px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:#5d574d;font:inherit;font-size:.79rem;font-weight:500;cursor:pointer}
+    .chip:hover{background:#f2f0eb}
+    .chip.active{background:var(--espresso);border-color:var(--espresso);color:#fff;font-weight:600}
+    /* ── Villa cards grid ── */
+    .villa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+    .villa-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+    .villa-card:hover{transform:translateY(-3px);box-shadow:0 6px 12px rgba(27,24,19,.07),0 18px 40px rgba(27,24,19,.1)}
+    .vc-photo{position:relative;height:130px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center}
+    .vc-photo .vc-initial{font-size:2.1rem;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.03em}
+    .vc-photo .vc-status{position:absolute;top:12px;left:12px}
+    .vc-photo .vc-arrow{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--ink)}
+    .vc-body{padding:15px 17px 17px}
+    .vc-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:3px}
+    .vc-title strong{font-size:1rem}
+    .vc-title .vc-price{font-weight:700;font-size:.88rem;white-space:nowrap}
+    .vc-loc{color:var(--muted);font-size:.78rem;margin-bottom:11px}
+    .vc-specs{display:flex;gap:12px;padding-top:11px;border-top:1px solid var(--line);color:var(--muted);font-size:.76rem;flex-wrap:wrap}
+    .vc-specs b{color:var(--ink);font-weight:600}
+    /* ── Villa detail ── */
+    .vd-head{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:0;margin-bottom:14px;overflow:hidden}
+    .vd-banner{height:140px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center;position:relative}
+    .vd-banner .vb-initial{font-size:3rem;font-weight:700;color:rgba(255,255,255,.85)}
+    .vd-content{padding:20px 22px 22px}
+    .vd-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+    .vd-id{display:flex;align-items:center;gap:15px}
+    .vd-ava{width:58px;height:58px;border-radius:15px;background:var(--gold-soft);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.35rem}
+    .vd-id h2{margin:0;font-size:1.35rem}
+    .vd-id p{margin:3px 0 0;color:var(--muted);font-size:.83rem}
+    .vd-facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+    .fact span{display:block;color:var(--muted);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+    .fact strong,.fact a{font-size:.85rem;overflow-wrap:anywhere}
+    .back{display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;color:var(--muted);background:none;border:none;font:inherit;font-size:.83rem;cursor:pointer}
+    .back:hover{color:var(--ink)}
+    .section-gap{margin-bottom:14px}
+    /* ── Donut ── */
+    .donut-wrap{display:flex;align-items:center;gap:20px;padding:18px}
+    .donut{width:130px;height:130px;border-radius:50%;position:relative;flex-shrink:0}
+    .donut::after{content:"";position:absolute;inset:18px;border-radius:50%;background:var(--card)}
+    .donut .dlabel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1}
+    .donut .dlabel strong{font-size:1.25rem}
+    .donut .dlabel span{color:var(--muted);font-size:.68rem}
+    .legend{display:flex;flex-direction:column;gap:8px;font-size:.8rem}
+    .legend .li{display:flex;align-items:center;gap:8px}
+    .legend .dot{width:9px;height:9px;border-radius:50%}
+    .legend .n{margin-left:auto;font-weight:600;padding-left:14px}
+    /* ── List rows ── */
+    .list-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line)}
+    .list-row:last-child{border-bottom:0}
+    .list-row strong{font-size:.85rem;font-weight:600;display:block}
+    .list-row small{display:block;color:var(--muted)}
+    /* ── Modal ── */
+    dialog{border:0;border-radius:16px;box-shadow:0 24px 70px rgba(27,24,19,.3);padding:0;width:min(740px,94vw);max-height:92vh}
+    dialog::backdrop{background:rgba(27,24,19,.45)}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line)}
+    .modal-head h3{margin:0;font-size:1.02rem}
+    .modal-close{border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--muted);padding:4px 8px}
+    .modal-body{padding:19px 22px;overflow-y:auto;max-height:calc(92vh - 132px)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .f{display:flex;flex-direction:column;gap:4px}
+    .f.full{grid-column:1/-1}
+    .f label{font-size:.74rem;font-weight:600;color:var(--muted)}
+    .f input,.f select,.f textarea{padding:9px 11px;border:1px solid #ddd5c8;border-radius:9px;font:inherit;background:#fff}
+    .f input:focus,.f select:focus,.f textarea:focus{outline:2px solid #e8dcc6;border-color:var(--gold)}
+    .f textarea{min-height:70px;resize:vertical}
+    .f-check{display:flex;align-items:center;gap:8px;font-size:.83rem;padding-top:20px}
+    .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 22px;border-top:1px solid var(--line);background:#faf8f4;border-radius:0 0 16px 16px}
+    .hint{grid-column:1/-1;background:var(--gold-soft);border:1px solid #e5d9c3;border-radius:9px;padding:10px 13px;font-size:.78rem;color:#7a6748}
+    /* ── Toast ── */
+    .toast{position:fixed;bottom:20px;right:20px;z-index:100;background:var(--espresso);color:#fff;padding:12px 18px;border-radius:11px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
+    .toast.show{opacity:1;transform:none}
+    /* ── Bots ── */
+    .bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .bot-card{padding:22px}
+    .pair-row{display:flex;gap:8px;margin-top:14px}
+    .pair-row input{flex:1;padding:9px 11px;border:1px solid #ddd5c8;border-radius:9px;font:inherit}
+    .pair-code{display:none;margin-top:12px;padding:15px;background:var(--espresso);color:#fff;border-radius:11px;text-align:center}
+    .pair-code strong{display:block;font-size:1.5rem;letter-spacing:.15em}
+    .mobile-scrim{display:none}
+    @media(max-width:1120px){.grid-3{grid-template-columns:1fr}}
+    @media(max-width:960px){
+      .app{display:block}
+      .sidebar{position:fixed;z-index:40;width:250px;transform:translateX(-102%);transition:.25s}
+      .sidebar.open{transform:none}
+      .mobile-scrim{position:fixed;inset:0;z-index:30;display:block;visibility:hidden;opacity:0;background:rgba(27,24,19,.4);transition:.25s}
+      .mobile-scrim.open{visibility:visible;opacity:1}
+      .menu-toggle{display:block}
+      .search{display:none}
+      .grid-2,.bot-grid{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
+      .content{padding:16px 14px}
+      .hello{display:none}
+    }
   </style>
 </head>
 <body>
   <div class="mobile-scrim" id="scrim"></div>
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><strong>TVM HQ</strong><span>Afni · Private workspace</span></div>
-      <nav class="nav" aria-label="Admin sections">
-        <button class="active" data-view="overview"><i>⌂</i>Overview</button>
-        <button data-view="villas"><i>◇</i>Villa records</button>
-        <button data-view="stays"><i>◷</i>Guest stays</button>
-        <button data-view="payments"><i>Rp</i>Payment schedule</button>
-        <button data-view="deposits"><i>◎</i>Deposits</button>
-        <button data-view="documents"><i>↗</i>Contracts & documents</button>
-        <button data-view="tasks"><i>✓</i>Tasks</button>
-        <button data-view="enquiries"><i>✉</i>Enquiries</button>
-        <button data-view="bots"><i>◉</i>Messaging bots</button>
+      <div class="brand"><div class="brand-logo">TVM</div><div><strong>TVM Admin</strong><small>The Villa Managers</small></div></div>
+      <nav class="nav">
+        <button class="active" data-view="overview"><i class="icon">⌂</i>Overview</button>
+        <div class="group open" id="nav-villas-group">
+          <div class="g-head"><button data-view="villas"><i class="icon">🏝</i>Villas<span class="count" id="n-villas">0</span><span class="chev">▶</span></button></div>
+          <div class="g-items" id="nav-villa-list"></div>
+        </div>
+        <div class="g-label">Rentals</div>
+        <button data-view="stays"><i class="icon">🧳</i>Guest stays<span class="count" id="n-stays">0</span></button>
+        <button data-view="payments"><i class="icon">💳</i>Payments<span class="count" id="n-payments">0</span></button>
+        <button data-view="deposits"><i class="icon">🔒</i>Deposits<span class="count" id="n-deposits">0</span></button>
+        <button data-view="documents"><i class="icon">📄</i>Documents<span class="count" id="n-documents">0</span></button>
+        <div class="g-label">Workspace</div>
+        <button data-view="tasks"><i class="icon">✓</i>Tasks<span class="count" id="n-tasks">0</span></button>
+        <button data-view="enquiries"><i class="icon">✉</i>Enquiries<span class="count" id="n-enquiries">0</span></button>
+        <button data-view="bots"><i class="icon">◎</i>Bots</button>
       </nav>
-      <div class="sidebar-foot">Villa marketing agency<br>The Bali Furniture<br>Afni Portfolio</div>
+      <div class="sidebar-foot">Signed in as <strong>afni</strong><br><a href="#" id="logout">Sign out</a></div>
     </aside>
-    <main class="main">
-      <header class="topbar"><button class="menu-toggle" id="menu-toggle" aria-label="Open menu">☰</button><div class="topbar-title">Personal HQ + TVM agency operations</div><div class="topbar-actions"><span id="updated">Loading workspace…</span><button class="logout" id="logout">Sign out</button></div></header>
-      <div class="content"><div class="notice" id="notice" role="status"></div>
 
+    <main>
+      <div class="topbar">
+        <div class="tb-left">
+          <button class="menu-toggle" id="menu-toggle">☰</button>
+          <div><h1 id="page-title">Overview</h1><div class="hello" id="hello">Welcome back, Afni 👋</div></div>
+        </div>
+        <div class="search"><span class="sicon">🔎</span><input id="search" placeholder="Search villas, guests, payments…"></div>
+        <div class="tb-right"><span class="updated" id="updated">Loading…</span><button class="btn secondary sm" id="refresh">Refresh</button><div class="avatar">A</div></div>
+      </div>
+
+      <div class="content">
+
+        <!-- OVERVIEW -->
         <section class="view active" id="view-overview">
-          <div class="view-head"><div><span class="eyebrow">Today at a glance</span><h1>Every villa detail, in one place.</h1></div><p>Stay dates, upcoming payments, follow-ups, deposits, contracts, owner records, and qualified enquiries.</p></div>
-          <div class="metrics"><article class="metric"><span>Villas</span><strong id="metric-villas">—</strong><small>Detailed records</small></article><article class="metric"><span>Active stays</span><strong id="metric-stays">—</strong><small id="metric-checkouts">Loading</small></article><article class="metric"><span>Payments to act on</span><strong id="metric-payments">—</strong><small id="metric-overdue">Loading</small></article><article class="metric"><span>Deposits held</span><strong id="metric-deposits">—</strong><small id="metric-refunds">Loading</small></article><article class="metric"><span>Open tasks</span><strong id="metric-tasks">—</strong><small id="metric-high">Loading</small></article><article class="metric"><span>New enquiries</span><strong id="metric-enquiries">—</strong><small>TVM + Afni</small></article></div>
-          <div class="dashboard-grid"><article class="panel"><div class="panel-head"><h2>Payment & follow-up calendar</h2><button class="button small secondary" data-goto="payments">View schedule</button></div><div class="list" id="overview-payments"></div></article><article class="panel"><div class="panel-head"><h2>Upcoming check-outs & refunds</h2><button class="button small secondary" data-goto="deposits">View deposits</button></div><div class="list" id="overview-refunds"></div></article></div>
+          <div class="stats">
+            <div class="stat"><div class="s-ico">🏝</div><div class="label">Villas</div><div class="value" id="m-villas">—</div><div class="sub" id="m-villas-sub"></div></div>
+            <div class="stat"><div class="s-ico">🧳</div><div class="label">Active stays</div><div class="value" id="m-stays">—</div><div class="sub" id="m-checkouts"></div></div>
+            <div class="stat"><div class="s-ico">💳</div><div class="label">Payments to act on</div><div class="value" id="m-payments">—</div><div class="sub" id="m-overdue"></div></div>
+            <div class="stat"><div class="s-ico">🔒</div><div class="label">Deposits held</div><div class="value" id="m-deposits">—</div><div class="sub" id="m-refunds"></div></div>
+            <div class="stat"><div class="s-ico">✉</div><div class="label">New enquiries</div><div class="value" id="m-enquiries">—</div><div class="sub">from websites</div></div>
+            <div class="stat"><div class="s-ico">✓</div><div class="label">Open tasks</div><div class="value" id="m-tasks">—</div><div class="sub" id="m-high"></div></div>
+          </div>
+          <div class="grid-3 section-gap">
+            <div class="card"><div class="card-head"><h3>Upcoming payments & follow-ups</h3><button class="link" data-goto="payments">View all</button></div><div id="ov-payments"></div></div>
+            <div class="card"><div class="card-head"><h3>Payment status</h3></div><div class="donut-wrap"><div class="donut" id="donut"><div class="dlabel"><strong id="donut-n">0</strong><span>payments</span></div></div><div class="legend" id="donut-legend"></div></div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Check-outs & deposit refunds</h3><button class="link" data-goto="deposits">View all</button></div><div id="ov-refunds"></div></div>
+            <div class="card"><div class="card-head"><h3>Recent enquiries</h3><button class="link" data-goto="enquiries">View all</button></div><div id="ov-enquiries"></div></div>
+          </div>
         </section>
 
+        <!-- VILLAS (clickable cards) -->
         <section class="view" id="view-villas">
-          <div class="view-head"><div><span class="eyebrow">Property master data</span><h1>Villa records</h1></div><p>Owner contacts, property facts, rates, listing assets, marketing notes, and agency agreements.</p></div>
-          <details class="record-form" id="villa-details"><summary>Add or edit a villa</summary><form class="record-grid" id="villa-form"><input type="hidden" name="id"><div class="field span-2"><label>Villa name</label><input name="name" required></div><div class="field"><label>Villa code</label><input name="code" placeholder="CV1-PDN"></div><div class="field"><label>Status</label><select name="status"><option>Available</option><option>Booked</option><option>Off-market</option><option>Maintenance</option></select></div><div class="field span-2"><label>Area / location</label><input name="location" placeholder="Padonan, Canggu"></div><div class="field span-2"><label>Google Maps link</label><input name="mapUrl" type="url" placeholder="https://maps.google.com/…"></div><div class="field"><label>Bedrooms</label><input name="bedrooms" type="number" min="0"></div><div class="field"><label>Bathrooms</label><input name="bathrooms" type="number" min="0"></div><div class="field"><label>Maximum guests</label><input name="maxGuests" type="number" min="0"></div><label class="check"><input name="pool" type="checkbox"> Private pool</label><div class="field span-2"><label>Facilities</label><input name="facilities" placeholder="WiFi, kitchen, parking, garden…"></div><div class="field"><label>Owner name</label><input name="ownerName"></div><div class="field"><label>Owner WhatsApp</label><input name="ownerPhone" type="tel"></div><div class="field span-2"><label>Owner email</label><input name="ownerEmail" type="email"></div><div class="field"><label>Monthly rate</label><input name="monthlyRate" type="number" min="0"></div><div class="field"><label>Yearly rate</label><input name="yearlyRate" type="number" min="0"></div><div class="field"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div><div></div><div class="field span-2"><label>Photos folder</label><input name="photosFolderUrl" type="url" placeholder="Private Google Drive folder"></div><div class="field span-2"><label>Public listing link</label><input name="listingUrl" type="url"></div><div class="field span-2"><label>Owner agency agreement PDF</label><input name="ownerAgreementUrl" type="url" placeholder="Private Google Drive link"></div><div class="field span-2"><label>Marketing notes</label><textarea name="marketingNotes"></textarea></div><div class="form-actions"><button class="button" type="submit">Save villa</button><button class="button secondary" type="reset">Clear</button></div></form></details>
-          <div class="cards" id="villa-cards"></div><div class="subhead"><h2>Legacy Notion projects</h2><span class="eyebrow">Read-only</span></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Code</th><th>Status</th><th>Type</th></tr></thead><tbody id="projects-table"></tbody></table></div>
+          <div class="page-head"><div><h2>Villas</h2><p>Click any villa to open its full page — stays, payments, deposits, and documents.</p></div><button class="btn" data-open="villas">+ Add villa</button></div>
+          <div class="chips" id="villa-chips">
+            <button class="chip active" data-vfilter="">All</button>
+            <button class="chip" data-vfilter="Available">Available</button>
+            <button class="chip" data-vfilter="Booked">Booked</button>
+            <button class="chip" data-vfilter="Maintenance">Maintenance</button>
+            <button class="chip" data-vfilter="Off-market">Off-market</button>
+          </div>
+          <div class="villa-grid" id="villa-cards"></div>
         </section>
 
+        <!-- VILLA DETAIL -->
+        <section class="view" id="view-villa-detail">
+          <button class="back" id="villa-back">← All villas</button>
+          <div class="vd-head" id="vd-head"></div>
+          <div class="stats" id="vd-stats"></div>
+          <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
+          <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Deposits</h3></div><div class="table-wrap"><table><thead><tr><th>Amount</th><th>Refund due</th><th>Refundable</th><th>Status</th><th></th></tr></thead><tbody id="vd-deposits"></tbody></table></div></div>
+            <div class="card"><div class="card-head"><h3>Documents</h3><button class="btn sm secondary" id="vd-add-doc">+ Add</button></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>File</th><th></th></tr></thead><tbody id="vd-documents"></tbody></table></div></div>
+          </div>
+        </section>
+
+        <!-- STAYS -->
         <section class="view" id="view-stays">
-          <div class="view-head"><div><span class="eyebrow">One record per booking</span><h1>Guest stays</h1></div><p>Exactly how long each guest stays, who they are, the rental terms, commission, contract, and payment plan.</p></div>
-          <details class="record-form" id="tenancy-details"><summary>Add or edit a guest stay</summary><form class="record-grid" id="tenancy-form"><input type="hidden" name="id"><div class="field"><label>Tenancy ID</label><input name="code" placeholder="TEN-2026-014" required></div><div class="field"><label>Villa</label><select name="villaId" data-villa-select required></select></div><div class="field"><label>Booking status</label><select name="bookingStatus"><option>Enquiry</option><option>Reserved</option><option>Confirmed</option><option>Checked-in</option><option>Checked-out</option><option>Cancelled</option></select></div><div class="field"><label>Rental term</label><select name="rentalTerm"><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div><div class="field"><label>Guest name</label><input name="guestName" required></div><div class="field"><label>Guest WhatsApp</label><input name="guestPhone" type="tel"></div><div class="field"><label>Guest email</label><input name="guestEmail" type="email"></div><div class="field"><label>Nationality</label><input name="nationality"></div><div class="field span-2"><label>Private ID / passport Drive link</label><input name="idDocumentUrl" type="url" placeholder="Private Google Drive link"></div><div class="field"><label>Number of guests</label><input name="guestCount" type="number" min="1"></div><div class="field"><label>Source</label><select name="source"><option>Website</option><option>Referral</option><option>Direct</option><option>Social media</option><option>Airbnb</option><option>Other</option></select></div><div class="field"><label>Check-in</label><input name="checkIn" type="date" required></div><div class="field"><label>Check-out</label><input name="checkOut" type="date" required></div><div class="field"><label>Rent per month</label><input name="rentAmount" type="number" min="0" required></div><div class="field"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div><div class="field"><label>Payment frequency</label><select name="paymentFrequency"><option>Monthly</option><option>Quarterly</option><option>Upfront</option></select></div><div class="field"><label>First payment due</label><input name="firstDueDate" type="date"></div><div class="field"><label>Grace period (days)</label><input name="gracePeriodDays" type="number" value="3" min="0"></div><div class="field"><label>Agency commission %</label><input name="agencyCommissionPercent" type="number" min="0" max="100" step=".1"></div><label class="check"><input name="generateSchedule" type="checkbox" checked> Generate payment schedule</label><div></div><div class="field"><label>Deposit amount</label><input name="depositAmount" type="number" min="0"></div><div class="field"><label>Deposit collected</label><input name="depositCollectedDate" type="date"></div><div class="field"><label>Deposit held in</label><select name="depositHeldIn"><option>Owner account</option><option>TVM account</option></select></div><div class="field"><label>Refund within days</label><input name="refundWindowDays" type="number" value="14" min="0"></div><div class="field span-2"><label>Signed tenancy contract PDF</label><input name="contractUrl" type="url" placeholder="Private Google Drive link"></div><label class="check"><input name="contractSigned" type="checkbox"> Contract signed</label><div class="field"><label>Signed date</label><input name="contractSignedDate" type="date"></div><div class="field span-4"><label>Special terms / notes</label><textarea name="notes"></textarea></div><div class="form-actions"><button class="button" type="submit">Save stay & schedule</button><button class="button secondary" type="reset">Clear</button></div></form></details>
-          <div class="cards" id="stay-cards"></div>
+          <div class="page-head"><div><h2>Guest stays</h2><p>One row per booking. Saving a new stay auto-creates its payment schedule and deposit.</p></div><button class="btn" data-open="tenancies">+ Add stay</button></div>
+          <div class="card table-wrap"><table><thead><tr><th>Guest</th><th>Villa</th><th>Stay</th><th>Length</th><th>Rent</th><th>Next payment</th><th>Contract</th><th>Status</th><th></th></tr></thead><tbody id="t-stays"></tbody></table></div>
         </section>
 
-        <section class="view" id="view-payments"><div class="view-head"><div><span class="eyebrow">One row per installment</span><h1>Payment schedule</h1></div><p>Due dates, seven-day follow-ups, grace periods, proof, late fees, and owner payout status.</p></div><details class="record-form" id="installment-details"><summary>Add or edit an installment</summary><form class="record-grid" id="installment-form"><input type="hidden" name="id"><div class="field"><label>Payment ID</label><input name="code"></div><div class="field"><label>Tenancy</label><select name="tenancyId" data-tenancy-select required></select></div><div class="field"><label>Villa</label><select name="villaId" data-villa-select required></select></div><div class="field"><label>Period</label><input name="period" placeholder="March 2026"></div><div class="field"><label>Installment number</label><input name="installmentNumber" type="number" min="1"></div><div class="field"><label>Total installments</label><input name="installmentTotal" type="number" min="1"></div><div class="field"><label>Amount</label><input name="amount" type="number" min="0"></div><div class="field"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div><div class="field"><label>Follow-up date</label><input name="followUpDate" type="date"></div><div class="field"><label>Due date</label><input name="dueDate" type="date"></div><div class="field"><label>Grace period (days)</label><input name="gracePeriodDays" type="number" min="0"></div><div class="field"><label>Status</label><select name="status"><option>Scheduled</option><option>Reminded</option><option>Due</option><option>Paid</option><option>Overdue</option><option>Late</option></select></div><div class="field"><label>Paid date</label><input name="paidDate" type="date"></div><div class="field"><label>Payment method</label><select name="paymentMethod"><option value="">Choose method</option><option>Bank transfer</option><option>Cash</option><option>Wise</option><option>Card</option></select></div><div class="field span-2"><label>Receipt / payment proof</label><input name="proofUrl" type="url" placeholder="Private Google Drive link"></div><div class="field"><label>Late fee</label><input name="lateFee" type="number" min="0"></div><div class="field"><label>Owner payout</label><select name="ownerPayoutStatus"><option>Pending</option><option>Sent</option><option>Not applicable</option></select></div><div class="form-actions"><button class="button" type="submit">Save installment</button><button class="button secondary" type="reset">Clear</button></div></form></details><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Villa / guest</th><th>Amount</th><th>Follow up</th><th>Due</th><th>Status</th><th>Proof / payout</th><th></th></tr></thead><tbody id="installments-table"></tbody></table></div><div class="subhead"><h2>Legacy Notion payments</h2><span class="eyebrow">Existing records</span></div><div class="table-wrap"><table><thead><tr><th>Villa</th><th>Tenant</th><th>Amount</th><th>Due day</th><th>Status</th><th></th></tr></thead><tbody id="legacy-payments-table"></tbody></table></div></section>
+        <!-- PAYMENTS -->
+        <section class="view" id="view-payments">
+          <div class="page-head"><div><h2>Payments</h2><p>Every installment with follow-up, due date, grace period, and payout status.</p></div><button class="btn" data-open="installments">+ Add payment</button></div>
+          <div class="card table-wrap"><table><thead><tr><th>Installment</th><th>Villa / guest</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th>Proof</th><th></th></tr></thead><tbody id="t-payments"></tbody></table></div>
+        </section>
 
+        <!-- DEPOSITS -->
         <section class="view" id="view-deposits">
-          <div class="view-head"><div><span class="eyebrow">Collection to refund</span><h1>Deposits</h1></div><p>Who holds the money, refund deadline, documented deductions, refundable balance, and transfer proof.</p></div>
-          <details class="record-form" id="deposit-details"><summary>Edit a deposit</summary><form class="record-grid" id="deposit-form"><input type="hidden" name="id"><div class="field"><label>Deposit ID</label><input name="code"></div><div class="field"><label>Tenancy</label><select name="tenancyId" data-tenancy-select required></select></div><div class="field"><label>Villa</label><select name="villaId" data-villa-select required></select></div><div class="field"><label>Status</label><select name="status"><option>Awaiting collection</option><option>Held</option><option>Partially refunded</option><option>Refunded</option><option>Forfeited</option></select></div><div class="field"><label>Amount</label><input name="amount" type="number" min="0"></div><div class="field"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div><div class="field"><label>Collected date</label><input name="collectedDate" type="date"></div><div class="field"><label>Held in</label><select name="heldIn"><option>Owner account</option><option>TVM account</option></select></div><div class="field"><label>Refund due date</label><input name="refundDueDate" type="date"></div><div class="field"><label>Deductions</label><input name="deductions" type="number" min="0"></div><div class="field span-2"><label>Deduction notes</label><input name="deductionNotes" placeholder="Itemised reason and evidence"></div><div class="field"><label>Refund date</label><input name="refundDate" type="date"></div><div class="field"><label>Refund proof</label><input name="refundProofUrl" type="url"></div><div class="field span-2"><label>Inventory checklist</label><input name="inventoryUrl" type="url"></div><div class="form-actions"><button class="button" type="submit">Save deposit</button><button class="button secondary" type="reset">Clear</button></div></form></details>
-          <div class="cards" id="deposit-cards"></div>
+          <div class="page-head"><div><h2>Deposits</h2><p>Collection, deductions, refundable balance, and refund deadline.</p></div></div>
+          <div class="card table-wrap"><table><thead><tr><th>Villa / guest</th><th>Amount</th><th>Collected</th><th>Refund due</th><th>Deductions</th><th>Refundable</th><th>Status</th><th></th></tr></thead><tbody id="t-deposits"></tbody></table></div>
         </section>
 
+        <!-- DOCUMENTS -->
         <section class="view" id="view-documents">
-          <div class="view-head"><div><span class="eyebrow">Private Google Drive links</span><h1>Contracts & documents</h1></div><p>Contracts stay private in Drive and open from this protected dashboard. Never place guest agreements on the public website.</p></div>
-          <details class="record-form" id="document-details"><summary>Add or edit a document link</summary><form class="record-grid" id="document-form"><input type="hidden" name="id"><div class="field span-2"><label>Document title</label><input name="title" required></div><div class="field"><label>Type</label><select name="type"><option>Owner agency agreement</option><option>Tenancy agreement</option><option>Inventory checklist</option><option>ID document</option><option>Payment receipt</option><option>Deposit receipt</option><option>Other</option></select></div><div class="field"><label>Villa</label><select name="villaId" data-villa-select></select></div><div class="field"><label>Tenancy</label><select name="tenancyId" data-tenancy-select></select></div><div class="field span-2"><label>Private Google Drive PDF link</label><input name="driveUrl" type="url" required></div><label class="check"><input name="signed" type="checkbox"> Signed</label><div class="field"><label>Signed date</label><input name="signedDate" type="date"></div><div class="field"><label>Expiry / renewal date</label><input name="expiryDate" type="date"></div><div class="field span-4"><label>Notes</label><textarea name="notes"></textarea></div><div class="form-actions"><button class="button" type="submit">Save document</button><button class="button secondary" type="reset">Clear</button></div></form></details>
-          <div class="cards" id="document-cards"></div>
+          <div class="page-head"><div><h2>Contracts & documents</h2><p>Private Google Drive links — never shown on the public website.</p></div><button class="btn" data-open="documents">+ Add document</button></div>
+          <div class="card table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>Villa</th><th>Guest</th><th>Signed</th><th>Expiry</th><th>File</th><th></th></tr></thead><tbody id="t-documents"></tbody></table></div>
         </section>
 
-        <section class="view" id="view-tasks"><div class="view-head"><div><span class="eyebrow">Personal HQ + operations</span><h1>Tasks</h1></div><p>Add priorities here or through WhatsApp and Telegram. Tasks stay in Notion.</p></div><form class="panel record-grid" id="task-form"><div class="field span-2"><label>Task</label><input name="name" required></div><div class="field"><label>Priority</label><select name="priority"><option>High</option><option selected>Mid</option><option>Low</option></select></div><div class="field"><label>Due date</label><input name="dueDate" type="date"></div><div class="form-actions"><button class="button" type="submit">Add task</button></div></form><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Task</th><th>Priority</th><th>Due</th><th>Project</th><th></th></tr></thead><tbody id="tasks-table"></tbody></table></div></section>
+        <!-- TASKS -->
+        <section class="view" id="view-tasks">
+          <div class="page-head"><div><h2>Tasks</h2><p>Stored in Notion. Also manageable from WhatsApp/Telegram.</p></div><button class="btn" data-open="task">+ Add task</button></div>
+          <div class="card table-wrap"><table><thead><tr><th>Task</th><th>Priority</th><th>Due</th><th></th></tr></thead><tbody id="t-tasks"></tbody></table></div>
+        </section>
 
-        <section class="view" id="view-enquiries"><div class="view-head"><div><span class="eyebrow">Public website leads</span><h1>Enquiries</h1></div><p>Villa submissions, rental enquiries, furniture requests, and Afni portfolio leads.</p></div><div class="table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Request</th></tr></thead><tbody id="enquiries-table"></tbody></table></div></section>
+        <!-- ENQUIRIES -->
+        <section class="view" id="view-enquiries">
+          <div class="page-head"><div><h2>Enquiries</h2><p>Villa submissions and requests from the public websites.</p></div></div>
+          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
+        </section>
 
-        <section class="view" id="view-bots"><div class="view-head"><div><span class="eyebrow">Messaging automation</span><h1>WhatsApp + Telegram</h1></div><p>Connection health, pairing, and the private channels used for reminders.</p></div><div class="bot-grid"><article class="bot-card"><span class="status" id="wa-status">Checking</span><h2>WhatsApp</h2><p id="wa-detail">Checking the linked device session…</p><form class="pair-form" id="pair-form"><input name="phone" inputmode="tel" placeholder="62821…" required><button class="button" type="submit">Get pairing code</button></form><div class="pair-code" id="pair-code"><span>Pairing code</span><strong></strong><small>WhatsApp → Linked devices → Link with phone number</small></div></article><article class="bot-card"><span class="status" id="tg-status">Checking</span><h2>Telegram</h2><p id="tg-detail">Checking the BotFather token and polling service…</p></article></div></section>
+        <!-- BOTS -->
+        <section class="view" id="view-bots">
+          <div class="page-head"><div><h2>Messaging bots</h2><p>Reminders and morning briefings are delivered through these channels.</p></div></div>
+          <div class="bot-grid">
+            <div class="card bot-card">
+              <span class="badge" id="wa-badge">Checking…</span>
+              <h3 style="margin:10px 0 4px">WhatsApp</h3>
+              <p id="wa-detail" style="color:var(--muted);margin:0">Checking session…</p>
+              <form class="pair-row" id="pair-form"><input name="phone" inputmode="tel" placeholder="62821… (with country code)" required><button class="btn" type="submit">Get pairing code</button></form>
+              <div class="pair-code" id="pair-code"><span>Pairing code</span><strong></strong><small>WhatsApp → Linked devices → Link with phone number</small></div>
+            </div>
+            <div class="card bot-card">
+              <span class="badge" id="tg-badge">Checking…</span>
+              <h3 style="margin:10px 0 4px">Telegram</h3>
+              <p id="tg-detail" style="color:var(--muted);margin:0">Checking token…</p>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   </div>
+
+  <!-- ═══ MODALS (same API/field names as backend) ═══ -->
+  <dialog id="dlg-villas"><div class="modal-head"><h3 id="ttl-villas">Add villa</h3><button class="modal-close" data-close="villas">✕</button></div>
+    <form id="form-villas"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="f"><label>Villa name *</label><input name="name" required></div>
+      <div class="f"><label>Villa code</label><input name="code" placeholder="VA-01"></div>
+      <div class="f"><label>Status</label><select name="status"><option>Available</option><option>Booked</option><option>Off-market</option><option>Maintenance</option></select></div>
+      <div class="f"><label>Location</label><input name="location" placeholder="Berawa, Canggu"></div>
+      <div class="f"><label>Bedrooms</label><input name="bedrooms" type="number" min="0"></div>
+      <div class="f"><label>Bathrooms</label><input name="bathrooms" type="number" min="0"></div>
+      <div class="f"><label>Max guests</label><input name="maxGuests" type="number" min="0"></div>
+      <div class="f-check"><input name="pool" type="checkbox" id="ck-pool"><label for="ck-pool">Private pool</label></div>
+      <div class="f full"><label>Facilities</label><input name="facilities" placeholder="Pool, AC, WiFi, kitchen, parking…"></div>
+      <div class="f"><label>Owner name</label><input name="ownerName"></div>
+      <div class="f"><label>Owner WhatsApp</label><input name="ownerPhone" type="tel"></div>
+      <div class="f full"><label>Owner email</label><input name="ownerEmail" type="email"></div>
+      <div class="f"><label>Monthly rate</label><input name="monthlyRate" type="number" min="0"></div>
+      <div class="f"><label>Yearly rate</label><input name="yearlyRate" type="number" min="0"></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Google Maps link</label><input name="mapUrl" type="url"></div>
+      <div class="f"><label>Photos folder (Drive)</label><input name="photosFolderUrl" type="url"></div>
+      <div class="f"><label>Public listing link</label><input name="listingUrl" type="url"></div>
+      <div class="f full"><label>Owner agency agreement (Drive PDF)</label><input name="ownerAgreementUrl" type="url"></div>
+      <div class="f full"><label>Marketing notes</label><textarea name="marketingNotes"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villas">Cancel</button><button class="btn" type="submit">Save villa</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-tenancies"><div class="modal-head"><h3 id="ttl-tenancies">Add guest stay</h3><button class="modal-close" data-close="tenancies">✕</button></div>
+    <form id="form-tenancies"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="hint" id="stay-hint">Saving a new stay with rent + first due date automatically creates every installment, the deposit record, and files the contract.</div>
+      <div class="f"><label>Stay ID *</label><input name="code" placeholder="TEN-2026-001" required></div>
+      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+      <div class="f"><label>Booking status</label><select name="bookingStatus"><option>Enquiry</option><option>Reserved</option><option>Confirmed</option><option>Checked-in</option><option>Checked-out</option><option>Cancelled</option></select></div>
+      <div class="f"><label>Rental term</label><select name="rentalTerm"><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
+      <div class="f"><label>Guest name *</label><input name="guestName" required></div>
+      <div class="f"><label>Guest WhatsApp</label><input name="guestPhone" type="tel"></div>
+      <div class="f"><label>Guest email</label><input name="guestEmail" type="email"></div>
+      <div class="f"><label>Nationality</label><input name="nationality"></div>
+      <div class="f"><label>Number of guests</label><input name="guestCount" type="number" min="1"></div>
+      <div class="f"><label>Source</label><select name="source"><option>Website</option><option>Referral</option><option>Direct</option><option>Social media</option><option>Airbnb</option><option>Other</option></select></div>
+      <div class="f"><label>Check-in *</label><input name="checkIn" type="date" required></div>
+      <div class="f"><label>Check-out *</label><input name="checkOut" type="date" required></div>
+      <div class="f"><label>Rent per month *</label><input name="rentAmount" type="number" min="0" required></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Payment frequency</label><select name="paymentFrequency"><option>Monthly</option><option>Quarterly</option><option>Upfront</option></select></div>
+      <div class="f"><label>First payment due</label><input name="firstDueDate" type="date"></div>
+      <div class="f"><label>Grace period (days)</label><input name="gracePeriodDays" type="number" value="3" min="0"></div>
+      <div class="f"><label>Agency commission %</label><input name="agencyCommissionPercent" type="number" min="0" max="100" step=".1"></div>
+      <div class="f-check"><input name="generateSchedule" type="checkbox" id="ck-gen" checked><label for="ck-gen">Auto-generate payment schedule</label></div>
+      <div class="f"><label>Deposit amount</label><input name="depositAmount" type="number" min="0"></div>
+      <div class="f"><label>Deposit collected date</label><input name="depositCollectedDate" type="date"></div>
+      <div class="f"><label>Deposit held in</label><select name="depositHeldIn"><option>Owner account</option><option>TVM account</option></select></div>
+      <div class="f"><label>Refund within (days)</label><input name="refundWindowDays" type="number" value="14" min="0"></div>
+      <div class="f full"><label>ID / passport (private Drive link)</label><input name="idDocumentUrl" type="url"></div>
+      <div class="f full"><label>Signed contract (private Drive link)</label><input name="contractUrl" type="url"></div>
+      <div class="f-check"><input name="contractSigned" type="checkbox" id="ck-signed"><label for="ck-signed">Contract signed</label></div>
+      <div class="f"><label>Signed date</label><input name="contractSignedDate" type="date"></div>
+      <div class="f full"><label>Notes / special terms</label><textarea name="notes"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="tenancies">Cancel</button><button class="btn" type="submit">Save stay</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-installments"><div class="modal-head"><h3 id="ttl-installments">Add payment</h3><button class="modal-close" data-close="installments">✕</button></div>
+    <form id="form-installments"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="f"><label>Payment ID</label><input name="code"></div>
+      <div class="f"><label>Stay *</label><select name="tenancyId" data-tenancy-select required></select></div>
+      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+      <div class="f"><label>Period</label><input name="period" placeholder="March 2026"></div>
+      <div class="f"><label>Installment #</label><input name="installmentNumber" type="number" min="1"></div>
+      <div class="f"><label>Of total</label><input name="installmentTotal" type="number" min="1"></div>
+      <div class="f"><label>Amount</label><input name="amount" type="number" min="0"></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Follow-up date</label><input name="followUpDate" type="date"></div>
+      <div class="f"><label>Due date</label><input name="dueDate" type="date"></div>
+      <div class="f"><label>Grace (days)</label><input name="gracePeriodDays" type="number" min="0"></div>
+      <div class="f"><label>Status</label><select name="status"><option>Scheduled</option><option>Reminded</option><option>Due</option><option>Paid</option><option>Overdue</option><option>Late</option></select></div>
+      <div class="f"><label>Paid date</label><input name="paidDate" type="date"></div>
+      <div class="f"><label>Method</label><select name="paymentMethod"><option value="">Choose</option><option>Bank transfer</option><option>Cash</option><option>Wise</option><option>Card</option></select></div>
+      <div class="f"><label>Late fee</label><input name="lateFee" type="number" min="0"></div>
+      <div class="f"><label>Owner payout</label><select name="ownerPayoutStatus"><option>Pending</option><option>Sent</option><option>Not applicable</option></select></div>
+      <div class="f full"><label>Payment proof (Drive link)</label><input name="proofUrl" type="url"></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="installments">Cancel</button><button class="btn" type="submit">Save payment</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-deposits"><div class="modal-head"><h3 id="ttl-deposits">Edit deposit</h3><button class="modal-close" data-close="deposits">✕</button></div>
+    <form id="form-deposits"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="f"><label>Deposit ID</label><input name="code"></div>
+      <div class="f"><label>Stay *</label><select name="tenancyId" data-tenancy-select required></select></div>
+      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+      <div class="f"><label>Status</label><select name="status"><option>Awaiting collection</option><option>Held</option><option>Partially refunded</option><option>Refunded</option><option>Forfeited</option></select></div>
+      <div class="f"><label>Amount</label><input name="amount" type="number" min="0"></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Collected date</label><input name="collectedDate" type="date"></div>
+      <div class="f"><label>Held in</label><select name="heldIn"><option>Owner account</option><option>TVM account</option></select></div>
+      <div class="f"><label>Refund due date</label><input name="refundDueDate" type="date"></div>
+      <div class="f"><label>Deductions</label><input name="deductions" type="number" min="0"></div>
+      <div class="f full"><label>Deduction notes</label><input name="deductionNotes" placeholder="Itemised reason and evidence"></div>
+      <div class="f"><label>Refund date</label><input name="refundDate" type="date"></div>
+      <div class="f"><label>Refund proof (Drive)</label><input name="refundProofUrl" type="url"></div>
+      <div class="f full"><label>Inventory checklist (Drive)</label><input name="inventoryUrl" type="url"></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="deposits">Cancel</button><button class="btn" type="submit">Save deposit</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-documents"><div class="modal-head"><h3 id="ttl-documents">Add document</h3><button class="modal-close" data-close="documents">✕</button></div>
+    <form id="form-documents"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="f full"><label>Title *</label><input name="title" required></div>
+      <div class="f"><label>Type</label><select name="type"><option>Owner agency agreement</option><option>Tenancy agreement</option><option>Inventory checklist</option><option>ID document</option><option>Payment receipt</option><option>Deposit receipt</option><option>Other</option></select></div>
+      <div class="f"><label>Villa</label><select name="villaId" data-villa-select></select></div>
+      <div class="f"><label>Stay</label><select name="tenancyId" data-tenancy-select></select></div>
+      <div class="f"><label>Expiry / renewal date</label><input name="expiryDate" type="date"></div>
+      <div class="f full"><label>Private Google Drive link *</label><input name="driveUrl" type="url" required></div>
+      <div class="f-check"><input name="signed" type="checkbox" id="ck-docsigned"><label for="ck-docsigned">Signed</label></div>
+      <div class="f"><label>Signed date</label><input name="signedDate" type="date"></div>
+      <div class="f full"><label>Notes</label><textarea name="notes"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="documents">Cancel</button><button class="btn" type="submit">Save document</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-task"><div class="modal-head"><h3>Add task</h3><button class="modal-close" data-close="task">✕</button></div>
+    <form id="form-task"><div class="modal-body"><div class="form-grid">
+      <div class="f full"><label>Task *</label><input name="name" required></div>
+      <div class="f"><label>Priority</label><select name="priority"><option>High</option><option selected>Mid</option><option>Low</option></select></div>
+      <div class="f"><label>Due date</label><input name="dueDate" type="date"></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="task">Cancel</button><button class="btn" type="submit">Add task</button></div></form>
+  </dialog>
+
+  <div class="toast" id="toast"></div>
+
   <script>
     const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[]}};
-    const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
-    const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-    const date=value=>value?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(`${String(value).slice(0,10)}T00:00:00`)):'—';
-    const money=(amount,currency='IDR')=>new Intl.NumberFormat('id-ID',{style:'currency',currency:currency||'IDR',maximumFractionDigits:0}).format(Number(amount)||0);
-    const safeUrl=value=>{try{const url=new URL(value);return ['https:','http:'].includes(url.protocol)?url.href:''}catch(_){return''}};
-    const status=value=>`<span class="status ${esc(String(value||'').replaceAll(' ','-'))}">${esc(value||'—')}</span>`;
-    const link=(url,label='Open document ↗')=>safeUrl(url)?`<a class="document-link" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>`:'—';
-    const villaMap=()=>Object.fromEntries(state.villaData.villas.map(item=>[item.id,item]));
-    const stayMap=()=>Object.fromEntries(state.villaData.tenancies.map(item=>[item.id,item]));
-    function notify(message){const el=$('#notice');el.textContent=message;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),4500)}
-    async function api(url,options={}){const response=await fetch(url,{headers:{'Content-Type':'application/json',...(options.headers||{})},...options});if(response.status===401){location.href='/admin/login';throw new Error('Session expired');}const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}
-    function showView(name){$$('.view').forEach(view=>view.classList.toggle('active',view.id===`view-${name}`));$$('.nav button').forEach(button=>button.classList.toggle('active',button.dataset.view===name));$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');scrollTo(0,0)}
-    $$('.nav button').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.view)));$$('[data-goto]').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.goto)));$('#menu-toggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('open')});$('#scrim').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open')});
-    function detail(label,value){return`<div class="detail"><span>${esc(label)}</span><strong>${value||'—'}</strong></div>`}
-    function populateSelects(){const villaOptions='<option value="">Choose villa</option>'+state.villaData.villas.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');const stayOptions='<option value="">Choose stay</option>'+state.villaData.tenancies.map(t=>`<option value="${esc(t.id)}">${esc(t.code||t.guestName)}</option>`).join('');$$('[data-villa-select]').forEach(select=>{const value=select.value;select.innerHTML=villaOptions;select.value=value});$$('[data-tenancy-select]').forEach(select=>{const value=select.value;select.innerHTML=stayOptions;select.value=value})}
-    function render(){const data=state.villaData,villas=villaMap(),stays=stayMap(),today=new Date().toISOString().slice(0,10);populateSelects();
-      const active=data.tenancies.filter(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));const actionPayments=data.installments.filter(p=>['Reminded','Due','Overdue','Late'].includes(p.status));const held=data.deposits.filter(d=>['Held','Partially refunded'].includes(d.status));const high=state.tasks.filter(t=>t.priority==='High').length;const fresh=state.enquiries.filter(e=>e.status==='new').length;
-      $('#metric-villas').textContent=data.villas.length;$('#metric-stays').textContent=active.length;$('#metric-checkouts').textContent=`${active.filter(t=>t.checkOut&&t.checkOut>=today).length} upcoming check-outs`;$('#metric-payments').textContent=actionPayments.length;$('#metric-overdue').textContent=`${actionPayments.filter(p=>['Overdue','Late'].includes(p.status)).length} overdue`;$('#metric-deposits').textContent=held.length;$('#metric-refunds').textContent=`${held.filter(d=>d.refundDueDate&&d.refundDueDate<=today).length} refund due`;$('#metric-tasks').textContent=state.tasks.length;$('#metric-high').textContent=`${high} high priority`;$('#metric-enquiries').textContent=fresh;
-      $('#overview-payments').innerHTML=data.installments.filter(p=>p.status!=='Paid').sort((a,b)=>(a.followUpDate||a.dueDate||'').localeCompare(b.followUpDate||b.dueDate||'')).slice(0,7).map(p=>{const t=stays[p.tenancyId]||{},v=villas[p.villaId]||{};return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} · ${esc(t.guestName||p.period)}</strong><small>Follow up ${date(p.followUpDate)} · Due ${date(p.dueDate)}</small></div>${status(p.status)}</div>`}).join('')||'<div class="empty">No upcoming payments.</div>';
-      $('#overview-refunds').innerHTML=[...held].sort((a,b)=>(a.refundDueDate||'').localeCompare(b.refundDueDate||'')).slice(0,7).map(d=>{const t=stays[d.tenancyId]||{},v=villas[d.villaId]||{};return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} · ${esc(t.guestName||'Guest')}</strong><small>Refund ${money(d.refundableAmount,d.currency)} by ${date(d.refundDueDate)}</small></div>${status(d.status)}</div>`}).join('')||'<div class="empty">No deposits awaiting refund.</div>';
-      $('#villa-cards').innerHTML=data.villas.map(v=>`<article class="record-card"><div class="card-head"><div><h2>${esc(v.name)}</h2><p>${esc(v.code||'No code')} · ${esc(v.location||'Location not added')}</p></div><div class="card-actions">${status(v.status)}<button class="button small secondary" data-edit="villas:${esc(v.id)}">Edit</button></div></div><div class="detail-grid">${detail('Owner',esc(v.ownerName))}${detail('Owner WhatsApp',esc(v.ownerPhone))}${detail('Owner email',esc(v.ownerEmail))}${detail('Rooms',`${esc(v.bedrooms||0)} BR · ${esc(v.bathrooms||0)} BA`)}${detail('Maximum guests',esc(v.maxGuests))}${detail('Pool',v.pool?'Yes':'No')}${detail('Monthly rate',money(v.monthlyRate,v.currency))}${detail('Yearly rate',money(v.yearlyRate,v.currency))}${detail('Facilities',esc(v.facilities))}${detail('Map',link(v.mapUrl,'Open map ↗'))}${detail('Photos',link(v.photosFolderUrl,'Open photo folder ↗'))}${detail('Listing',link(v.listingUrl,'Open listing ↗'))}${detail('Owner agreement',link(v.ownerAgreementUrl,'Open agreement PDF ↗'))}</div>${v.marketingNotes?`<p class="card-note">${esc(v.marketingNotes)}</p>`:''}</article>`).join('')||'<div class="empty panel">No detailed villa records yet. Add the first villa above.</div>';
-      $('#stay-cards').innerHTML=data.tenancies.map(t=>{const v=villas[t.villaId]||{};const due=data.installments.filter(p=>p.tenancyId===t.id&&p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];return`<article class="record-card"><div class="card-head"><div><h2>${esc(t.guestName||t.code)}</h2><p>${esc(t.code)} · ${esc(v.name||'Villa not linked')}</p></div><div class="card-actions">${status(t.bookingStatus)}<button class="button small secondary" data-edit="tenancies:${esc(t.id)}">Edit</button></div></div><div class="detail-grid">${detail('Stay',`${date(t.checkIn)} → ${date(t.checkOut)}`)}${detail('Length',esc(t.lengthOfStay))}${detail('Rental term',esc(t.rentalTerm))}${detail('Guest contact',`${esc(t.guestPhone||'')} ${t.guestEmail?`<br>${esc(t.guestEmail)}`:''}`)}${detail('Nationality',esc(t.nationality))}${detail('Guests',esc(t.guestCount))}${detail('Rent / frequency',`${money(t.rentAmount,t.currency)} · ${esc(t.paymentFrequency)}`)}${detail('Next payment',due?`${money(due.amount,due.currency)} · ${date(due.dueDate)}`:'—')}${detail('Follow up',due?date(due.followUpDate):'—')}${detail('Source',esc(t.source))}${detail('Agency commission',`${esc(t.agencyCommissionPercent||0)}%`)}${detail('ID document',link(t.idDocumentUrl,'Open private ID ↗'))}${detail('Contract',link(t.contractUrl,'Open contract PDF ↗'))}</div>${t.notes?`<p class="card-note">${esc(t.notes)}</p>`:''}</article>`}).join('')||'<div class="empty panel">No guest stays yet.</div>';
-      $('#installments-table').innerHTML=data.installments.sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(p=>{const t=stays[p.tenancyId]||{},v=villas[p.villaId]||{};return`<tr><td><strong>${esc(p.code||p.period)}</strong><br><small>${esc(p.installmentNumber)} of ${esc(p.installmentTotal)} · ${esc(p.period)}</small></td><td>${esc(v.name||'—')}<br><small>${esc(t.guestName||'—')}</small></td><td>${money(p.amount,p.currency)}${p.lateFee?`<br><small>Late fee ${money(p.lateFee,p.currency)}</small>`:''}</td><td>${date(p.followUpDate)}</td><td>${date(p.dueDate)}<br><small>${esc(p.gracePeriodDays||0)}-day grace</small></td><td>${status(p.status)}${p.paidDate?`<br><small>Paid ${date(p.paidDate)}</small>`:''}</td><td>${link(p.proofUrl,'Payment proof ↗')}<br><small>${esc(p.ownerPayoutStatus||'Payout pending')}</small></td><td>${p.status!=='Paid'?`<button class="button small" data-pay="${esc(p.id)}">Mark paid</button>`:''}<br><button class="button small secondary" data-edit="installments:${esc(p.id)}">Edit</button></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No installment schedule yet. Create a guest stay to generate one.</td></tr>';
-      $('#legacy-payments-table').innerHTML=state.payments.map(p=>`<tr><td><strong>${esc(p.villa)}</strong></td><td>${esc(p.tenant||'—')}</td><td>${money(p.amount,p.currency)}</td><td>${esc(p.dueDay)}</td><td>${status(p.status)}</td><td>${p.status==='Pending'?`<button class="button small secondary" data-paid-legacy="${esc(p.id)}">Mark paid</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No legacy payment records.</td></tr>';
-      $('#deposit-cards').innerHTML=data.deposits.map(d=>{const t=stays[d.tenancyId]||{},v=villas[d.villaId]||{};return`<article class="record-card"><div class="card-head"><div><h2>${esc(v.name||d.code)}</h2><p>${esc(t.guestName||'Guest not linked')} · ${esc(d.code||'Deposit')}</p></div><div class="card-actions">${status(d.status)}<button class="button small secondary" data-edit="deposits:${esc(d.id)}">Edit</button></div></div><div class="detail-grid">${detail('Deposit',money(d.amount,d.currency))}${detail('Collected',date(d.collectedDate))}${detail('Held in',esc(d.heldIn))}${detail('Check-out',date(t.checkOut))}${detail('Refund due',date(d.refundDueDate))}${detail('Deductions',money(d.deductions,d.currency))}${detail('Refundable',money(d.refundableAmount,d.currency))}${detail('Refunded',date(d.refundDate))}${detail('Refund proof',link(d.refundProofUrl,'Open proof ↗'))}${detail('Inventory',link(d.inventoryUrl,'Open checklist ↗'))}</div>${d.deductionNotes?`<p class="card-note">Deductions: ${esc(d.deductionNotes)}</p>`:''}${d.status!=='Refunded'?`<div class="card-actions" style="margin-top:14px"><button class="button small" data-refund="${esc(d.id)}">Mark refunded</button></div>`:''}</article>`}).join('')||'<div class="empty panel">No deposits yet.</div>';
-      $('#document-cards').innerHTML=data.documents.map(d=>{const t=stays[d.tenancyId]||{},v=villas[d.villaId]||{};return`<article class="record-card"><div class="card-head"><div><h2>${esc(d.title)}</h2><p>${esc(d.type)} · ${esc(v.name||'General')}</p></div><button class="button small secondary" data-edit="documents:${esc(d.id)}">Edit</button></div><div class="detail-grid">${detail('Guest / stay',esc(t.guestName||t.code))}${detail('Signed',d.signed?`Yes · ${date(d.signedDate)}`:'No')}${detail('Expiry / renewal',date(d.expiryDate))}${detail('Private file',link(d.driveUrl,'Open in Google Drive ↗'))}</div>${d.notes?`<p class="card-note">${esc(d.notes)}</p>`:''}</article>`}).join('')||'<div class="empty panel">No contract links yet.</div>';
-      const projectNames=Object.fromEntries(state.projects.map(p=>[p.id,p.name]));const projectType=name=>{const n=String(name||'').toLowerCase();if(/(carlos|sikhou|adjuna|kong|sunken|cls)/.test(n))return'Furniture project';if(/(hr & staffing|marketing & sales|finance & admin|operations & maintenance)/.test(n))return'Department';if(/(tech mentor|edunest)/.test(n))return'Personal';return'Rental villa'};$('#projects-table').innerHTML=state.projects.map(p=>`<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.code||'—')}</td><td>${esc(p.status||'—')}</td><td>${projectType(p.name)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No projects found.</td></tr>';$('#tasks-table').innerHTML=state.tasks.map(t=>`<tr><td><strong>${esc(t.name)}</strong></td><td><span class="priority ${esc(t.priority)}">${esc(t.priority)}</span></td><td>${date(t.dueDate)}</td><td>${esc(t.projectIds?.[0]?projectNames[t.projectIds[0]]||'Linked project':'—')}</td><td><button class="button small secondary" data-complete-task="${esc(t.id)}">Complete</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No open tasks.</td></tr>';$('#enquiries-table').innerHTML=state.enquiries.map(e=>`<tr><td>${date(e.createdAt)}</td><td><strong>${esc(e.source)}</strong><br><small>${esc(e.business||'General')}</small></td><td>${esc(e.name)}</td><td>${e.email?`<a href="mailto:${encodeURIComponent(e.email)}">${esc(e.email)}</a>`:esc(e.phone)}</td><td>${esc(e.message)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No website enquiries yet.</td></tr>';
-      const wa=state.bots.whatsapp||{},tg=state.bots.telegram||{};$('#wa-status').className=`status ${wa.connected?'online':'offline'}`;$('#wa-status').textContent=wa.connected?'Connected':(wa.status||'Offline').replaceAll('_',' ');$('#wa-detail').textContent=wa.connected?'Incoming allowlisted messages are active.':(wa.lastError||'Pair this account to activate messages and reminders.');$('#pair-form').style.display=wa.connected?'none':'grid';$('#tg-status').className=`status ${tg.running?'online':'offline'}`;$('#tg-status').textContent=tg.running?'Connected':'Offline';$('#tg-detail').textContent=tg.running?`@${tg.botName} is ready.`:(tg.lastError||'Add a Telegram BotFather token in the private server settings.');
+    let currentVillaId=null;
+    const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+    const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const fdate=v=>v?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(`${String(v).slice(0,10)}T00:00:00`)):'—';
+    const money=(a,c='IDR')=>a?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
+    const safeUrl=v=>{try{const u=new URL(v);return['https:','http:'].includes(u.protocol)?u.href:''}catch(_){return''}};
+    const flink=(u,l='Open')=>safeUrl(u)?`<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener noreferrer">${esc(l)} ↗</a>`:'—';
+    const BADGE={Paid:'green',Refunded:'green',Confirmed:'green','Checked-in':'green',Available:'green',Sent:'green',
+      Reminded:'amber',Due:'amber',Held:'amber',Reserved:'amber','Awaiting collection':'amber','Partially refunded':'amber',
+      Booked:'blue',Scheduled:'blue',Enquiry:'blue',High:'red',Mid:'amber',Low:'green',
+      Overdue:'red',Late:'red',Forfeited:'red',Cancelled:'red',Maintenance:'red','Off-market':'red'};
+    const badge=v=>`<span class="badge ${BADGE[v]||''}">${esc(v||'—')}</span>`;
+    const vMap=()=>Object.fromEntries(state.villaData.villas.map(v=>[v.id,v]));
+    const sMap=()=>Object.fromEntries(state.villaData.tenancies.map(t=>[t.id,t]));
+    const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3500)}
+    async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+
+    // ── Navigation ──
+    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots'};
+    function show(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
+      $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
+      $('#page-title').textContent=TITLES[name]||name;$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');$('#search').value='';applySearch('');scrollTo(0,0)}
+    $$('.nav button[data-view]').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.view);if(b.dataset.view==='villas')$('#nav-villas-group').classList.add('open')}));
+    document.addEventListener('click',e=>{
+      const g=e.target.closest('[data-goto]');if(g)return show(g.dataset.goto);
+      const vn=e.target.closest('[data-villa-nav]');if(vn)return openVilla(vn.dataset.villaNav);
+      const ch=e.target.closest('.chip');if(ch&&ch.dataset.vfilter!==undefined){state._villaFilter=ch.dataset.vfilter;$$('#villa-chips .chip').forEach(c=>c.classList.toggle('active',c===ch));render()}});
+    $('#menu-toggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('open')});
+    $('#scrim').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open')});
+    $('#villa-back').addEventListener('click',()=>show('villas'));
+
+    // ── Search (filters visible rows/cards in active view) ──
+    function applySearch(q){q=q.toLowerCase();const view=$('.view.active');if(!view)return;
+      view.querySelectorAll('tbody tr').forEach(tr=>{tr.style.display=!q||tr.textContent.toLowerCase().includes(q)?'':'none'});
+      view.querySelectorAll('.villa-card').forEach(c=>{c.style.display=!q||c.textContent.toLowerCase().includes(q)?'':'none'})}
+    $('#search').addEventListener('input',e=>applySearch(e.target.value));
+
+    // ── Modals ──
+    function openModal(name,record,prefill){const dlg=$(`#dlg-${name}`);const form=$(`#form-${name}`);form.reset();if(form.elements.id)form.elements.id.value='';
+      if(name==='tenancies'){form.generateSchedule.checked=!record;$('#stay-hint').style.display=record?'none':'block'}
+      fillSelects();
+      if(record)Object.entries(record).forEach(([k,v])=>{const i=form.elements[k];if(!i)return;if(i.type==='checkbox')i.checked=Boolean(v);else i.value=v??''});
+      if(prefill)Object.entries(prefill).forEach(([k,v])=>{const i=form.elements[k];if(i)i.value=v});
+      const ttl=$(`#ttl-${name}`);if(ttl)ttl.textContent=(record?'Edit ':'Add ')+({villas:'villa',tenancies:'guest stay',installments:'payment',deposits:'deposit',documents:'document'}[name]||name);
+      dlg.showModal()}
+    document.addEventListener('click',e=>{
+      const o=e.target.closest('[data-open]');if(o)openModal(o.dataset.open);
+      const c=e.target.closest('[data-close]');if(c)$(`#dlg-${c.dataset.close}`).close();
+    });
+    $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
+    $('#vd-add-stay').addEventListener('click',()=>openModal('tenancies',null,{villaId:currentVillaId}));
+    $('#vd-add-doc').addEventListener('click',()=>openModal('documents',null,{villaId:currentVillaId}));
+
+    function fillSelects(){const vo='<option value="">Choose villa</option>'+state.villaData.villas.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+      const so='<option value="">Choose stay</option>'+state.villaData.tenancies.map(t=>`<option value="${esc(t.id)}">${esc(t.code||t.guestName)}</option>`).join('');
+      $$('[data-villa-select]').forEach(s=>{const v=s.value;s.innerHTML=vo;s.value=v});$$('[data-tenancy-select]').forEach(s=>{const v=s.value;s.innerHTML=so;s.value=v})}
+
+    // ── Save / actions ──
+    function formData(f){const d=Object.fromEntries(new FormData(f));f.querySelectorAll('input[type=checkbox]').forEach(i=>d[i.name]=i.checked);return d}
+    async function save(coll,rec){await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:rec})});await load()}
+    ['villas','tenancies','installments','deposits','documents'].forEach(coll=>{
+      $(`#form-${coll}`).addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
+        try{await save(coll,formData(e.target));$(`#dlg-${coll}`).close();toast('Saved.')}catch(err){toast(err.message)}finally{btn.disabled=false}})});
+    $('#form-task').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/admin/tasks',{method:'POST',body:JSON.stringify(formData(e.target))});$('#dlg-task').close();await load();toast('Task added.')}catch(err){toast(err.message)}});
+
+    document.addEventListener('click',async e=>{
+      const t=e.target;
+      try{
+        if(t.dataset.edit){const[c,id]=t.dataset.edit.split(':');const r=state.villaData[c]?.find(x=>x.id===id);if(r)openModal(c,r);return}
+        if(t.dataset.del){const[c,id]=t.dataset.del.split(':');const extra=c==='tenancies'?' This also deletes its payments and deposit.':'';
+          if(confirm(`Delete this record?${extra}`)){await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();toast('Deleted.')}return}
+        if(t.dataset.pay){const r=state.villaData.installments.find(x=>x.id===t.dataset.pay);await save('installments',{...r,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});toast('Marked paid.');return}
+        if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
+        if(t.dataset.completeTask){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:t.dataset.completeTask})});await load();toast('Task completed.');return}
+        const vc=t.closest('[data-villa-open]');if(vc&&!t.closest('button')){openVilla(vc.dataset.villaOpen)}
+      }catch(err){toast(err.message)}
+    });
+
+    // ── Villa detail page ──
+    function openVilla(id){currentVillaId=id;renderVilla();show('villa-detail')}
+    function renderVilla(){const v=vMap()[currentVillaId];if(!v)return;const d=state.villaData,S=sMap();
+      $('#page-title').textContent=v.name;
+      const stays=d.tenancies.filter(t=>t.villaId===v.id);
+      const pays=d.installments.filter(p=>p.villaId===v.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+      const deps=d.deposits.filter(x=>x.villaId===v.id);
+      const docs=d.documents.filter(x=>x.villaId===v.id);
+      const activeStay=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+      const nextPay=pays.find(p=>p.status!=='Paid');
+      $('#vd-head').innerHTML=`<div class="vd-banner"><span class="vb-initial">${esc(initials(v.name))}</span></div><div class="vd-content"><div class="vd-row">
+        <div class="vd-id"><div><h2>${esc(v.name)}</h2><p>${esc(v.code||'No code')} · ${esc(v.location||'Location not set')}</p></div></div>
+        <div style="display:flex;gap:8px;align-items:center">${badge(v.status)}<button class="btn secondary sm" data-edit="villas:${esc(v.id)}">Edit villa</button><button class="btn danger sm" data-del="villas:${esc(v.id)}">Delete</button></div></div>
+        <div class="vd-facts">
+          <div class="fact"><span>Rooms</span><strong>${v.bedrooms||0} BR · ${v.bathrooms||0} BA${v.pool?' · Pool':''}</strong></div>
+          <div class="fact"><span>Max guests</span><strong>${v.maxGuests||'—'}</strong></div>
+          <div class="fact"><span>Monthly rate</span><strong>${money(v.monthlyRate,v.currency)}</strong></div>
+          <div class="fact"><span>Yearly rate</span><strong>${money(v.yearlyRate,v.currency)}</strong></div>
+          <div class="fact"><span>Owner</span><strong>${esc(v.ownerName||'—')}</strong></div>
+          <div class="fact"><span>Owner WhatsApp</span><strong>${v.ownerPhone?`<a href="https://wa.me/${esc(String(v.ownerPhone).replace(/\D/g,''))}" target="_blank" rel="noopener">${esc(v.ownerPhone)}</a>`:'—'}</strong></div>
+          <div class="fact"><span>Facilities</span><strong>${esc(v.facilities||'—')}</strong></div>
+          <div class="fact"><span>Map</span><strong>${flink(v.mapUrl,'Open map')}</strong></div>
+          <div class="fact"><span>Photos</span><strong>${flink(v.photosFolderUrl,'Drive folder')}</strong></div>
+          <div class="fact"><span>Listing</span><strong>${flink(v.listingUrl,'Public listing')}</strong></div>
+          <div class="fact"><span>Owner agreement</span><strong>${flink(v.ownerAgreementUrl,'Open PDF')}</strong></div>
+        </div>${v.marketingNotes?`<p style="margin:14px 0 0;color:var(--muted);font-size:.83rem;border-top:1px solid var(--line);padding-top:12px">${esc(v.marketingNotes)}</p>`:''}</div>`;
+      $('#vd-stats').innerHTML=`
+        <div class="stat"><div class="label">Current guest</div><div class="value" style="font-size:1.1rem">${esc(activeStay?.guestName||'None')}</div><div class="sub">${activeStay?`until ${fdate(activeStay.checkOut)}`:'villa is free'}</div></div>
+        <div class="stat"><div class="label">Next payment</div><div class="value" style="font-size:1.1rem">${nextPay?money(nextPay.amount,nextPay.currency):'—'}</div><div class="sub">${nextPay?`due ${fdate(nextPay.dueDate)}`:'nothing scheduled'}</div></div>
+        <div class="stat"><div class="label">Deposits held</div><div class="value" style="font-size:1.1rem">${deps.filter(x=>['Held','Partially refunded'].includes(x.status)).length}</div><div class="sub">${deps.length} total</div></div>
+        <div class="stat"><div class="label">Documents</div><div class="value" style="font-size:1.1rem">${docs.length}</div><div class="sub">private Drive files</div></div>`;
+      $('#vd-stays').innerHTML=stays.map(t=>`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td><td>${money(t.rentAmount,t.currency)}<span class="sub">${esc(t.paymentFrequency||'')}</span></td><td>${badge(t.bookingStatus)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No stays for this villa yet.</td></tr>';
+      $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(p.code||p.period||'—')}</strong><span class="sub">${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
+      $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No deposits.</td></tr>';
+      $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'PDF')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
     }
-    function formRecord(form){const data=Object.fromEntries(new FormData(form));form.querySelectorAll('input[type=checkbox]').forEach(input=>data[input.name]=input.checked);return data}
-    async function saveRecord(collection,record){await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection,record})});await load()}
-    function resetRecordForm(form){form.reset();if(form.elements.id)form.elements.id.value='';if(form.id==='tenancy-form')form.generateSchedule.checked=true}
-    function fillForm(form,record){resetRecordForm(form);Object.entries(record).forEach(([key,value])=>{const input=form.elements[key];if(!input)return;if(input.type==='checkbox')input.checked=Boolean(value);else input.value=value??''});if(form.id==='tenancy-form')form.generateSchedule.checked=false;form.closest('details').open=true;form.scrollIntoView({behavior:'smooth',block:'start'})}
-    const forms={villas:$('#villa-form'),tenancies:$('#tenancy-form'),installments:$('#installment-form'),deposits:$('#deposit-form'),documents:$('#document-form')};
-    Object.entries(forms).forEach(([collection,form])=>form.addEventListener('submit',async event=>{event.preventDefault();const button=form.querySelector('button[type=submit]');button.disabled=true;try{await saveRecord(collection,formRecord(form));notify(`${collection.slice(0,-1)} saved.`);resetRecordForm(form);form.closest('details').open=false}catch(error){notify(error.message)}finally{button.disabled=false}}));
-    $$('.record-form form').forEach(form=>form.addEventListener('reset',()=>setTimeout(()=>{if(form.elements.id)form.elements.id.value='';if(form.id==='tenancy-form')form.generateSchedule.checked=true},0)));
-    document.addEventListener('click',async event=>{const edit=event.target.dataset.edit,pay=event.target.dataset.pay,refund=event.target.dataset.refund,taskId=event.target.dataset.completeTask,legacy=event.target.dataset.paidLegacy;try{if(edit){const[collection,id]=edit.split(':');const record=state.villaData[collection]?.find(item=>item.id===id);if(record&&forms[collection])fillForm(forms[collection],record)}if(pay){const item=state.villaData.installments.find(x=>x.id===pay);await saveRecord('installments',{...item,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});notify('Payment marked paid.')}if(refund){const item=state.villaData.deposits.find(x=>x.id===refund);await saveRecord('deposits',{...item,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});notify('Deposit marked refunded.')}if(taskId){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:taskId})});await load();notify('Task completed.')}if(legacy){await api('/api/admin/payments/paid',{method:'POST',body:JSON.stringify({id:legacy})});await load();notify('Payment marked paid.')}}catch(error){notify(error.message)}});
-    $('#task-form').addEventListener('submit',async event=>{event.preventDefault();try{await api('/api/admin/tasks',{method:'POST',body:JSON.stringify(formRecord(event.currentTarget))});event.currentTarget.reset();await load();notify('Task added.')}catch(error){notify(error.message)}});
-    $('#pair-form').addEventListener('submit',async event=>{event.preventDefault();const button=event.currentTarget.querySelector('button');button.disabled=true;try{const result=await api('/api/admin/bots/whatsapp/pair',{method:'POST',body:JSON.stringify({phone:event.currentTarget.phone.value})});if(result.pairingCode){$('#pair-code strong').textContent=result.pairingCode;$('#pair-code').style.display='block';notify('Pairing code created.')}}catch(error){notify(error.message)}finally{button.disabled=false}});
-    async function load(){try{const data=await api('/api/admin/overview');Object.assign(state,data);render();$('#updated').textContent=`Updated ${new Date(data.generatedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;if(data.errors?.length)notify(`Some data could not load: ${data.errors.join(', ')}`)}catch(error){notify(error.message)}}
-    $('#logout').addEventListener('click',async()=>{await api('/api/admin/logout',{method:'POST'});location.href='/admin/login'});load();setInterval(load,60000);
+
+    // ── Render everything ──
+    function render(){const d=state.villaData,V=vMap(),S=sMap(),today=new Date().toISOString().slice(0,10);fillSelects();
+      const active=d.tenancies.filter(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+      const act=d.installments.filter(p=>['Reminded','Due','Overdue','Late'].includes(p.status));
+      const held=d.deposits.filter(x=>['Held','Partially refunded','Awaiting collection'].includes(x.status));
+      const fresh=state.enquiries.filter(x=>x.status==='new').length;
+      // sidebar counts
+      $('#n-villas').textContent=d.villas.length;$('#n-stays').textContent=d.tenancies.length;$('#n-payments').textContent=d.installments.filter(p=>p.status!=='Paid').length;$('#n-deposits').textContent=held.length;$('#n-documents').textContent=d.documents.length;$('#n-tasks').textContent=state.tasks.length;$('#n-enquiries').textContent=fresh;
+      // stats
+      $('#m-villas').textContent=d.villas.length;$('#m-villas-sub').textContent=`${d.villas.filter(v=>v.status==='Available').length} available`;
+      $('#m-stays').textContent=active.length;$('#m-checkouts').textContent=`${active.filter(t=>t.checkOut>=today).length} upcoming check-outs`;
+      $('#m-payments').textContent=act.length;const od=act.filter(p=>['Overdue','Late'].includes(p.status)).length;const mo=$('#m-overdue');mo.textContent=`${od} overdue`;mo.className=od?'sub warn':'sub';
+      $('#m-deposits').textContent=held.length;const rd=held.filter(x=>x.refundDueDate&&x.refundDueDate<=today).length;const mr=$('#m-refunds');mr.textContent=`${rd} refunds due`;mr.className=rd?'sub warn':'sub';
+      $('#m-tasks').textContent=state.tasks.length;$('#m-high').textContent=`${state.tasks.filter(t=>t.priority==='High').length} high priority`;
+      $('#m-enquiries').textContent=fresh;
+      // overview lists
+      $('#ov-payments').innerHTML=d.installments.filter(p=>p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,6).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
+        return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(t.guestName||p.period||'')}</strong><small>Follow-up ${fdate(p.followUpDate)} · Due ${fdate(p.dueDate)} · ${money(p.amount,p.currency)}</small></div>${badge(p.status)}</div>`}).join('')||'<div class="empty">No upcoming payments.</div>';
+      $('#ov-refunds').innerHTML=held.sort((a,b)=>(a.refundDueDate||'').localeCompare(b.refundDueDate||'')).slice(0,6).map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
+        return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(t.guestName||'Guest')}</strong><small>Refund ${money(x.refundableAmount,x.currency)} by ${fdate(x.refundDueDate)}</small></div>${badge(x.status)}</div>`}).join('')||'<div class="empty">No deposits awaiting refund.</div>';
+      $('#ov-enquiries').innerHTML=state.enquiries.slice(0,6).map(x=>`<div class="list-row"><div><strong>${esc(x.name||'—')}</strong><small>${esc((x.message||'').slice(0,80))}${(x.message||'').length>80?'…':''}</small></div><small style="white-space:nowrap;color:var(--muted)">${fdate(x.createdAt)}</small></div>`).join('')||'<div class="empty">No enquiries yet.</div>';
+      // donut
+      const buckets=[['Paid','#3e7d54'],['Scheduled','#b8ac96'],['Reminded','#a9702c'],['Due','#c9a24c'],['Overdue','#b0483c'],['Late','#7c2d24']];
+      const total=d.installments.length;let acc=0;const segs=[],legend=[];
+      buckets.forEach(([st,col])=>{const n=d.installments.filter(p=>p.status===st).length;if(!n)return;const from=acc/Math.max(total,1)*360,to=(acc+n)/Math.max(total,1)*360;acc+=n;
+        segs.push(`${col} ${from}deg ${to}deg`);legend.push(`<div class="li"><span class="dot" style="background:${col}"></span>${st}<span class="n">${n}</span></div>`)});
+      $('#donut').style.background=total?`conic-gradient(${segs.join(',')})`:'#f1ede6';
+      $('#donut-n').textContent=total;$('#donut-legend').innerHTML=legend.join('')||'<div class="li" style="color:var(--muted)">No payments yet</div>';
+      // sidebar villa sub-menu
+      $('#nav-villa-list').innerHTML=d.villas.map(v=>`<button data-villa-nav="${esc(v.id)}" class="${currentVillaId===v.id&&$('#view-villa-detail').classList.contains('active')?'active':''}">${esc(v.name)}</button>`).join('');
+      // villa cards
+      const vf=state._villaFilter||'';
+      $('#villa-cards').innerHTML=d.villas.filter(v=>!vf||v.status===vf).map(v=>{const stays=d.tenancies.filter(t=>t.villaId===v.id);const cur=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+        const next=d.installments.filter(p=>p.villaId===v.id&&p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];
+        return`<div class="villa-card" data-villa-open="${esc(v.id)}">
+          <div class="vc-photo"><span class="vc-initial">${esc(initials(v.name))}</span><span class="vc-status">${badge(v.status)}</span><span class="vc-arrow">↗</span></div>
+          <div class="vc-body">
+            <div class="vc-title"><strong>${esc(v.name)}</strong><span class="vc-price">${money(v.monthlyRate,v.currency)}<small style="color:var(--muted);font-weight:400">/mo</small></span></div>
+            <div class="vc-loc">${esc(v.location||v.code||'Location not set')}</div>
+            <div class="vc-specs"><span><b>${v.bedrooms||0}</b> beds</span><span><b>${v.bathrooms||0}</b> baths</span>${v.pool?'<span><b>Pool</b></span>':''}<span style="margin-left:auto"><b>${esc(cur?.guestName||'No guest')}</b></span></div>
+          </div>
+        </div>`}).join('')||'<div class="card" style="padding:34px;text-align:center;color:var(--muted)">No villas match this filter.</div>';
+      // stays table
+      $('#t-stays').innerHTML=d.tenancies.map(t=>{const v=V[t.villaId]||{};const next=d.installments.filter(p=>p.tenancyId===t.id&&p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];
+        return`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td>
+        <td>${esc(v.name||'—')}</td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td>
+        <td>${money(t.rentAmount,t.currency)}<span class="sub">${esc(t.paymentFrequency||'')}</span></td>
+        <td>${next?`${money(next.amount,next.currency)}<span class="sub">due ${fdate(next.dueDate)}</span>`:'—'}</td>
+        <td>${flink(t.contractUrl,'Contract')}</td><td>${badge(t.bookingStatus)}</td>
+        <td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">No stays yet — click “+ Add stay”.</td></tr>';
+      // payments table
+      $('#t-payments').innerHTML=d.installments.sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
+        return`<tr><td><strong>${esc(p.code||p.period||'—')}</strong><span class="sub">${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td>
+        <td>${esc(v.name||'—')}<span class="sub">${esc(t.guestName||'')}</span></td>
+        <td>${money(p.amount,p.currency)}${p.lateFee?`<span class="sub">+ late fee ${money(p.lateFee,p.currency)}</span>`:''}</td>
+        <td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}<span class="sub">${p.gracePeriodDays||0}-day grace</span></td>
+        <td>${badge(p.status)}${p.paidDate?`<span class="sub">paid ${fdate(p.paidDate)}</span>`:''}</td>
+        <td>${flink(p.proofUrl,'Proof')}</td>
+        <td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button><button class="btn danger sm" data-del="installments:${esc(p.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No payments yet. Add a guest stay to auto-generate the schedule.</td></tr>';
+      // deposits table
+      $('#t-deposits').innerHTML=d.deposits.map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
+        return`<tr><td><strong>${esc(v.name||'—')}</strong><span class="sub">${esc(t.guestName||'')}</span></td>
+        <td>${money(x.amount,x.currency)}</td><td>${fdate(x.collectedDate)}<span class="sub">${esc(x.heldIn||'')}</span></td>
+        <td>${fdate(x.refundDueDate)}</td><td>${money(x.deductions,x.currency)}</td>
+        <td><strong>${money(x.refundableAmount,x.currency)}</strong></td>
+        <td>${badge(x.status)}${x.refundDate?`<span class="sub">refunded ${fdate(x.refundDate)}</span>`:''}</td>
+        <td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Mark refunded</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="deposits:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No deposits yet. Created automatically with each guest stay.</td></tr>';
+      // documents table
+      $('#t-documents').innerHTML=d.documents.map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
+        return`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${esc(v.name||'—')}</td><td>${esc(t.guestName||'—')}</td>
+        <td>${x.signed?`Yes<span class="sub">${fdate(x.signedDate)}</span>`:'No'}</td><td>${fdate(x.expiryDate)}</td><td>${flink(x.driveUrl,'Open PDF')}</td>
+        <td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="documents:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No documents yet — click “+ Add document”.</td></tr>';
+      // tasks & enquiries
+      $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
+      $('#t-enquiries').innerHTML=state.enquiries.map(x=>`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:420px">${esc(x.message)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No enquiries yet.</td></tr>';
+      // bots
+      const wa=state.bots.whatsapp||{},tg=state.bots.telegram||{};
+      $('#wa-badge').className=`badge ${wa.connected?'green':'red'}`;$('#wa-badge').textContent=wa.connected?'Connected':'Offline';
+      $('#wa-detail').textContent=wa.connected?'Linked and receiving messages.':(wa.lastError||'Not paired. Enter your number below to get a pairing code.');
+      $('#pair-form').style.display=wa.connected?'none':'flex';
+      $('#tg-badge').className=`badge ${tg.running?'green':'red'}`;$('#tg-badge').textContent=tg.running?'Connected':'Offline';
+      $('#tg-detail').textContent=tg.running?`@${tg.botName} is polling.`:(tg.lastError||'No BotFather token configured on the server.');
+      // keep villa detail fresh
+      if(currentVillaId&&$('#view-villa-detail').classList.contains('active'))renderVilla();
+    }
+
+    $('#pair-form').addEventListener('submit',async e=>{e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;
+      try{const r=await api('/api/admin/bots/whatsapp/pair',{method:'POST',body:JSON.stringify({phone:e.target.phone.value})});
+        if(r.pairingCode){$('#pair-code strong').textContent=r.pairingCode;$('#pair-code').style.display='block';toast('Pairing code created.')}}catch(err){toast(err.message)}finally{b.disabled=false}});
+    $('#logout').addEventListener('click',async e=>{e.preventDefault();await api('/api/admin/logout',{method:'POST'});location.href='/admin/login'});
+    $('#refresh').addEventListener('click',()=>load());
+
+    async function load(){try{const d=await api('/api/admin/overview');Object.assign(state,d);render();$('#updated').textContent=`Updated ${new Date(d.generatedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+      if(d.errors?.length)toast(`Some data could not load: ${d.errors.join(', ')}`)}catch(err){toast(err.message)}}
+    load();setInterval(load,60000);
   </script>
 </body>
 </html>

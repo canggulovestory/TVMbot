@@ -313,11 +313,11 @@ async function processMessage({ text, phone, telegramId }) {
     return textBlocks.map(b => b.text).join('\n') || 'Done.';
 
   } catch (err) {
-    if (err.message?.includes('credit') || err.status === 400) {
-      return 'API credits depleted. Top up at console.anthropic.com';
+    if (/credit balance|billing|insufficient.credit/i.test(err.message || '')) {
+      return 'AI credits depleted — top up at console.anthropic.com.\nMeanwhile these still work: /remind, /reminders, /remember, /memory, /ops (see /help)';
     }
     console.error('[Brain] Error:', err.message);
-    return 'Something went wrong. Try again.';
+    return 'Something went wrong. Try again. (Structured commands always work — see /help)';
   }
 }
 

@@ -276,4 +276,19 @@ async function getActionSummary() {
   return lines.join('\n');
 }
 
-module.exports = { init, getAll, getActionSummary, upsert, createTenancyBundle, stayLength, addDays, addMonths };
+async function remove(collection, id) {
+  if (!COLLECTIONS.includes(collection)) throw new Error('Unknown record type');
+  return mutate(store => {
+    const index = store[collection].findIndex(item => item.id === id);
+    if (index < 0) return null;
+    const [removed] = store[collection].splice(index, 1);
+    // Cascade: deleting a tenancy also removes its installments and deposits
+    if (collection === 'tenancies') {
+      store.installments = store.installments.filter(item => item.tenancyId !== id);
+      store.deposits = store.deposits.filter(item => item.tenancyId !== id);
+    }
+    return removed;
+  });
+}
+
+module.exports = { init, getAll, getActionSummary, upsert, remove, createTenancyBundle, stayLength, addDays, addMonths };
