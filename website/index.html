@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The Villa Managers — thoughtful villa management and custom furniture by The Bali Furniture in Canggu, Bali.">
+  <meta name="description" content="The Villa Managers — a Bali villa marketing agency for monthly, yearly, and long-term rentals, alongside custom furniture by The Bali Furniture.">
   <meta name="theme-color" content="#f4f0e8">
   <title>The Villa Managers | Villas & The Bali Furniture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -305,7 +305,7 @@
       gap: 0 20px;
       padding-block: 42px;
     }
-    .business-route--management { padding-right: clamp(30px, 5vw, 75px); }
+    .business-route--agency { padding-right: clamp(30px, 5vw, 75px); }
     .business-route--furniture { padding-left: clamp(30px, 5vw, 75px); border-left: 1px solid var(--line); }
     .business-route-number {
       grid-row: 1 / span 3;
@@ -502,6 +502,11 @@
     .contact-details small { display: block; color: var(--clay); font-size: .68rem; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; }
     .contact-details a, .contact-details span { font-family: var(--display); font-size: 1.25rem; }
     .contact-form { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 20px; align-content: start; padding-top: 20px; }
+    .owner-fields { display: none; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 22px 20px; padding: 24px; border: 1px solid var(--line); background: rgba(238, 232, 220, .45); }
+    .owner-fields.visible { display: grid; }
+    .owner-fields-head { grid-column: 1 / -1; }
+    .owner-fields-head strong { display: block; margin-bottom: 4px; font-weight: 500; }
+    .owner-fields-head span { color: var(--muted); font-size: .82rem; }
     .field { position: relative; }
     .field--full { grid-column: 1 / -1; }
     .field label { display: block; margin-bottom: 7px; color: var(--muted); font-size: .72rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
@@ -616,7 +621,7 @@
       .hero-actions { align-items: stretch; flex-direction: column; width: min(100%, 290px); }
       .business-routes-grid { grid-template-columns: 1fr; }
       .business-route { min-height: 0; grid-template-columns: 38px 1fr; padding-block: 48px; }
-      .business-route--management { padding-right: 0; }
+      .business-route--agency { padding-right: 0; }
       .business-route--furniture { padding-left: 0; border-top: 1px solid var(--line); border-left: 0; }
       .villas { padding-top: 90px; }
       .chapter-head { margin-bottom: 48px; }
@@ -645,7 +650,7 @@
       .furniture-note { grid-template-columns: 1fr; }
       .testimonial-grid { margin-inline: calc(var(--gutter) * -1); }
       .testimonial-copy { padding-inline: var(--gutter); }
-      .contact-form { grid-template-columns: 1fr; }
+      .contact-form, .owner-fields { grid-template-columns: 1fr; }
       .field--full { grid-column: auto; }
       .form-note { grid-column: auto; }
       .footer-main { grid-template-columns: 1fr 1fr; gap: 42px 25px; }
@@ -663,14 +668,14 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="top-note">Two dedicated Bali businesses · Villa management + furniture</div>
+  <div class="top-note">Two dedicated Bali businesses · Villa marketing agency + furniture</div>
 
   <header class="site-header" id="site-header">
     <nav class="nav shell" aria-label="Primary navigation">
       <ul class="nav-list">
         <li><a href="#villas">Villas</a></li>
-        <li><a href="#management">Management</a></li>
-        <li><a href="#services">Services</a></li>
+        <li><a href="#agency">Agency</a></li>
+        <li><a href="#services">How it works</a></li>
       </ul>
       <a class="brand" href="#top" aria-label="The Villa Managers home">
         <strong>TVM</strong>
@@ -690,8 +695,8 @@
   <div class="menu-scrim" aria-hidden="true"></div>
   <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
     <a href="#villas">Villas</a>
-    <a href="#management">Management</a>
-    <a href="#services">Services</a>
+    <a href="#agency">Agency</a>
+    <a href="#services">How it works</a>
     <a href="#furniture">The Bali Furniture</a>
     <a href="#about">About</a>
     <a href="#contact">Contact</a>
@@ -701,12 +706,12 @@
     <section class="hero" id="top" aria-labelledby="hero-title">
       <img class="hero-image" src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&amp;fit=crop&amp;w=2000&amp;q=88" alt="Contemporary tropical villa surrounded by greenery in Bali">
       <div class="hero-content shell">
-        <span class="hero-kicker">Villa management · Canggu, Bali</span>
-        <h1 id="hero-title">Your Bali villa,<br>beautifully managed.</h1>
-        <p class="hero-copy">We care for distinctive homes with local knowledge, clear communication, and an eye for every detail—from daily operations to the spaces within.</p>
+        <span class="hero-kicker">Villa marketing agency · Bali</span>
+        <h1 id="hero-title">Your Bali villa,<br>marketed with intention.</h1>
+        <p class="hero-copy">We help villa owners attract the right tenants for monthly, yearly, and long-term stays through thoughtful presentation, focused promotion, and qualified enquiries.</p>
         <div class="hero-actions">
-          <a class="button button--light" href="#contact" data-interest="The Villa Managers — Villa management">Manage my villa <span class="arrow">→</span></a>
-          <a class="button" href="#villas">View managed villas <span class="arrow">→</span></a>
+          <a class="button button--light" href="#contact" data-interest="The Villa Managers — Submit a villa">Submit my villa <span class="arrow">→</span></a>
+          <a class="button" href="#villas">Browse featured villas <span class="arrow">→</span></a>
         </div>
       </div>
       <a class="hero-scroll" href="#villas">Scroll to discover</a>
@@ -714,12 +719,12 @@
 
     <section class="business-routes" aria-label="Choose a TVM business">
       <div class="business-routes-grid shell">
-        <article class="business-route business-route--management">
+        <article class="business-route business-route--agency">
           <span class="business-route-number">01</span>
           <small>For villa owners</small>
           <h2>The Villa Managers</h2>
-          <p>Professional villa operations, tenant care, maintenance, payments, and trusted local oversight.</p>
-          <a class="text-link" href="#management">Explore villa management <span>→</span></a>
+          <p>A focused marketing agency connecting Bali villa owners with qualified monthly, yearly, and long-term tenants.</p>
+          <a class="text-link" href="#agency">Explore the agency <span>→</span></a>
         </article>
         <article class="business-route business-route--furniture">
           <span class="business-route-number">02</span>
@@ -736,9 +741,9 @@
         <div class="chapter-head reveal">
           <div>
             <span class="eyebrow">Our villas</span>
-            <h2 class="chapter-title" id="villas-title">Homes we are proud to care for.</h2>
+            <h2 class="chapter-title" id="villas-title">Villas ready to be discovered.</h2>
           </div>
-          <p class="lead">A considered collection of villas across Bali, each managed with the same personal attention we would give our own home.</p>
+          <p class="lead">A considered collection of Bali homes presented for monthly, yearly, and long-term rental opportunities.</p>
         </div>
 
         <div class="villa-grid">
@@ -775,7 +780,7 @@
           </a>
         </div>
 
-        <div class="villa-cta reveal"><a class="button button--outline" href="#contact">Enquire about a villa <span class="arrow">→</span></a></div>
+        <div class="villa-cta reveal"><a class="button button--outline" href="#contact" data-interest="The Villa Managers — Find a villa">Find a villa <span class="arrow">→</span></a></div>
       </div>
     </section>
 
@@ -783,62 +788,62 @@
       <div class="about-grid shell">
         <div class="about-image reveal">
           <img src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="Calm, textural Bali villa interior" loading="lazy">
-          <div class="about-stamp">Local care.<br>Clear minds.</div>
+          <div class="about-stamp">Local reach.<br>Clear strategy.</div>
         </div>
         <div class="about-copy reveal">
           <span class="eyebrow">The TVM approach</span>
-          <h2 id="about-title">Personal management, grounded in Bali.</h2>
-          <p>Managing a villa from near or far should feel simple. TVM brings one trusted point of contact to the people, payments, maintenance, and details that keep your property running beautifully.</p>
-          <p class="about-quote">“Good management is quiet. You feel it in the confidence that everything is taken care of.”</p>
-          <a class="text-link" href="#management">Discover how we work <span>→</span></a>
+          <h2 id="about-title">Focused villa marketing, grounded in Bali.</h2>
+          <p>TVM is the bridge between villa owners and people looking for a longer stay in Bali. We shape the listing, promote the property, qualify enquiries, and connect both sides—while owners stay in control of their villa and rental agreement.</p>
+          <p class="about-quote">“The right presentation attracts the right people—and turns an empty calendar into a serious conversation.”</p>
+          <a class="text-link" href="#agency">Discover how we market <span>→</span></a>
           <div class="metrics" aria-label="TVM in numbers">
-            <div class="metric"><strong>11+</strong><span>Villas managed</span></div>
-            <div class="metric"><strong>4</strong><span>Management pillars</span></div>
-            <div class="metric"><strong>24/7</strong><span>Local coordination</span></div>
+            <div class="metric"><strong>01</strong><span>Monthly stays</span></div>
+            <div class="metric"><strong>02</strong><span>Yearly rentals</span></div>
+            <div class="metric"><strong>03</strong><span>Long-term tenants</span></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="services" id="management" aria-labelledby="services-title">
+    <section class="services" id="agency" aria-labelledby="services-title">
       <div class="shell">
         <div class="services-head reveal">
-          <span class="eyebrow">Villa management</span>
-          <h2 class="chapter-title" id="services-title">Everything your property needs, in one place.</h2>
-          <p class="lead">From the first handover to the everyday details, our service is built around calm ownership and well-cared-for homes.</p>
+          <span class="eyebrow">Villa marketing agency</span>
+          <h2 class="chapter-title" id="services-title">From your villa to the right audience.</h2>
+          <p class="lead">A clear agency service for owners who want more visibility and serious rental enquiries without handing over property operations.</p>
         </div>
 
         <div class="service-list" id="services">
-          <div class="service-row reveal"><span class="service-index">01</span><h3>Tenant &amp; guest care</h3><p>Thoughtful communication, tenant sourcing, check-ins, and responsive day-to-day support.</p><span class="service-icon">⌂</span></div>
-          <div class="service-row reveal"><span class="service-index">02</span><h3>Property operations</h3><p>Rent collection, scheduled inspections, owner updates, and coordination across every moving part.</p><span class="service-icon">◇</span></div>
-          <div class="service-row reveal"><span class="service-index">03</span><h3>Maintenance</h3><p>Reliable local teams for pool, garden, air conditioning, plumbing, pest control, and repairs.</p><span class="service-icon">⌁</span></div>
-          <div class="service-row reveal"><span class="service-index">04</span><h3>Property presentation</h3><p>Careful preparation, interior styling, and finishing details that help your villa feel its best.</p><span class="service-icon">✦</span></div>
+          <div class="service-row reveal"><span class="service-index">01</span><h3>Listing strategy</h3><p>We clarify the ideal tenant, rental term, positioning, pricing context, and strongest reasons to choose your villa.</p><span class="service-icon">⌂</span></div>
+          <div class="service-row reveal"><span class="service-index">02</span><h3>Content &amp; presentation</h3><p>We refine the story, property details, imagery direction, and listing copy so the villa is easy to understand and remember.</p><span class="service-icon">◇</span></div>
+          <div class="service-row reveal"><span class="service-index">03</span><h3>Focused promotion</h3><p>We market the villa through our website, social channels, direct network, and relevant rental communities.</p><span class="service-icon">⌁</span></div>
+          <div class="service-row reveal"><span class="service-index">04</span><h3>Qualified enquiries</h3><p>We screen the basics, organize serious interest, and introduce suitable tenants directly to the owner.</p><span class="service-icon">✦</span></div>
         </div>
 
         <div class="process reveal">
           <div class="process-top">
-            <h2>A clear path to effortless ownership.</h2>
-            <p>We begin by understanding your villa, your priorities, and how involved you want to be. Then we build the right management plan around you.</p>
+            <h2>A clear path from submission to enquiry.</h2>
+            <p>Owners submit their villa once. We review the fit, prepare the marketing direction, publish the property, and connect qualified interest.</p>
           </div>
           <div class="process-steps">
-            <div class="process-step"><span>STEP 01</span><h3>Conversation</h3><p>We learn about your property, goals, and current needs.</p></div>
-            <div class="process-step"><span>STEP 02</span><h3>Villa review</h3><p>We assess operations, condition, and opportunities in person.</p></div>
-            <div class="process-step"><span>STEP 03</span><h3>Onboarding</h3><p>We agree priorities, systems, contacts, and reporting.</p></div>
-            <div class="process-step"><span>STEP 04</span><h3>Ongoing care</h3><p>Your local team manages the details and keeps you informed.</p></div>
+            <div class="process-step"><span>STEP 01</span><h3>Submit</h3><p>Share your villa, location, availability, rental term, and current photos.</p></div>
+            <div class="process-step"><span>STEP 02</span><h3>Review</h3><p>We assess the villa, audience fit, positioning, and marketing opportunity.</p></div>
+            <div class="process-step"><span>STEP 03</span><h3>Launch</h3><p>We agree the agency package and publish a focused property campaign.</p></div>
+            <div class="process-step"><span>STEP 04</span><h3>Connect</h3><p>We qualify enquiries and introduce serious prospective tenants to you.</p></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="testimonial" aria-label="Villa management client testimonial">
+    <section class="testimonial" aria-label="The Villa Managers agency promise">
       <div class="shell">
         <div class="testimonial-grid reveal">
           <img class="testimonial-image" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="Serene villa lounge with natural materials" loading="lazy">
           <div class="testimonial-copy">
-            <span class="eyebrow">Villa management review</span>
+            <span class="eyebrow">Our agency promise</span>
             <div class="quote-mark">“</div>
-            <blockquote>TVM transformed how we manage our Bali properties. Their attention to detail makes the entire experience feel personal and effortless.</blockquote>
-            <div class="quote-author"><strong>James W.</strong><span>Villa owner · Australia</span></div>
+            <blockquote>We market your villa and bring you qualified interest. You keep control of the property, the final tenant decision, and the rental agreement.</blockquote>
+            <div class="quote-author"><strong>Clear roles</strong><span>Focused marketing · Owner-led decisions</span></div>
           </div>
         </div>
       </div>
@@ -893,8 +898,8 @@
       <div class="contact-grid shell">
         <div class="contact-copy reveal">
           <span class="eyebrow">Begin a conversation</span>
-          <h2 id="contact-title">Which business can we help with?</h2>
-          <p>Choose The Villa Managers for property operations, or The Bali Furniture to purchase and customize furniture. Your enquiry goes directly to the right conversation.</p>
+          <h2 id="contact-title">Submit a villa or start an enquiry.</h2>
+          <p>Choose The Villa Managers to market a villa or find a longer-term Bali rental. Choose The Bali Furniture to purchase or customize furniture.</p>
           <ul class="contact-details">
             <li><small>WhatsApp</small><a href="https://wa.me/6282122922252" target="_blank" rel="noopener">+62 821 2292 2252</a></li>
             <li><small>Email</small><a href="mailto:hello@thevillamanagers.com">hello@thevillamanagers.com</a></li>
@@ -907,10 +912,19 @@
           <div class="field"><label for="last-name">Last name</label><input id="last-name" name="lastName" autocomplete="family-name"></div>
           <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
           <div class="field"><label for="phone">Phone / WhatsApp</label><input id="phone" name="phone" type="tel" autocomplete="tel"></div>
-          <div class="field field--full"><label for="interest">Choose a business</label><select id="interest" name="interest" required><option value="">Select villa management or furniture</option><optgroup label="The Villa Managers"><option>The Villa Managers — Villa management</option><option>The Villa Managers — Villa rental</option><option>The Villa Managers — Maintenance</option></optgroup><optgroup label="The Bali Furniture"><option>The Bali Furniture — Furniture order</option><option>The Bali Furniture — Custom furniture</option><option>The Bali Furniture — Styling</option></optgroup></select></div>
+          <div class="field field--full"><label for="interest">What can we help with?</label><select id="interest" name="interest" required><option value="">Select an enquiry type</option><optgroup label="The Villa Managers — Marketing Agency"><option>The Villa Managers — Submit a villa</option><option>The Villa Managers — Find a villa</option><option>The Villa Managers — Marketing partnership</option></optgroup><optgroup label="The Bali Furniture"><option>The Bali Furniture — Furniture order</option><option>The Bali Furniture — Custom furniture</option><option>The Bali Furniture — Styling</option></optgroup></select></div>
+          <div class="owner-fields" id="owner-fields" aria-hidden="true">
+            <div class="owner-fields-head"><strong>Tell us about your villa</strong><span>These details help us review its fit for monthly, yearly, or long-term marketing.</span></div>
+            <div class="field"><label for="villa-name">Villa name</label><input id="villa-name" name="villaName" autocomplete="organization"></div>
+            <div class="field"><label for="villa-location">Location in Bali</label><input id="villa-location" name="villaLocation" placeholder="Canggu, Uluwatu, Ubud…"></div>
+            <div class="field"><label for="rental-term">Preferred rental term</label><select id="rental-term" name="rentalTerm"><option value="">Choose a term</option><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
+            <div class="field"><label for="bedrooms">Bedrooms</label><input id="bedrooms" name="bedrooms" type="number" min="1" max="30" inputmode="numeric"></div>
+            <div class="field"><label for="available-from">Available from</label><input id="available-from" name="availableFrom" type="date"></div>
+            <div class="field"><label for="listing-link">Photos or current listing link</label><input id="listing-link" name="listingLink" type="url" placeholder="https://"></div>
+          </div>
           <div class="field field--full"><label for="message">Tell us what you need</label><textarea id="message" name="message" required></textarea></div>
           <button class="button" type="submit">Send via WhatsApp <span class="arrow">→</span></button>
-          <p class="form-note">Your enquiry is saved to TVM HQ, then opens in WhatsApp for review.</p>
+          <p class="form-note">Your enquiry is saved to TVM HQ, then opens in WhatsApp for review. Submitting does not guarantee representation.</p>
         </form>
       </div>
     </section>
@@ -921,9 +935,9 @@
       <div class="footer-main">
         <div class="footer-brand">
           <a class="brand" href="#top"><strong>TVM</strong><small>The Villa Managers</small></a>
-          <p>Two dedicated Bali businesses: property care by The Villa Managers and furniture sales by The Bali Furniture.</p>
+          <p>Two dedicated Bali businesses: villa marketing by The Villa Managers and furniture sales by The Bali Furniture.</p>
         </div>
-        <div class="footer-col"><h3>The Villa Managers</h3><ul><li><a href="#villas">Managed villas</a></li><li><a href="#management">Management services</a></li><li><a href="#services">Maintenance</a></li><li><a href="#about">About TVM</a></li></ul></div>
+        <div class="footer-col"><h3>The Villa Managers</h3><ul><li><a href="#villas">Featured villas</a></li><li><a href="#agency">Marketing agency</a></li><li><a href="#contact" data-interest="The Villa Managers — Submit a villa">Submit your villa</a></li><li><a href="#about">About TVM</a></li></ul></div>
         <div class="footer-col"><h3>The Bali Furniture</h3><ul><li><a href="#furniture">Living furniture</a></li><li><a href="#furniture">Dining furniture</a></li><li><a href="#furniture">Custom orders</a></li><li><a href="#contact" data-interest="The Bali Furniture — Furniture order">Request a quote</a></li></ul></div>
         <div class="footer-col"><h3>Contact</h3><ul><li><a href="https://wa.me/6282122922252" target="_blank" rel="noopener">WhatsApp</a></li><li><a href="mailto:hello@thevillamanagers.com">Email us</a></li><li><a href="#contact">Send an enquiry</a></li><li><a href="/afni/">Afni’s portfolio</a></li></ul></div>
       </div>
@@ -970,12 +984,30 @@
       document.querySelectorAll('.reveal').forEach(element => element.classList.add('visible'));
     }
 
+    const interestSelect = document.getElementById('interest');
+    const ownerFields = document.getElementById('owner-fields');
+    const ownerRequiredFields = [
+      document.getElementById('villa-name'),
+      document.getElementById('villa-location'),
+      document.getElementById('rental-term')
+    ];
+    const updateOwnerFields = () => {
+      const isOwnerSubmission = interestSelect.value === 'The Villa Managers — Submit a villa';
+      ownerFields.classList.toggle('visible', isOwnerSubmission);
+      ownerFields.setAttribute('aria-hidden', String(!isOwnerSubmission));
+      ownerRequiredFields.forEach(field => { field.required = isOwnerSubmission; });
+    };
+    interestSelect.addEventListener('change', updateOwnerFields);
+
     document.querySelectorAll('[data-villa]').forEach(card => {
       card.addEventListener('click', () => {
         const message = document.getElementById('message');
         const interest = document.getElementById('interest');
         if (message && !message.value) message.value = `I’d like to know more about ${card.dataset.villa}.`;
-        if (interest) interest.value = 'The Villa Managers — Villa rental';
+        if (interest) {
+          interest.value = 'The Villa Managers — Find a villa';
+          updateOwnerFields();
+        }
       });
     });
 
@@ -983,11 +1015,16 @@
       link.addEventListener('click', () => {
         const interest = document.getElementById('interest');
         const message = document.getElementById('message');
-        if (interest) interest.value = link.dataset.interest;
+        if (interest) {
+          interest.value = link.dataset.interest;
+          updateOwnerFields();
+        }
         if (message && !message.value) {
           message.value = link.dataset.interest.startsWith('The Bali Furniture')
             ? 'I’d like a furniture quotation. Please tell me about options, customization, and delivery.'
-            : 'I’d like to discuss villa management for my property.';
+            : link.dataset.interest === 'The Villa Managers — Submit a villa'
+              ? 'I’d like TVM to review and market my villa for a longer-term rental.'
+              : 'I’d like to discuss a Bali villa rental.';
         }
       });
     });
@@ -996,6 +1033,15 @@
       event.preventDefault();
       const data = new FormData(event.currentTarget);
       const fullName = `${data.get('firstName')} ${data.get('lastName') || ''}`.trim();
+      const ownerDetails = data.get('interest') === 'The Villa Managers — Submit a villa' ? [
+        data.get('villaName') ? `Villa: ${data.get('villaName')}` : '',
+        data.get('villaLocation') ? `Location: ${data.get('villaLocation')}` : '',
+        data.get('rentalTerm') ? `Rental term: ${data.get('rentalTerm')}` : '',
+        data.get('bedrooms') ? `Bedrooms: ${data.get('bedrooms')}` : '',
+        data.get('availableFrom') ? `Available from: ${data.get('availableFrom')}` : '',
+        data.get('listingLink') ? `Photos/listing: ${data.get('listingLink')}` : ''
+      ].filter(Boolean) : [];
+      const enquiryMessage = [data.get('message'), ...ownerDetails].filter(Boolean).join('\n');
       const text = [
         'Hello TVM,',
         '',
@@ -1004,7 +1050,7 @@
         `Email: ${data.get('email')}`,
         data.get('phone') ? `Phone: ${data.get('phone')}` : '',
         '',
-        data.get('message')
+        enquiryMessage
       ].filter(Boolean).join('\n');
       try {
         await fetch('/api/public/enquiries', {
@@ -1016,7 +1062,7 @@
             name: fullName,
             email: data.get('email'),
             phone: data.get('phone'),
-            message: data.get('message')
+            message: enquiryMessage
           })
         });
       } catch (_) {
@@ -1025,6 +1071,7 @@
       window.open(`https://wa.me/6282122922252?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     });
 
+    updateOwnerFields();
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
