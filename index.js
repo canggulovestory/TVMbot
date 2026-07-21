@@ -274,14 +274,58 @@ async function handleAdminApi(req, res, url) {
     if (!RECORD_TYPES.includes(collection)) {
       return sendJson(res, 422, { error: 'Unknown record type.' });
     }
-    const record = collection === 'tenancies'
-      ? await villaData.createTenancyBundle(body.record || {})
-      : await villaData.upsert(collection, body.record || {});
-    // Auto-book rent income when an installment is marked Paid
-    if (collection === 'installments' && record.status === 'Paid') {
-      await villaData.recordPaymentIncome(record).catch(err => console.error('[Finance] auto-income failed:', err.message));
+    try {
+      const record = collection === 'tenancies'
+        ? await villaData.createTenancyBundle(body.record || {})
+        : await villaData.upsert(collection, body.record || {});
+      // Auto-book rent income when an installment is marked Paid
+      if (collection === 'installments' && record.status === 'Paid') {
+        await villaData.recordPaymentIncome(record).catch(err => console.error('[Finance] auto-income failed:', err.message));
+      }
+      return sendJson(res, 201, { ok: true, record });
+    } catch (error) {
+      if (error.statusCode === 409) return sendJson(res, 409, { error: error.message });
+      throw error;
     }
-    return sendJson(res, 201, { ok: true, record });
+  }
+  if (url.pathname === '/api/admin/enquiries/status' && req.method === 'POST') {
+    const body = await readBody(req);
+    const id = clean(body.id, 80);
+    const status = clean(body.status, 20);
+    if (!['new', 'replied', 'won', 'lost'].includes(status)) {
+      return sendJson(res, 422, { error: 'Status must be new, replied, won, or lost.' });
+    }
+    enquiryWriteQueue = enquiryWriteQueue.then(async () => {
+      const enquiries = await readEnquiries();
+      const target = enquiries.find(item => item.id === id);
+      if (target) {
+        target.status = status;
+        const temp = `${ENQUIRIES_FILE}.tmp`;
+        await fs.writeFile(temp, JSON.stringify(enquiries, null, 2), { mode: 0o600 });
+        await fs.rename(temp, ENQUIRIES_FILE);
+      }
+      return target || null;
+    });
+    const updated = await enquiryWriteQueue;
+    if (!updated) return sendJson(res, 404, { error: 'Enquiry not found.' });
+    return sendJson(res, 200, { ok: true });
+  }
+  if (url.pathname === '/api/admin/villas/photo' && req.method === 'POST') {
+    const body = await readBody(req, 8 * 1024 * 1024); // photos are bigger than JSON
+    const id = clean(body.id, 80);
+    const match = String(body.image || '').match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/s);
+    if (!id || !match) return sendJson(res, 422, { error: 'Need villa id and a JPEG/PNG/WebP image.' });
+    const buffer = Buffer.from(match[2], 'base64');
+    if (buffer.length > 5 * 1024 * 1024) return sendJson(res, 413, { error: 'Image too large — keep it under 5 MB.' });
+    const fileName = `${id.replace(/[^\w-]/g, '')}.jpg`;
+    const repoDir = path.join(__dirname, 'website', 'villa-photos');
+    await fs.mkdir(repoDir, { recursive: true });
+    await fs.writeFile(path.join(repoDir, fileName), buffer);
+    // Also copy straight into the live web root so it serves immediately
+    await fs.mkdir('/root/tvm-website/villa-photos', { recursive: true }).catch(() => {});
+    await fs.writeFile(`/root/tvm-website/villa-photos/${fileName}`, buffer).catch(() => {});
+    const record = await villaData.upsert('villas', { id, photoUrl: `https://thevillamanagers.cloud/villa-photos/${fileName}` });
+    return sendJson(res, 200, { ok: true, photoUrl: record.photoUrl });
   }
   if (url.pathname === '/api/admin/records/delete' && req.method === 'POST') {
     const body = await readBody(req);

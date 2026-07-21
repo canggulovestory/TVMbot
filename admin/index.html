@@ -105,6 +105,14 @@
     .villa-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
     .villa-card:hover{transform:translateY(-3px);box-shadow:0 6px 12px rgba(27,24,19,.07),0 18px 40px rgba(27,24,19,.1)}
     .vc-photo{position:relative;height:130px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center}
+    .vc-photo>img,.vd-banner>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    /* Payments chart */
+    .bars{display:flex;gap:10px;align-items:flex-end;height:170px;padding:18px 18px 8px}
+    .bar-g{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;min-width:0}
+    .bar{border-radius:4px 4px 0 0;min-height:2px}
+    .bar.bin{background:#4f9066}
+    .bar.bout{background:#cf8b80}
+    .bar-lbl{text-align:center;color:var(--muted);font-size:.62rem;margin-top:6px;white-space:nowrap;overflow:hidden}
     .vc-photo .vc-initial{font-size:2.1rem;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.03em}
     .vc-photo .vc-status{position:absolute;top:12px;left:12px}
     .vc-photo .vc-arrow{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--ink)}
@@ -306,6 +314,12 @@
         <!-- PAYMENTS -->
         <section class="view" id="view-payments">
           <div class="page-head"><div><h2>Payments</h2><p>Every installment with follow-up, due date, grace period, and payout status.</p></div><button class="btn" data-open="installments">+ Add payment</button></div>
+          <div class="chips" id="pay-chips">
+            <button class="chip active" data-pfilter="">All</button>
+            <button class="chip" data-pfilter="unpaid">Unpaid</button>
+            <button class="chip" data-pfilter="overdue">Overdue</button>
+            <button class="chip" data-pfilter="payout">Payout pending</button>
+          </div>
           <div class="card table-wrap"><table><thead><tr><th>Installment</th><th>Villa / guest</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th>Proof</th><th></th></tr></thead><tbody id="t-payments"></tbody></table></div>
         </section>
 
@@ -329,6 +343,7 @@
             <div class="stat"><div class="s-ico">↓</div><div class="label">Expenses (this month)</div><div class="value" id="f-expense" style="font-size:1.25rem">—</div><div class="sub" id="f-expense-all"></div></div>
             <div class="stat"><div class="s-ico">Σ</div><div class="label">Net (this month)</div><div class="value" id="f-net" style="font-size:1.25rem">—</div><div class="sub" id="f-net-all"></div></div>
           </div>
+          <div class="card section-gap"><div class="card-head"><h3>Last 12 months — income vs expenses</h3></div><div class="bars" id="fin-bars"></div><div style="display:flex;gap:16px;padding:0 18px 16px;font-size:.74rem;color:var(--muted)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4f9066;margin-right:6px"></span>Income</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#cf8b80;margin-right:6px"></span>Expenses</span></div></div>
           <div class="card table-wrap"><table><thead><tr><th>Date</th><th>Villa</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Proof</th><th></th></tr></thead><tbody id="t-finance"></tbody></table></div>
         </section>
 
@@ -341,7 +356,7 @@
         <!-- ENQUIRIES -->
         <section class="view" id="view-enquiries">
           <div class="page-head"><div><h2>Enquiries</h2><p>Villa submissions and requests from the public websites.</p></div></div>
-          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
+          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th><th>Status</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
         </section>
 
         <!-- BOTS -->
@@ -389,6 +404,7 @@
       <div class="f"><label>Photos folder (Drive)</label><input name="photosFolderUrl" type="url"></div>
       <div class="f"><label>Public listing link</label><input name="listingUrl" type="url"></div>
       <div class="f full"><label>Owner agency agreement (Drive PDF)</label><input name="ownerAgreementUrl" type="url"></div>
+      <div class="f full"><label>Villa photo (JPG/PNG — shown on the card and villa page)</label><input type="file" name="photoFile" accept="image/jpeg,image/png,image/webp"></div>
       <div class="f full"><label>Marketing notes</label><textarea name="marketingNotes"></textarea></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villas">Cancel</button><button class="btn" type="submit">Save villa</button></div></form>
   </dialog>
@@ -557,7 +573,13 @@
     document.addEventListener('click',e=>{
       const g=e.target.closest('[data-goto]');if(g)return show(g.dataset.goto);
       const vn=e.target.closest('[data-villa-nav]');if(vn)return openVilla(vn.dataset.villaNav);
-      const ch=e.target.closest('.chip');if(ch&&ch.dataset.vfilter!==undefined){state._villaFilter=ch.dataset.vfilter;$$('#villa-chips .chip').forEach(c=>c.classList.toggle('active',c===ch));render()}});
+      const ch=e.target.closest('.chip');
+      if(ch&&ch.dataset.vfilter!==undefined){state._villaFilter=ch.dataset.vfilter;$$('#villa-chips .chip').forEach(c=>c.classList.toggle('active',c===ch));render()}
+      if(ch&&ch.dataset.pfilter!==undefined){state._payFilter=ch.dataset.pfilter;$$('#pay-chips .chip').forEach(c=>c.classList.toggle('active',c===ch));render()}});
+    document.addEventListener('change',async e=>{
+      if(e.target.matches('.enq-status')){
+        try{await api('/api/admin/enquiries/status',{method:'POST',body:JSON.stringify({id:e.target.dataset.enq,status:e.target.value})});toast('Enquiry updated.');await load()}
+        catch(err){toast(err.message)}}});
     $('#menu-toggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('open')});
     $('#scrim').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open')});
     $('#villa-back').addEventListener('click',()=>show('villas'));
@@ -626,11 +648,18 @@
       $$('[data-villa-select]').forEach(s=>{const v=s.value;s.innerHTML=vo;s.value=v});$$('[data-tenancy-select]').forEach(s=>{const v=s.value;s.innerHTML=so;s.value=v})}
 
     // ── Save / actions ──
-    function formData(f){const d=Object.fromEntries(new FormData(f));f.querySelectorAll('input[type=checkbox]').forEach(i=>d[i.name]=i.checked);return d}
+    function formData(f){const d=Object.fromEntries([...new FormData(f).entries()].filter(([k,v])=>!(v instanceof File)));f.querySelectorAll('input[type=checkbox]').forEach(i=>d[i.name]=i.checked);return d}
     async function save(coll,rec){await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:rec})});await load()}
+    function resizeImage(file,maxW=1600){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,maxW/img.width);const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};img.onerror=reject;img.src=URL.createObjectURL(file)})}
     ['villas','tenancies','installments','deposits','documents','transactions','villaTasks'].forEach(coll=>{
       $(`#form-${coll}`).addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
-        try{await save(coll,formData(e.target));$(`#dlg-${coll}`).close();toast('Saved.')}catch(err){toast(err.message)}finally{btn.disabled=false}})});
+        try{
+          const res=await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:formData(e.target)})});
+          if(coll==='villas'){const fi=e.target.querySelector('input[type=file]');const file=fi&&fi.files[0];
+            if(file){toast('Uploading photo…');const image=await resizeImage(file);
+              await api('/api/admin/villas/photo',{method:'POST',body:JSON.stringify({id:res.record.id,image})})}}
+          await load();$(`#dlg-${coll}`).close();toast('Saved.')
+        }catch(err){toast(err.message)}finally{btn.disabled=false}})});
     $('#form-task').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/admin/tasks',{method:'POST',body:JSON.stringify(formData(e.target))});$('#dlg-task').close();await load();toast('Task added.')}catch(err){toast(err.message)}});
 
     document.addEventListener('click',async e=>{
@@ -657,7 +686,7 @@
       const docs=d.documents.filter(x=>x.villaId===v.id);
       const activeStay=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
       const nextPay=pays.find(p=>p.status!=='Paid');
-      $('#vd-head').innerHTML=`<div class="vd-banner"><span class="vb-initial">${esc(initials(v.name))}</span></div><div class="vd-content"><div class="vd-row">
+      $('#vd-head').innerHTML=`<div class="vd-banner">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="">`:`<span class="vb-initial">${esc(initials(v.name))}</span>`}</div><div class="vd-content"><div class="vd-row">
         <div class="vd-id"><div><h2>${esc(v.name)}</h2><p>${esc(v.code||'No code')} · ${esc(v.location||'Location not set')}</p></div></div>
         <div style="display:flex;gap:8px;align-items:center">${badge(v.status)}<button class="btn secondary sm" data-edit="villas:${esc(v.id)}">Edit villa</button><button class="btn danger sm" data-del="villas:${esc(v.id)}">Delete</button></div></div>
         <div class="vd-facts">
@@ -750,7 +779,7 @@
       $('#villa-cards').innerHTML=d.villas.filter(v=>!vf||v.status===vf).map(v=>{const stays=d.tenancies.filter(t=>t.villaId===v.id);const cur=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
         const next=d.installments.filter(p=>p.villaId===v.id&&p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];
         return`<div class="villa-card" data-villa-open="${esc(v.id)}">
-          <div class="vc-photo"><span class="vc-initial">${esc(initials(v.name))}</span><span class="vc-status">${badge(v.status)}</span><span class="vc-arrow">↗</span></div>
+          <div class="vc-photo">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="" loading="lazy">`:`<span class="vc-initial">${esc(initials(v.name))}</span>`}<span class="vc-status">${badge(v.status)}</span><span class="vc-arrow">↗</span></div>
           <div class="vc-body">
             <div class="vc-title"><strong>${esc(v.name)}</strong><span class="vc-price">${money(v.monthlyRate,v.currency)}<small style="color:var(--muted);font-weight:400">/mo</small></span></div>
             <div class="vc-loc">${esc(v.location||v.code||'Location not set')}</div>
@@ -765,15 +794,23 @@
         <td>${next?`${money(next.amount,next.currency)}<span class="sub">due ${fdate(next.dueDate)}</span>`:'—'}</td>
         <td>${flink(t.contractUrl,'Contract')}</td><td>${badge(t.bookingStatus)}</td>
         <td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">No stays yet — click “+ Add stay”.</td></tr>';
-      // payments table
-      $('#t-payments').innerHTML=d.installments.slice().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
+      // payments table (with filter)
+      const pf=state._payFilter||'';
+      const plist=d.installments.slice().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).filter(p=>
+        !pf||(pf==='unpaid'&&p.status!=='Paid')||(pf==='overdue'&&['Overdue','Late'].includes(p.status))||(pf==='payout'&&p.status==='Paid'&&!['Sent','Not applicable'].includes(p.ownerPayoutStatus||'')));
+      $('#t-payments').innerHTML=plist.map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
         return`<tr><td><strong>${esc(p.code||p.period||'—')}</strong><span class="sub">${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td>
         <td>${esc(v.name||'—')}<span class="sub">${esc(t.guestName||'')}</span></td>
         <td>${money(p.amount,p.currency)}${p.lateFee?`<span class="sub">+ late fee ${money(p.lateFee,p.currency)}</span>`:''}</td>
         <td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}<span class="sub">${p.gracePeriodDays||0}-day grace</span></td>
         <td>${badge(p.status)}${p.paidDate?`<span class="sub">paid ${fdate(p.paidDate)}</span>`:''}</td>
         <td>${flink(p.proofUrl,'Proof')}</td>
-        <td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button><button class="btn danger sm" data-del="installments:${esc(p.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No payments yet. Add a guest stay to auto-generate the schedule.</td></tr>';
+        <td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button><button class="btn danger sm" data-del="installments:${esc(p.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No payments match this filter.</td></tr>';
+      // finance 12-month chart
+      (()=>{const now=new Date();const months=[];for(let i=11;i>=0;i-=1){const dt=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`,lbl:dt.toLocaleDateString('en-GB',{month:'short'})})}
+        const sums=months.map(m=>{const tx=d.transactions.filter(x=>(x.date||'').startsWith(m.key));return{...m,inc:tx.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0),0),out:tx.filter(x=>x.type==='Expense').reduce((s,x)=>s+Number(x.amount||0),0)}});
+        const max=Math.max(1,...sums.map(s=>Math.max(s.inc,s.out)));
+        $('#fin-bars').innerHTML=sums.map(s=>`<div class="bar-g" title="${s.lbl}: +${money(s.inc)} / −${money(s.out)}"><div class="bar bin" style="height:${Math.round(s.inc/max*120)}px"></div><div class="bar bout" style="height:${Math.round(s.out/max*120)}px"></div><div class="bar-lbl">${s.lbl}</div></div>`).join('')})();
       // deposits table
       $('#t-deposits').innerHTML=d.deposits.map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
         return`<tr><td><strong>${esc(v.name||'—')}</strong><span class="sub">${esc(t.guestName||'')}</span></td>
@@ -802,7 +839,10 @@
         return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'—')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — click “+ Add transaction”, or mark a payment paid to auto-book rent income.</td></tr>';
       // tasks & enquiries
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
-      $('#t-enquiries').innerHTML=state.enquiries.map(x=>`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:420px">${esc(x.message)}</td><td><div class="row-actions"><button class="btn sm" data-enquiry-stay="${esc(x.id)}">→ Create stay</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No enquiries yet.</td></tr>';
+      $('#t-enquiries').innerHTML=state.enquiries.map(x=>{const wa=String(x.phone||'').replace(/\D/g,'');
+        return`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:380px">${esc(x.message)}</td>
+        <td><select class="enq-status" data-enq="${esc(x.id)}" style="padding:5px 8px;border:1px solid #ddd5c8;border-radius:8px;font-size:.76rem">${['new','replied','won','lost'].map(s=>`<option ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+        <td><div class="row-actions">${wa?`<a class="btn sm" style="text-decoration:none" href="https://wa.me/${wa}?text=${encodeURIComponent('Hi '+(x.name||'')+', thanks for reaching out to The Villa Managers!')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button class="btn secondary sm" data-enquiry-stay="${esc(x.id)}">→ Stay</button></div></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No enquiries yet.</td></tr>';
       // bots
       const wa=state.bots.whatsapp||{},tg=state.bots.telegram||{};
       $('#wa-badge').className=`badge ${wa.connected?'green':'red'}`;$('#wa-badge').textContent=wa.connected?'Connected':'Offline';

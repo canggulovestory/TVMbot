@@ -11,7 +11,7 @@ const path = require('path');
 const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks'];
 const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC', transactions: 'TRX', villaTasks: 'VTK' };
 const FIELDS = {
-  villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes'],
+  villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes', 'photoUrl'],
   tenancies: ['code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'nationality', 'idDocumentUrl', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'guestCount', 'rentAmount', 'currency', 'paymentFrequency', 'source', 'agencyCommissionPercent', 'contractUrl', 'notes'],
   installments: ['code', 'tenancyId', 'villaId', 'installmentNumber', 'installmentTotal', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'gracePeriodDays', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'lateFee', 'ownerPayoutStatus'],
   deposits: ['code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'deductionNotes', 'refundDate', 'refundProofUrl', 'inventoryUrl'],
@@ -156,8 +156,29 @@ function stayLength(checkIn, checkOut) {
   return nights >= 28 ? `${months} month${months === 1 ? '' : 's'} · ${nights} nights` : `${nights} night${nights === 1 ? '' : 's'}`;
 }
 
+/** Throws 409 if the requested stay overlaps an existing non-cancelled stay at the same villa. */
+async function assertNoOverlap(input) {
+  const villaId = clean(input.villaId, 80);
+  const selfId = clean(input.id, 80);
+  const checkIn = clean(input.checkIn, 20);
+  const checkOut = clean(input.checkOut, 20);
+  if (!villaId || !checkIn || !checkOut) return;
+  const store = await read();
+  const clash = store.tenancies.find(t =>
+    t.villaId === villaId && t.id !== selfId &&
+    !['Cancelled', 'Enquiry', 'Checked-out'].includes(t.bookingStatus) &&
+    t.checkIn && t.checkOut &&
+    checkIn < t.checkOut && t.checkIn < checkOut);
+  if (clash) {
+    const err = new Error(`Date conflict: ${clash.guestName || clash.code} is already booked at this villa ${clash.checkIn} → ${clash.checkOut}. Adjust the dates or cancel the other stay first.`);
+    err.statusCode = 409;
+    throw err;
+  }
+}
+
 async function createTenancyBundle(input) {
   const isNew = !clean(input.id, 80);
+  await assertNoOverlap(input);
   const tenancy = await upsert('tenancies', input);
   const firstDueDate = clean(input.firstDueDate, 20) || tenancy.checkIn;
   const frequency = tenancy.paymentFrequency || 'Monthly';
