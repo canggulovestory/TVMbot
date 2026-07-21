@@ -134,7 +134,7 @@ async function readEnquiries() {
 }
 
 function saveEnquiry(input, req) {
-  enquiryWriteQueue = enquiryWriteQueue.then(async () => {
+  const task = enquiryWriteQueue.then(async () => {
     await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
     const enquiries = await readEnquiries();
     const record = {
@@ -156,7 +156,8 @@ function saveEnquiry(input, req) {
     await fs.rename(temp, ENQUIRIES_FILE);
     return record;
   });
-  return enquiryWriteQueue;
+  enquiryWriteQueue = task.catch(() => {}); // keep the queue healthy if a write fails
+  return task;
 }
 
 function loginRateLimited(ip) {
@@ -295,7 +296,7 @@ async function handleAdminApi(req, res, url) {
     if (!['new', 'replied', 'won', 'lost'].includes(status)) {
       return sendJson(res, 422, { error: 'Status must be new, replied, won, or lost.' });
     }
-    enquiryWriteQueue = enquiryWriteQueue.then(async () => {
+    const task = enquiryWriteQueue.then(async () => {
       const enquiries = await readEnquiries();
       const target = enquiries.find(item => item.id === id);
       if (target) {
@@ -306,7 +307,8 @@ async function handleAdminApi(req, res, url) {
       }
       return target || null;
     });
-    const updated = await enquiryWriteQueue;
+    enquiryWriteQueue = task.catch(() => {});
+    const updated = await task;
     if (!updated) return sendJson(res, 404, { error: 'Enquiry not found.' });
     return sendJson(res, 200, { ok: true });
   }
@@ -364,6 +366,18 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/public/enquiries' && req.method === 'POST') {
       return await handlePublicEnquiry(req, res);
+    }
+    if (url.pathname === '/api/public/villas' && req.method === 'GET') {
+      // Sanitized public list — no owner data, no rates, no internal notes.
+      const data = await villaData.getAll();
+      const publicVillas = data.villas
+        .filter(v => ['Available', 'Booked'].includes(v.status))
+        .map(v => ({
+          name: v.name, location: v.location || '', bedrooms: v.bedrooms || 0,
+          bathrooms: v.bathrooms || 0, pool: !!v.pool, maxGuests: v.maxGuests || 0,
+          status: v.status, photoUrl: v.photoUrl || '',
+        }));
+      return sendJson(res, 200, publicVillas, { 'Cache-Control': 'public, max-age=300' });
     }
     if (url.pathname.startsWith('/api/admin/')) {
       return await handleAdminApi(req, res, url);
@@ -433,7 +447,7 @@ async function backupData() {
     const { execFile } = require('child_process');
     const backupDir = '/root/tvm-backups';
     const stamp = new Date().toISOString().slice(0, 10);
-    await fs.mkdir(backupDir, { recursive: true, mode: 0o700 });
+    await fs.mkdir(backupDir, { recursive: true, mode: 0o750 }); // group-readable for n8n off-site backup
     await new Promise((resolve, reject) => {
       execFile('tar', ['-czf', `${backupDir}/data-${stamp}.tar.gz`, '-C', DATA_DIR, '.'],
         err => err ? reject(err) : resolve());

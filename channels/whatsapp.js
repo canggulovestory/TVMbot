@@ -85,7 +85,14 @@ async function createConnection() {
       } else {
         status = 'logged_out';
         qrAvailable = false;
-        console.log('[WA] Logged out — pair again from Admin HQ');
+        // Stale credentials block re-pairing — clear them so the next
+        // "Get pairing code" from Admin HQ starts a clean session.
+        try {
+          require('fs').rmSync(process.env.WA_SESSION_PATH || './wa-session', { recursive: true, force: true });
+          console.log('[WA] Logged out — stale session cleared, pair again from Admin HQ');
+        } catch (error) {
+          console.log('[WA] Logged out — could not clear session:', error.message);
+        }
       }
     }
   });

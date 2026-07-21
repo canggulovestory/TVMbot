@@ -188,6 +188,12 @@ async function createTenancyBundle(input) {
   const amount = frequency === 'Upfront' ? tenancy.rentAmount * months : frequency === 'Quarterly' ? tenancy.rentAmount * 3 : tenancy.rentAmount;
 
   const shouldGenerateSchedule = (isNew && input.generateSchedule !== false && input.generateSchedule !== 'false') || input.generateSchedule === true || input.generateSchedule === 'true';
+  // Regenerating for an existing stay: clear its UNPAID installments first so we never duplicate the schedule.
+  if (shouldGenerateSchedule && !isNew) {
+    await mutate(store => {
+      store.installments = store.installments.filter(item => !(item.tenancyId === tenancy.id && item.status !== 'Paid'));
+    });
+  }
   if (shouldGenerateSchedule && tenancy.rentAmount > 0 && firstDueDate) {
     for (let index = 0; index < count; index += 1) {
       const dueDate = addMonths(firstDueDate, index * step);

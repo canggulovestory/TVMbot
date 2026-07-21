@@ -1128,5 +1128,26 @@
     updateOwnerFields();
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
+<script>
+/* Live villa photos: when a photo is uploaded in the TVM dashboard, it appears here automatically. */
+fetch('/api/public/villas').then(r => r.json()).then(villas => {
+  document.querySelectorAll('.villa-card').forEach(card => {
+    const cardName = (card.dataset.villa || '').toLowerCase();
+    const match = villas.find(v => {
+      const n = v.name.toLowerCase();
+      return n === cardName || cardName.includes(n) || n.includes(cardName);
+    });
+    if (!match) return;
+    if (match.photoUrl) {
+      const img = card.querySelector('img');
+      if (img) { img.src = match.photoUrl; img.srcset = ''; }
+    }
+    if (match.status === 'Booked') {
+      const meta = card.querySelector('.villa-meta p');
+      if (meta && !/booked/i.test(meta.textContent)) meta.textContent += ' · Currently booked';
+    }
+  });
+}).catch(() => {});
+</script>
 </body>
 </html>

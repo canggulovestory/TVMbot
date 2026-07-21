@@ -4,7 +4,8 @@
  */
 'use strict';
 
-const TelegramBot = require('node-telegram-bot-api').default;
+const TelegramBotModule = require('node-telegram-bot-api');
+const TelegramBot = TelegramBotModule.default || TelegramBotModule; // package exports the class directly (CJS)
 const brain = require('../brain');
 
 let bot = null;
