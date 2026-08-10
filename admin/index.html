@@ -193,6 +193,8 @@
     .toast{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;align-items:center;gap:14px;background:var(--espresso);color:#fff;padding:12px 18px;border-radius:11px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
     .toast.show{opacity:1;transform:none;pointer-events:auto}
     .toast button{background:var(--gold);border:0;color:var(--espresso);font:600 .78rem inherit;padding:6px 13px;border-radius:8px;cursor:pointer}
+    .role-staff .admin-only{display:none!important}
+    .role-staff .btn.danger{display:none!important}
     /* ── Quick actions ── */
     .qa-wrap{position:relative}
     .qa-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;display:none;min-width:210px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px rgba(27,24,19,.16);padding:7px;flex-direction:column}
@@ -271,8 +273,10 @@
         <button data-view="tasks"><i class="icon">✓</i>Tasks<span class="count" id="n-tasks">0</span></button>
         <button data-view="enquiries"><i class="icon">✉</i>Enquiries<span class="count" id="n-enquiries">0</span></button>
         <button data-view="bots"><i class="icon">◎</i>Bots</button>
+        <button data-view="team" class="admin-only"><i class="icon">👥</i>Team</button>
+        <button data-view="activity" class="admin-only"><i class="icon">🕐</i>Activity</button>
       </nav>
-      <div class="sidebar-foot">Signed in as <strong>afni</strong><br><a href="#" id="logout">Sign out</a></div>
+      <div class="sidebar-foot"><span id="foot-user">Signed in</span><br><a href="#" id="logout">Sign out</a></div>
     </aside>
 
     <main>
@@ -405,6 +409,27 @@
         <section class="view" id="view-enquiries">
           <div class="page-head"><div><h2>Enquiries</h2><p>Villa submissions and requests from the public websites.</p></div></div>
           <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th><th>Status</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
+        </section>
+
+        <!-- TEAM (admin) -->
+        <section class="view" id="view-team">
+          <div class="page-head"><div><h2>Team</h2><p>Who can sign in, and what they can do. Staff can work with everything except deleting records and managing users.</p></div></div>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Accounts</h3></div><div class="table-wrap"><table><thead><tr><th>User</th><th>Role</th><th>Created</th><th></th></tr></thead><tbody id="t-users"></tbody></table></div></div>
+            <div class="card"><div class="card-head"><h3>Add account</h3></div><form id="form-user" style="display:grid;gap:12px;padding:18px">
+              <div class="f"><label>Username</label><input name="username" required pattern="[A-Za-z0-9_.-]{3,30}" placeholder="e.g. syifa"></div>
+              <div class="f"><label>Full name</label><input name="name" placeholder="Syifa"></div>
+              <div class="f"><label>Password (min 8 chars)</label><input name="password" type="password" required minlength="8"></div>
+              <div class="f"><label>Role</label><select name="role"><option value="staff">Staff — everything except delete & team</option><option value="admin">Admin — full access</option></select></div>
+              <button class="btn" type="submit">Create account</button>
+            </form></div>
+          </div>
+        </section>
+
+        <!-- ACTIVITY (admin) -->
+        <section class="view" id="view-activity">
+          <div class="page-head"><div><h2>Activity</h2><p>Every action, by whom, when — the audit trail.</p></div></div>
+          <div class="card table-wrap"><table><thead><tr><th>When</th><th>User</th><th>Action</th><th>Detail</th></tr></thead><tbody id="t-audit"></tbody></table></div>
         </section>
 
         <!-- BOTS -->
@@ -644,11 +669,12 @@
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
 
     // ── Navigation ──
-    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Finance',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots'};
+    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Finance',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots',team:'Team',activity:'Activity'};
     function show(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
       $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
       $$('#bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
-      $('#page-title').textContent=TITLES[name]||name;$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');$('#search').value='';applySearch('');scrollTo(0,0)}
+      $('#page-title').textContent=TITLES[name]||name;$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');$('#search').value='';applySearch('');scrollTo(0,0);
+      if(name==='team')loadTeam();if(name==='activity')loadActivity()}
     $$('.nav button[data-view]').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.view);if(b.dataset.view==='villas')$('#nav-villas-group').classList.add('open')}));
     document.addEventListener('click',e=>{
       const g=e.target.closest('[data-goto]');if(g)return show(g.dataset.goto);
@@ -1007,7 +1033,19 @@
     $('#logout').addEventListener('click',async e=>{e.preventDefault();await api('/api/admin/logout',{method:'POST'});location.href='/admin/login'});
     $('#refresh').addEventListener('click',()=>load());
 
-    async function load(){try{const d=await api('/api/admin/overview');Object.assign(state,d);render();$('#updated').textContent=`Updated ${new Date(d.generatedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+    async function loadTeam(){try{const users=await api('/api/admin/users');
+      $('#t-users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.name||u.username)}</strong><span class="sub">${esc(u.username)}</span></td><td>${badge(u.role==='admin'?'Paid':'Scheduled').replace(/>(.*?)</,`>${esc(u.role)}<`)}</td><td>${fdate(u.createdAt)}</td><td><div class="row-actions">${u.username!==(state.session?.user)?`<button class="btn danger sm" data-user-del="${esc(u.username)}">Remove</button>`:'<span class="sub">you</span>'}</div></td></tr>`).join('')}catch(e){toast(e.message)}}
+    async function loadActivity(){try{const rows=await api('/api/admin/audit');
+      $('#t-audit').innerHTML=rows.map(r=>`<tr><td style="white-space:nowrap">${new Date(r.at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td><strong>${esc(r.user)}</strong></td><td>${esc(r.action)}</td><td style="max-width:380px">${esc(r.detail)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No activity yet.</td></tr>'}catch(e){toast(e.message)}}
+    $('#form-user').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/admin/users',{method:'POST',body:JSON.stringify(formData(e.target))});e.target.reset();toast('Account created.');loadTeam()}catch(err){toast(err.message)}});
+    document.addEventListener('click',async e=>{const b=e.target.closest('[data-user-del]');if(!b)return;
+      if(confirm(`Remove account "${b.dataset.userDel}"?`)){try{await api('/api/admin/users/delete',{method:'POST',body:JSON.stringify({username:b.dataset.userDel})});toast('Account removed.');loadTeam()}catch(err){toast(err.message)}}});
+    async function load(){try{const d=await api('/api/admin/overview');Object.assign(state,d);
+      if(d.session){document.body.classList.toggle('role-staff',d.session.role!=='admin');
+        $('#foot-user').innerHTML=`Signed in as <strong>${esc(d.session.name||d.session.user)}</strong> · ${esc(d.session.role)}`;
+        $('.avatar').textContent=(d.session.name||d.session.user||'?')[0].toUpperCase();
+        $('#hello').textContent=`Welcome back, ${esc(d.session.name||d.session.user)} 👋`}
+      render();$('#updated').textContent=`Updated ${new Date(d.generatedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
       if(d.errors?.length)toast(`Some data could not load: ${d.errors.join(', ')}`)}catch(err){toast(err.message)}}
     load();setInterval(load,60000);
   </script>

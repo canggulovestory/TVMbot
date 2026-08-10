@@ -14,6 +14,8 @@ const path = require('path');
 const cron = require('node-cron');
 const notion = require('./notion');
 const assistant = require('./assistant');
+const authUsers = require('./auth-users');
+const audit = require('./audit');
 const brain = require('./brain');
 const villaData = require('./villa-data');
 const whatsapp = require('./channels/whatsapp');
@@ -84,20 +86,28 @@ function signSession(payload) {
 }
 
 function verifySession(token) {
-  if (!token || !ADMIN_SESSION_SECRET || !token.includes('.')) return false;
+  if (!token || !ADMIN_SESSION_SECRET || !token.includes('.')) return null;
   const [encoded, signature] = token.split('.');
   const expected = crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update(encoded).digest('base64url');
-  if (!safeEqual(signature, expected)) return false;
+  if (!safeEqual(signature, expected)) return null;
   try {
     const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
-    return payload.user === ADMIN_USERNAME && payload.exp > Date.now();
+    return payload.exp > Date.now() ? payload : null;
   } catch (_) {
-    return false;
+    return null;
   }
 }
 
-function isAuthenticated(req) {
-  return verifySession(parseCookies(req)[SESSION_COOKIE]);
+/** Returns the session payload {user, role, name} or null. Revokes sessions of deleted users. */
+async function getSession(req) {
+  const payload = verifySession(parseCookies(req)[SESSION_COOKIE]);
+  if (!payload) return null;
+  if (!(await authUsers.exists(payload.user))) return null;
+  return payload;
+}
+
+async function isAuthenticated(req) {
+  return !!(await getSession(req));
 }
 
 function sessionCookie(value, maxAge = SESSION_AGE_SECONDS) {
@@ -221,17 +231,19 @@ async function handlePublicEnquiry(req, res) {
 async function handleAdminApi(req, res, url) {
   if (url.pathname === '/api/admin/login' && req.method === 'POST') {
     const ip = clean((req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0], 80);
-    if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+    if (!ADMIN_SESSION_SECRET) {
       return sendJson(res, 503, { error: 'Admin access has not been configured.' });
     }
     if (loginRateLimited(ip)) return sendJson(res, 429, { error: 'Too many attempts. Try again later.' });
     const body = await readBody(req);
-    if (!safeEqual(body.username || '', ADMIN_USERNAME) || !safeEqual(body.password || '', ADMIN_PASSWORD)) {
+    const account = await authUsers.verify(body.username, body.password);
+    if (!account) {
       recordLoginFailure(ip);
       return sendJson(res, 401, { error: 'Incorrect username or password.' });
     }
     loginAttempts.delete(ip);
-    const token = signSession({ user: ADMIN_USERNAME, exp: Date.now() + SESSION_AGE_SECONDS * 1000, nonce: crypto.randomUUID() });
+    const token = signSession({ user: account.username, role: account.role, name: account.name, exp: Date.now() + SESSION_AGE_SECONDS * 1000, nonce: crypto.randomUUID() });
+    audit.add(account.username, 'signed in', `role ${account.role}`);
     return sendJson(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(token) });
   }
 
@@ -239,13 +251,57 @@ async function handleAdminApi(req, res, url) {
     return sendJson(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie('', 0) });
   }
 
-  if (!isAuthenticated(req)) return sendJson(res, 401, { error: 'Authentication required.' });
+  const session = await getSession(req);
+  if (!session) return sendJson(res, 401, { error: 'Authentication required.' });
+  const requireAdmin = () => session.role === 'admin';
 
   if (url.pathname === '/api/admin/session' && req.method === 'GET') {
-    return sendJson(res, 200, { authenticated: true, user: ADMIN_USERNAME });
+    return sendJson(res, 200, { authenticated: true, user: session.user, role: session.role, name: session.name });
   }
   if (url.pathname === '/api/admin/overview' && req.method === 'GET') {
-    return sendJson(res, 200, await adminOverview());
+    const overview = await adminOverview();
+    overview.session = { user: session.user, role: session.role, name: session.name };
+    return sendJson(res, 200, overview);
+  }
+
+  // ── Team management (admin only) ──
+  if (url.pathname === '/api/admin/users' && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    return sendJson(res, 200, await authUsers.listUsers());
+  }
+  if (url.pathname === '/api/admin/users' && req.method === 'POST') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    const body = await readBody(req);
+    try {
+      const user = await authUsers.addUser(body);
+      audit.add(session.user, 'added user', `${user.username} (${user.role})`);
+      return sendJson(res, 201, { ok: true, user });
+    } catch (error) { return sendJson(res, 422, { error: error.message }); }
+  }
+  if (url.pathname === '/api/admin/users/delete' && req.method === 'POST') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    const body = await readBody(req);
+    if (clean(body.username, 40).toLowerCase() === session.user) return sendJson(res, 422, { error: 'You cannot delete your own account.' });
+    try {
+      const removed = await authUsers.removeUser(body.username);
+      if (!removed) return sendJson(res, 404, { error: 'User not found.' });
+      audit.add(session.user, 'removed user', removed.username);
+      return sendJson(res, 200, { ok: true });
+    } catch (error) { return sendJson(res, 422, { error: error.message }); }
+  }
+  if (url.pathname === '/api/admin/users/password' && req.method === 'POST') {
+    const body = await readBody(req);
+    const target = clean(body.username, 40).toLowerCase() || session.user;
+    if (target !== session.user && !requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    try {
+      await authUsers.changePassword(target, body.password);
+      audit.add(session.user, 'changed password', target === session.user ? 'own account' : `for ${target}`);
+      return sendJson(res, 200, { ok: true });
+    } catch (error) { return sendJson(res, 422, { error: error.message }); }
+  }
+  if (url.pathname === '/api/admin/audit' && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    return sendJson(res, 200, await audit.list(300));
   }
   if (url.pathname === '/api/admin/tasks' && req.method === 'POST') {
     const body = await readBody(req);
@@ -256,16 +312,19 @@ async function handleAdminApi(req, res, url) {
       dueDate: clean(body.dueDate, 20) || undefined,
       projectId: clean(body.projectId, 80) || undefined,
     });
+    audit.add(session.user, 'added task', task.name);
     return sendJson(res, 201, { ok: true, task });
   }
   if (url.pathname === '/api/admin/tasks/complete' && req.method === 'POST') {
     const body = await readBody(req);
     await notion.completeTaskById(clean(body.id, 80));
+    audit.add(session.user, 'completed task', clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
   if (url.pathname === '/api/admin/payments/paid' && req.method === 'POST') {
     const body = await readBody(req);
     await notion.markPaymentPaidById(clean(body.id, 80));
+    audit.add(session.user, 'marked legacy payment paid', clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
   const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks'];
@@ -283,6 +342,7 @@ async function handleAdminApi(req, res, url) {
       if (collection === 'installments' && record.status === 'Paid') {
         await villaData.recordPaymentIncome(record).catch(err => console.error('[Finance] auto-income failed:', err.message));
       }
+      audit.add(session.user, `saved ${collection.slice(0, -1)}`, record.name || record.guestName || record.title || record.code || record.description || record.id);
       return sendJson(res, 201, { ok: true, record });
     } catch (error) {
       if (error.statusCode === 409) return sendJson(res, 409, { error: error.message });
@@ -310,6 +370,7 @@ async function handleAdminApi(req, res, url) {
     enquiryWriteQueue = task.catch(() => {});
     const updated = await task;
     if (!updated) return sendJson(res, 404, { error: 'Enquiry not found.' });
+    audit.add(session.user, 'enquiry status', `${updated.name || id} -> ${status}`);
     return sendJson(res, 200, { ok: true });
   }
   if (url.pathname === '/api/admin/villas/photo' && req.method === 'POST') {
@@ -327,9 +388,11 @@ async function handleAdminApi(req, res, url) {
     await fs.mkdir('/root/tvm-website/villa-photos', { recursive: true }).catch(() => {});
     await fs.writeFile(`/root/tvm-website/villa-photos/${fileName}`, buffer).catch(() => {});
     const record = await villaData.upsert('villas', { id, photoUrl: `https://thevillamanagers.cloud/villa-photos/${fileName}` });
+    audit.add(session.user, 'uploaded villa photo', record.name || id);
     return sendJson(res, 200, { ok: true, photoUrl: record.photoUrl });
   }
   if (url.pathname === '/api/admin/records/delete' && req.method === 'POST') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Only admins can delete records.' });
     const body = await readBody(req);
     const collection = clean(body.collection, 40);
     if (!RECORD_TYPES.includes(collection)) {
@@ -338,6 +401,7 @@ async function handleAdminApi(req, res, url) {
     try {
       const removed = await villaData.remove(collection, clean(body.id, 80));
       if (!removed) return sendJson(res, 404, { error: 'Record not found.' });
+      audit.add(session.user, `deleted ${collection.slice(0, -1)}`, removed.name || removed.guestName || removed.title || removed.code || removed.id);
       return sendJson(res, 200, { ok: true });
     } catch (error) {
       if (error.statusCode === 409) return sendJson(res, 409, { error: error.message });
@@ -383,11 +447,11 @@ const server = http.createServer(async (req, res) => {
       return await handleAdminApi(req, res, url);
     }
     if ((url.pathname === '/admin/login' || url.pathname === '/admin/login/') && req.method === 'GET') {
-      if (isAuthenticated(req)) return redirect(res, '/admin/');
+      if (await isAuthenticated(req)) return redirect(res, '/admin/');
       return await sendHtml(res, 'login.html');
     }
     if ((url.pathname === '/admin' || url.pathname === '/admin/') && req.method === 'GET') {
-      if (!isAuthenticated(req)) return redirect(res, '/admin/login');
+      if (!(await isAuthenticated(req))) return redirect(res, '/admin/login');
       return await sendHtml(res, 'index.html');
     }
     return sendJson(res, 404, { error: 'Not found.' });
@@ -466,6 +530,8 @@ async function boot() {
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
   villaData.init(DATA_DIR);
   assistant.init(DATA_DIR);
+  audit.init(DATA_DIR);
+  await authUsers.init(DATA_DIR);
   notion.init();
   brain.init();
   if (process.env.DISABLE_CHANNELS !== 'true') {
