@@ -440,7 +440,11 @@ const server = http.createServer(async (req, res) => {
         .map(v => ({
           name: v.name, location: v.location || '', bedrooms: v.bedrooms || 0,
           bathrooms: v.bathrooms || 0, pool: !!v.pool, maxGuests: v.maxGuests || 0,
-          status: v.status, photoUrl: v.photoUrl || '',
+          status: v.status, photoUrl: v.photoUrl || '', facilities: v.facilities || '',
+          // Sanitized availability: date ranges only, never guest details.
+          bookedRanges: data.tenancies
+            .filter(t => t.villaId === v.id && !['Cancelled', 'Enquiry'].includes(t.bookingStatus) && t.checkIn && t.checkOut)
+            .map(t => ({ from: t.checkIn, to: t.checkOut })),
         }));
       return sendJson(res, 200, publicVillas, { 'Cache-Control': 'public, max-age=300' });
     }

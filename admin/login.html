@@ -4,35 +4,58 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>TVM HQ — Sign in</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <title>Sign in — The Villa Managers</title>
   <style>
-    :root{--paper:#f4f0e8;--ink:#28221d;--cocoa:#5b4435;--clay:#ad7d59;--line:rgba(50,39,31,.16);--athena:"Athena","Raleway",Arial,sans-serif}
-    *,*::before,*::after{box-sizing:border-box;font-family:var(--athena)!important}body{margin:0;min-height:100svh;display:grid;grid-template-columns:1.05fr .95fr;color:var(--ink);background:var(--paper);font-family:var(--athena)}.visual{position:relative;min-height:100svh;overflow:hidden;background:#4b4036}.visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72}.visual:after{position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,24,20,.15),rgba(30,24,20,.64));content:""}.visual-copy{position:absolute;z-index:1;right:8vw;bottom:7vw;left:6vw;color:#fff}.mark{font-size:clamp(3rem,7vw,7rem);font-weight:300;line-height:.9}.visual-copy p{max-width:470px;margin:24px 0 0;color:rgba(255,255,255,.75);font-size:.88rem;letter-spacing:.08em;text-transform:uppercase}.panel{display:grid;place-items:center;padding:50px}.login{width:min(100%,430px)}.eyebrow{display:block;margin-bottom:45px;color:var(--clay);font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase}.login h1{margin:0 0 15px;font-size:clamp(2.8rem,5vw,4.7rem);font-weight:300;line-height:1}.login>p{margin:0 0 45px;color:#73685e}.field{margin-bottom:22px}.field label{display:block;margin-bottom:8px;font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase}.field input{width:100%;padding:14px 0;border:0;border-bottom:1px solid var(--line);border-radius:0;outline:0;background:transparent;font:inherit}.field input:focus{border-color:var(--clay)}button{width:100%;min-height:54px;margin-top:14px;border:1px solid var(--ink);color:#fff;background:var(--ink);font-size:.72rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:.2s}button:hover{background:var(--cocoa)}button:disabled{opacity:.55;cursor:wait}.message{min-height:24px;margin:18px 0 0;color:#a04436;font-size:.86rem}.back{display:inline-block;margin-top:38px;padding-bottom:3px;border-bottom:1px solid var(--line);color:#766b61;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}@media(max-width:760px){body{display:block}.visual{min-height:220px}.visual-copy{bottom:32px}.visual-copy p{display:none}.panel{padding:55px 24px}.eyebrow{margin-bottom:30px}}
+    :root{--bg:#edebe7;--card:#fff;--ink:#191713;--muted:#8b8478;--line:#e7e3db;--gold:#b49164;--espresso:#1c1915}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:20px;
+      font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);
+      background:var(--bg);background-image:radial-gradient(circle at 80% 10%,rgba(180,145,100,.1),transparent 45%)}
+    .box{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:20px;
+      box-shadow:0 1px 2px rgba(27,24,19,.04),0 20px 50px rgba(27,24,19,.09);padding:38px 34px}
+    .logo{width:46px;height:46px;border-radius:13px;background:var(--espresso);color:#fff;display:flex;
+      align-items:center;justify-content:center;font-weight:700;font-size:.9rem;margin-bottom:20px}
+    h1{margin:0 0 4px;font-size:1.35rem}
+    .sub{margin:0 0 26px;color:var(--muted);font-size:.85rem}
+    label{display:block;margin-bottom:6px;color:var(--muted);font-size:.76rem;font-weight:600}
+    input{width:100%;padding:12px 14px;border:1.5px solid #ddd5c8;border-radius:11px;font:inherit;background:#fff;margin-bottom:15px}
+    input:focus{outline:2.5px solid #e8dcc6;border-color:var(--gold)}
+    button{width:100%;padding:14px;border:0;border-radius:12px;background:var(--espresso);color:#fff;
+      font:600 .92rem inherit;cursor:pointer;transition:background .2s}
+    button:hover{background:#3a332b}
+    button:disabled{opacity:.6;cursor:wait}
+    .msg{min-height:1.3em;margin:13px 0 0;color:#b0483c;font-size:.82rem;text-align:center}
+    .foot{margin-top:22px;padding-top:17px;border-top:1px solid var(--line);color:var(--muted);font-size:.74rem;text-align:center}
   </style>
 </head>
 <body>
-  <section class="visual" aria-hidden="true">
-    <img src="https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&amp;fit=crop&amp;w=1400&amp;q=85" alt="">
-    <div class="visual-copy"><div class="mark">TVM<br>HQ</div><p>Personal clarity and villa agency operations in one private workspace.</p></div>
-  </section>
-  <main class="panel">
-    <form class="login" id="login-form">
-      <span class="eyebrow">Private administration</span>
-      <h1>Welcome back.</h1>
-      <p>Sign in to your personal HQ and TVM operations.</p>
-      <div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus></div>
-      <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
-      <button type="submit">Enter HQ →</button>
-      <p class="message" id="message" role="alert"></p>
-      <a class="back" href="/">← Return to TVM</a>
-    </form>
-  </main>
+  <form class="box" id="f">
+    <div class="logo">TVM</div>
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to The Villa Managers — team dashboard or owner portal.</p>
+    <label for="u">Username</label>
+    <input id="u" name="username" autocomplete="username" autocapitalize="none" required autofocus>
+    <label for="p">Password</label>
+    <input id="p" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit" id="b">Sign in</button>
+    <p class="msg" id="m"></p>
+    <p class="foot">Villa owner? Your account opens your villa's portal automatically.<br>The Villa Managers · Bali</p>
+  </form>
   <script>
-    const form=document.getElementById('login-form');const message=document.getElementById('message');
-    form.addEventListener('submit',async event=>{event.preventDefault();message.textContent='';const button=form.querySelector('button');button.disabled=true;try{const response=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:form.username.value.trim(),password:form.password.value})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Sign in failed.');location.href='/admin/';}catch(error){message.textContent=error.message;button.disabled=false;}});
+    document.getElementById('f').addEventListener('submit', async e => {
+      e.preventDefault();
+      const b = document.getElementById('b'), m = document.getElementById('m');
+      b.disabled = true; m.textContent = '';
+      try {
+        const r = await fetch('/api/admin/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: document.getElementById('u').value.trim(), password: document.getElementById('p').value }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Sign in failed.');
+        location.href = '/admin/'; // owners are routed to /owner automatically
+      } catch (err) { m.textContent = err.message; b.disabled = false; }
+    });
   </script>
 </body>
 </html>
