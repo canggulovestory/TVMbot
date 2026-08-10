@@ -189,9 +189,43 @@
     .stmt-row.total{border-bottom:0;border-top:2px solid var(--ink);font-weight:700;font-size:.95rem;margin-top:4px}
     .stmt-controls{display:flex;gap:8px;align-items:center}
     .stmt-controls input{padding:6px 9px;border:1px solid #ddd5c8;border-radius:8px;font:inherit;font-size:.8rem}
-    /* ── Toast ── */
-    .toast{position:fixed;bottom:20px;right:20px;z-index:100;background:var(--espresso);color:#fff;padding:12px 18px;border-radius:11px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
-    .toast.show{opacity:1;transform:none}
+    /* ── Toast / snackbar ── */
+    .toast{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;align-items:center;gap:14px;background:var(--espresso);color:#fff;padding:12px 18px;border-radius:11px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
+    .toast.show{opacity:1;transform:none;pointer-events:auto}
+    .toast button{background:var(--gold);border:0;color:var(--espresso);font:600 .78rem inherit;padding:6px 13px;border-radius:8px;cursor:pointer}
+    /* ── Quick actions ── */
+    .qa-wrap{position:relative}
+    .qa-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;display:none;min-width:210px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px rgba(27,24,19,.16);padding:7px;flex-direction:column}
+    .qa-menu.open{display:flex}
+    .qa-menu button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 13px;border:0;border-radius:9px;background:none;font:inherit;font-size:.85rem;text-align:left;cursor:pointer}
+    .qa-menu button:hover{background:#f2f0eb}
+    .qa-menu .qi{width:19px;text-align:center}
+    /* ── Wizard ── */
+    .wsteps{display:flex;gap:8px;align-items:center;padding:14px 22px 0}
+    .wdot{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--muted);font-weight:600}
+    .wdot .n{width:24px;height:24px;border-radius:50%;background:#eee9df;display:flex;align-items:center;justify-content:center;font-size:.72rem}
+    .wdot.active{color:var(--espresso)}
+    .wdot.active .n{background:var(--espresso);color:#fff}
+    .wdot.done .n{background:var(--gold);color:#fff}
+    .wline{flex:1;height:1.5px;background:var(--line)}
+    .wstep{display:none}
+    .wstep.active{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .wstep .full{grid-column:1/-1}
+    .wiz-conflict{grid-column:1/-1;display:none;background:var(--red-bg);border:1px solid #eccfca;color:var(--red);border-radius:9px;padding:10px 13px;font-size:.8rem}
+    .wiz-conflict.show{display:block}
+    .wiz-free{grid-column:1/-1;display:none;background:var(--green-bg);border:1px solid #cfe4d6;color:var(--green);border-radius:9px;padding:10px 13px;font-size:.8rem}
+    .wiz-free.show{display:block}
+    /* ── Mobile bottom nav ── */
+    .bottom-nav{display:none}
+    @media(max-width:960px){
+      .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:45;display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+      .bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--muted);font:500 .62rem inherit;padding:6px 2px;cursor:pointer;border-radius:10px}
+      .bottom-nav button.active{color:var(--espresso)}
+      .bottom-nav .bi{font-size:1.15rem}
+      .content{padding-bottom:86px}
+      .btn{min-height:42px}
+      .btn.sm{min-height:34px}
+    }
     /* ── Bots ── */
     .bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .bot-card{padding:22px}
@@ -248,7 +282,21 @@
           <div><h1 id="page-title">Overview</h1><div class="hello" id="hello">Welcome back, Afni 👋</div></div>
         </div>
         <div class="search"><span class="sicon">🔎</span><input id="search" placeholder="Search villas, guests, payments…"></div>
-        <div class="tb-right"><span class="updated" id="updated">Loading…</span><button class="btn secondary sm" id="refresh">Refresh</button><div class="avatar">A</div></div>
+        <div class="tb-right">
+          <span class="updated" id="updated">Loading…</span>
+          <div class="qa-wrap">
+            <button class="btn sm" id="qa-btn">+ New</button>
+            <div class="qa-menu" id="qa-menu">
+              <button data-qa="booking"><span class="qi">🧳</span>Booking</button>
+              <button data-qa="expense"><span class="qi">💸</span>Expense</button>
+              <button data-qa="income"><span class="qi">💰</span>Income</button>
+              <button data-qa="vtask"><span class="qi">🔧</span>Villa task</button>
+              <button data-qa="document"><span class="qi">📄</span>Document</button>
+              <button data-qa="villa"><span class="qi">🏝</span>Villa</button>
+            </div>
+          </div>
+          <button class="btn secondary sm" id="refresh">Refresh</button><div class="avatar">A</div>
+        </div>
       </div>
 
       <div class="content">
@@ -293,7 +341,7 @@
           <div class="stats" id="vd-stats"></div>
           <div class="grid-2 section-gap">
             <div class="card"><div class="card-head"><h3>Availability — next 6 months</h3></div><div class="cal-wrap" id="vd-calendar"></div><div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span><span><span class="dot" style="background:#fff;outline:2px solid var(--gold)"></span>Today</span></div></div>
-            <div class="card"><div class="card-head"><h3>Owner statement</h3><div class="stmt-controls"><input type="month" id="vd-month"><button class="btn secondary sm" id="vd-copy-stmt">Copy for WhatsApp</button></div></div><div class="stmt" id="vd-statement"></div></div>
+            <div class="card"><div class="card-head"><h3>Owner statement</h3><div class="stmt-controls"><input type="month" id="vd-month"><button class="btn secondary sm" id="vd-copy-stmt">Copy for WhatsApp</button><button class="btn sm" id="vd-print-stmt">Print / PDF</button></div></div><div class="stmt" id="vd-statement"></div></div>
           </div>
           <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
           <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
@@ -409,39 +457,61 @@
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villas">Cancel</button><button class="btn" type="submit">Save villa</button></div></form>
   </dialog>
 
-  <dialog id="dlg-tenancies"><div class="modal-head"><h3 id="ttl-tenancies">Add guest stay</h3><button class="modal-close" data-close="tenancies">✕</button></div>
-    <form id="form-tenancies"><div class="modal-body"><div class="form-grid">
+  <dialog id="dlg-tenancies"><div class="modal-head"><h3 id="ttl-tenancies">New booking</h3><button class="modal-close" data-close="tenancies">✕</button></div>
+    <div class="wsteps" id="wsteps">
+      <span class="wdot active" data-ws="1"><span class="n">1</span>Guest</span><span class="wline"></span>
+      <span class="wdot" data-ws="2"><span class="n">2</span>Villa &amp; dates</span><span class="wline"></span>
+      <span class="wdot" data-ws="3"><span class="n">3</span>Money &amp; papers</span>
+    </div>
+    <form id="form-tenancies"><div class="modal-body">
       <input type="hidden" name="id">
-      <div class="hint" id="stay-hint">Saving a new stay with rent + first due date automatically creates every installment, the deposit record, and files the contract.</div>
-      <div class="f"><label>Stay ID *</label><input name="code" placeholder="TEN-2026-001" required></div>
-      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
-      <div class="f"><label>Booking status</label><select name="bookingStatus"><option>Enquiry</option><option>Reserved</option><option>Confirmed</option><option>Checked-in</option><option>Checked-out</option><option>Cancelled</option></select></div>
-      <div class="f"><label>Rental term</label><select name="rentalTerm"><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
-      <div class="f"><label>Guest name *</label><input name="guestName" required></div>
-      <div class="f"><label>Guest WhatsApp</label><input name="guestPhone" type="tel"></div>
-      <div class="f"><label>Guest email</label><input name="guestEmail" type="email"></div>
-      <div class="f"><label>Nationality</label><input name="nationality"></div>
-      <div class="f"><label>Number of guests</label><input name="guestCount" type="number" min="1"></div>
-      <div class="f"><label>Source</label><select name="source"><option>Website</option><option>Referral</option><option>Direct</option><option>Social media</option><option>Airbnb</option><option>Other</option></select></div>
-      <div class="f"><label>Check-in *</label><input name="checkIn" type="date" required></div>
-      <div class="f"><label>Check-out *</label><input name="checkOut" type="date" required></div>
-      <div class="f"><label>Rent per month *</label><input name="rentAmount" type="number" min="0" required></div>
-      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
-      <div class="f"><label>Payment frequency</label><select name="paymentFrequency"><option>Monthly</option><option>Quarterly</option><option>Upfront</option></select></div>
-      <div class="f"><label>First payment due</label><input name="firstDueDate" type="date"></div>
-      <div class="f"><label>Grace period (days)</label><input name="gracePeriodDays" type="number" value="3" min="0"></div>
-      <div class="f"><label>Agency commission %</label><input name="agencyCommissionPercent" type="number" min="0" max="100" step=".1"></div>
-      <div class="f-check"><input name="generateSchedule" type="checkbox" id="ck-gen" checked><label for="ck-gen">Auto-generate payment schedule</label></div>
-      <div class="f"><label>Deposit amount</label><input name="depositAmount" type="number" min="0"></div>
-      <div class="f"><label>Deposit collected date</label><input name="depositCollectedDate" type="date"></div>
-      <div class="f"><label>Deposit held in</label><select name="depositHeldIn"><option>Owner account</option><option>TVM account</option></select></div>
-      <div class="f"><label>Refund within (days)</label><input name="refundWindowDays" type="number" value="14" min="0"></div>
-      <div class="f full"><label>ID / passport (private Drive link)</label><input name="idDocumentUrl" type="url"></div>
-      <div class="f full"><label>Signed contract (private Drive link)</label><input name="contractUrl" type="url"></div>
-      <div class="f-check"><input name="contractSigned" type="checkbox" id="ck-signed"><label for="ck-signed">Contract signed</label></div>
-      <div class="f"><label>Signed date</label><input name="contractSignedDate" type="date"></div>
-      <div class="f full"><label>Notes / special terms</label><textarea name="notes"></textarea></div>
-    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="tenancies">Cancel</button><button class="btn" type="submit">Save stay</button></div></form>
+      <div class="wstep active" data-step="1">
+        <div class="f full"><label>Guest name *</label><input name="guestName" required placeholder="Who is staying?"></div>
+        <div class="f"><label>WhatsApp</label><input name="guestPhone" type="tel" placeholder="62…"></div>
+        <div class="f"><label>Email</label><input name="guestEmail" type="email"></div>
+        <div class="f"><label>Nationality</label><input name="nationality"></div>
+        <div class="f"><label>Guests</label><input name="guestCount" type="number" min="1" value="2"></div>
+        <div class="f"><label>Source</label><select name="source"><option>Website</option><option>Referral</option><option>Direct</option><option>Social media</option><option>Airbnb</option><option>Other</option></select></div>
+        <div class="f"><label>Booking ID</label><input name="code" placeholder="auto"></div>
+      </div>
+      <div class="wstep" data-step="2">
+        <div class="f full"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+        <div class="f"><label>Check-in *</label><input name="checkIn" type="date" required></div>
+        <div class="f"><label>Check-out *</label><input name="checkOut" type="date" required></div>
+        <div class="wiz-conflict" id="wiz-conflict"></div>
+        <div class="wiz-free" id="wiz-free"></div>
+        <div class="f"><label>Booking status</label><select name="bookingStatus"><option>Enquiry</option><option>Reserved</option><option selected>Confirmed</option><option>Checked-in</option><option>Checked-out</option><option>Cancelled</option></select></div>
+        <div class="f"><label>Rental term</label><select name="rentalTerm"><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
+      </div>
+      <div class="wstep" data-step="3">
+        <div class="f"><label>Rent per month *</label><input name="rentAmount" type="number" min="0" required></div>
+        <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+        <div class="f"><label>Payment frequency</label><select name="paymentFrequency"><option>Monthly</option><option>Quarterly</option><option>Upfront</option></select></div>
+        <div class="f"><label>First payment due</label><input name="firstDueDate" type="date"></div>
+        <div class="f-check full"><input name="generateSchedule" type="checkbox" id="ck-gen" checked><label for="ck-gen"><strong>Create the payment schedule and deposit automatically</strong></label></div>
+        <div class="f"><label>Deposit amount</label><input name="depositAmount" type="number" min="0"></div>
+        <div class="f"><label>Deposit collected on</label><input name="depositCollectedDate" type="date"></div>
+        <details class="full" style="grid-column:1/-1"><summary style="cursor:pointer;font-size:.8rem;color:var(--muted);padding:4px 0">More options (grace period, commission, contract, ID, notes)</summary>
+          <div class="form-grid" style="margin-top:12px">
+            <div class="f"><label>Grace period (days)</label><input name="gracePeriodDays" type="number" value="3" min="0"></div>
+            <div class="f"><label>Agency commission %</label><input name="agencyCommissionPercent" type="number" min="0" max="100" step=".1"></div>
+            <div class="f"><label>Deposit held in</label><select name="depositHeldIn"><option>Owner account</option><option>TVM account</option></select></div>
+            <div class="f"><label>Refund within (days)</label><input name="refundWindowDays" type="number" value="14" min="0"></div>
+            <div class="f full"><label>ID / passport (private Drive link)</label><input name="idDocumentUrl" type="url"></div>
+            <div class="f full"><label>Signed contract (private Drive link)</label><input name="contractUrl" type="url"></div>
+            <div class="f-check"><input name="contractSigned" type="checkbox" id="ck-signed"><label for="ck-signed">Contract signed</label></div>
+            <div class="f"><label>Signed date</label><input name="contractSignedDate" type="date"></div>
+            <div class="f full"><label>Notes / special terms</label><textarea name="notes"></textarea></div>
+          </div>
+        </details>
+      </div>
+    </div><div class="modal-foot">
+      <button type="button" class="btn secondary" data-close="tenancies">Cancel</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn secondary" id="wiz-back" style="display:none">← Back</button>
+      <button type="button" class="btn" id="wiz-next">Next →</button>
+      <button class="btn" type="submit" id="wiz-save" style="display:none">Save booking</button>
+    </div></form>
   </dialog>
 
   <dialog id="dlg-installments"><div class="modal-head"><h3 id="ttl-installments">Add payment</h3><button class="modal-close" data-close="installments">✕</button></div>
@@ -544,6 +614,14 @@
 
   <div class="toast" id="toast"></div>
 
+  <nav class="bottom-nav" id="bottom-nav">
+    <button data-view="overview" class="active"><span class="bi">⌂</span>Home</button>
+    <button data-view="villas"><span class="bi">🏝</span>Villas</button>
+    <button data-view="stays"><span class="bi">🧳</span>Stays</button>
+    <button data-view="payments"><span class="bi">💳</span>Pay</button>
+    <button data-view="finance"><span class="bi">📊</span>Finance</button>
+  </nav>
+
   <script>
     const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],villaTasks:[]}};
     let currentVillaId=null;
@@ -562,12 +640,14 @@
     const sMap=()=>Object.fromEntries(state.villaData.tenancies.map(t=>[t.id,t]));
     const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
     function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3500)}
+    function toastAction(m,label,fn,ms=6000){const el=$('#toast');el.textContent=m;const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{el.classList.remove('show');try{await fn()}catch(e){toast(e.message)}};el.appendChild(b);el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms)}
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
 
     // ── Navigation ──
     const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Finance',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots'};
     function show(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
       $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
+      $$('#bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
       $('#page-title').textContent=TITLES[name]||name;$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');$('#search').value='';applySearch('');scrollTo(0,0)}
     $$('.nav button[data-view]').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.view);if(b.dataset.view==='villas')$('#nav-villas-group').classList.add('open')}));
     document.addEventListener('click',e=>{
@@ -592,7 +672,8 @@
 
     // ── Modals ──
     function openModal(name,record,prefill){const dlg=$(`#dlg-${name}`);const form=$(`#form-${name}`);form.reset();if(form.elements.id)form.elements.id.value='';
-      if(name==='tenancies'){form.generateSchedule.checked=!record;$('#stay-hint').style.display=record?'none':'block'}
+      if(name==='tenancies'){form.generateSchedule.checked=!record;wizGo(1);
+        if(!record){const yr=new Date().getFullYear();const n=state.villaData.tenancies.length+1;form.code.placeholder=`TEN-${yr}-${String(n).padStart(3,'0')}`}}
       fillSelects();
       if(record)Object.entries(record).forEach(([k,v])=>{const i=form.elements[k];if(!i)return;if(i.type==='checkbox')i.checked=Boolean(v);else i.value=v??''});
       if(prefill)Object.entries(prefill).forEach(([k,v])=>{const i=form.elements[k];if(i)i.value=v});
@@ -608,6 +689,67 @@
     $('#vd-add-doc').addEventListener('click',()=>openModal('documents',null,{villaId:currentVillaId}));
     $('#vd-add-task').addEventListener('click',()=>openModal('villaTasks',null,{villaId:currentVillaId}));
     $('#vd-add-txn').addEventListener('click',()=>openModal('transactions',null,{villaId:currentVillaId,date:new Date().toISOString().slice(0,10)}));
+
+    // ── Booking wizard ──
+    let wizStep=1;
+    function wizGo(n){wizStep=n;$$('#form-tenancies .wstep').forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===n));
+      $$('#wsteps .wdot').forEach(d=>{const k=Number(d.dataset.ws);d.classList.toggle('active',k===n);d.classList.toggle('done',k<n)});
+      $('#wiz-back').style.display=n>1?'':'none';$('#wiz-next').style.display=n<3?'':'none';$('#wiz-save').style.display=n===3?'':'none';
+      if(n===2)wizCheckConflict()}
+    function wizValidate(n){const step=$(`#form-tenancies .wstep[data-step="${n}"]`);let ok=true;
+      step.querySelectorAll('input[required],select[required]').forEach(i=>{if(!i.checkValidity()){i.reportValidity();ok=false}});return ok}
+    function wizCheckConflict(){const f=$('#form-tenancies');const villaId=f.villaId.value,ci=f.checkIn.value,co=f.checkOut.value,self=f.elements.id.value;
+      const warn=$('#wiz-conflict'),free=$('#wiz-free');warn.classList.remove('show');free.classList.remove('show');
+      if(!villaId||!ci||!co)return true;
+      if(co<=ci){warn.textContent='Check-out must be after check-in.';warn.classList.add('show');return false}
+      const clash=state.villaData.tenancies.find(t=>t.villaId===villaId&&t.id!==self&&!['Cancelled','Enquiry','Checked-out'].includes(t.bookingStatus)&&t.checkIn&&t.checkOut&&ci<t.checkOut&&t.checkIn<co);
+      if(clash){warn.textContent=`⚠ Conflict: ${clash.guestName||clash.code} is booked here ${fdate(clash.checkIn)} → ${fdate(clash.checkOut)}.`;warn.classList.add('show');return false}
+      free.textContent='✓ Villa is free for these dates.';free.classList.add('show');return true}
+    $('#wiz-next').addEventListener('click',()=>{if(!wizValidate(wizStep))return;
+      if(wizStep===2&&!wizCheckConflict())return;
+      if(wizStep===2){const f=$('#form-tenancies');if(!f.firstDueDate.value)f.firstDueDate.value=f.checkIn.value}
+      wizGo(wizStep+1)});
+    $('#wiz-back').addEventListener('click',()=>wizGo(wizStep-1));
+    ['villaId','checkIn','checkOut'].forEach(nm=>$('#form-tenancies').elements[nm].addEventListener('change',wizCheckConflict));
+
+    // ── Quick actions ──
+    $('#qa-btn').addEventListener('click',e=>{e.stopPropagation();$('#qa-menu').classList.toggle('open')});
+    document.addEventListener('click',e=>{if(!e.target.closest('.qa-wrap'))$('#qa-menu').classList.remove('open')});
+    $('#qa-menu').addEventListener('click',e=>{const b=e.target.closest('[data-qa]');if(!b)return;$('#qa-menu').classList.remove('open');
+      const today=new Date().toISOString().slice(0,10);
+      const map={booking:()=>openModal('tenancies'),expense:()=>openModal('transactions',null,{type:'Expense',date:today}),
+        income:()=>openModal('transactions',null,{type:'Income',date:today}),vtask:()=>openModal('villaTasks'),
+        document:()=>openModal('documents'),villa:()=>openModal('villas')};
+      map[b.dataset.qa]?.()});
+
+    // ── Printable owner statement ──
+    function printStatement(){const v=vMap()[currentVillaId];if(!v)return;
+      const s=villaStatement(currentVillaId,vdMonth);
+      const rows=s.txns.map(x=>`<tr><td>${fdate(x.date)}</td><td>${esc(x.category||'')}</td><td>${esc(x.description||'')}</td><td style="text-align:right;color:${x.type==='Income'?'#3e7d54':'#b0483c'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td></tr>`).join('');
+      const w=window.open('','_blank');
+      w.document.write(`<!doctype html><html><head><title>Statement ${esc(v.name)} ${vdMonth}</title><style>
+        body{font-family:-apple-system,Segoe UI,Arial,sans-serif;color:#1b1813;max-width:720px;margin:40px auto;padding:0 20px}
+        h1{font-size:1.4rem;margin:0}h2{font-size:1rem;color:#8b8478;font-weight:500;margin:4px 0 26px}
+        table{width:100%;border-collapse:collapse;font-size:.86rem;margin:18px 0}
+        th{text-align:left;border-bottom:2px solid #1b1813;padding:8px 6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:8px 6px;border-bottom:1px solid #eee}
+        .tot{display:flex;justify-content:space-between;padding:8px 6px;font-size:.92rem}
+        .tot.final{border-top:2px solid #1b1813;font-weight:700;font-size:1.05rem;margin-top:6px}
+        .foot{margin-top:40px;color:#8b8478;font-size:.75rem}
+        @media print{body{margin:10mm auto}}
+      </style></head><body>
+        <h1>Owner Statement — ${esc(v.name)}</h1><h2>${vdMonth} · Prepared by The Villa Managers</h2>
+        <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows||'<tr><td colspan="4" style="color:#8b8478">No transactions this month.</td></tr>'}</tbody></table>
+        <div class="tot"><span>Income</span><span>+${money(s.income,v.currency)}</span></div>
+        <div class="tot"><span>Agency commission</span><span>−${money(s.commission,v.currency)}</span></div>
+        <div class="tot"><span>Expenses</span><span>−${money(s.expenses,v.currency)}</span></div>
+        <div class="tot final"><span>Owner payout</span><span>${money(s.payout,v.currency)}</span></div>
+        <p class="foot">The Villa Managers · thevillamanagers.cloud · Generated ${new Date().toLocaleDateString('en-GB')}</p>
+        <script>window.onload=()=>window.print()<\/script></body></html>`);
+      w.document.close()}
+    $('#vd-print-stmt').addEventListener('click',printStatement);
+    // ── Bottom nav ──
+    $('#bottom-nav').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)show(b.dataset.view)});
     // ── CSV export ──
     function exportCSV(rows,filename){if(!rows.length)return toast('Nothing to export.');
       const cols=['date','type','category','description','amount','currency','villa','guest','code','notes'];
@@ -666,8 +808,13 @@
       const t=e.target;
       try{
         if(t.dataset.edit){const[c,id]=t.dataset.edit.split(':');const r=state.villaData[c]?.find(x=>x.id===id);if(r)openModal(c,r);return}
-        if(t.dataset.del){const[c,id]=t.dataset.del.split(':');const extra=c==='tenancies'?' This also deletes its payments and deposit.':'';
-          if(confirm(`Delete this record?${extra}`)){await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();toast('Deleted.')}return}
+        if(t.dataset.del){const[c,id]=t.dataset.del.split(':');
+          if(c==='tenancies'){if(confirm('Delete this booking? Its payments and deposit are deleted too.')){await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();toast('Booking deleted.')}return}
+          const backup=state.villaData[c]?.find(x=>x.id===id);
+          await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();
+          if(backup){const{id:_,createdAt:__,updatedAt:___,...rest}=backup;
+            toastAction('Deleted.','Undo',async()=>{await save(c,rest);toast('Restored.')})}
+          return}
         if(t.dataset.pay){const r=state.villaData.installments.find(x=>x.id===t.dataset.pay);await save('installments',{...r,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});toast('Marked paid.');return}
         if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
         if(t.dataset.completeTask){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:t.dataset.completeTask})});await load();toast('Task completed.');return}
