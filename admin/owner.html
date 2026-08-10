@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Owner Portal — The Villa Managers</title>
+  <style>
+    :root{--bg:#edebe7;--card:#fff;--ink:#191713;--muted:#8b8478;--line:#e7e3db;--gold:#b49164;--gold-soft:#f3ecdf;--espresso:#1c1915;
+      --green:#3e7d54;--green-bg:#e3f2e7;--red:#b0483c;--red-bg:#f9ecea;--amber:#a9702c;--amber-bg:#f8f0e2;--blue:#4c6b94;--blue-bg:#eaf0f7;
+      --radius:18px;--shadow:0 1px 2px rgba(27,24,19,.03),0 10px 30px rgba(27,24,19,.06)}
+    *{box-sizing:border-box}
+    body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(16px,4vw,40px);background:rgba(237,235,231,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-logo{width:36px;height:36px;border-radius:11px;background:var(--espresso);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem}
+    .brand strong{display:block;font-size:.95rem}.brand small{color:var(--muted);font-size:.72rem}
+    .top-right{display:flex;align-items:center;gap:10px}
+    select,input[type=month]{padding:8px 11px;border:1px solid #ddd5c8;border-radius:9px;font:inherit;background:#fff}
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px solid transparent;border-radius:10px;background:var(--espresso);color:#fff;font:600 .82rem inherit;cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--ink);border-color:var(--line)}
+    .wrap{max-width:1080px;margin:0 auto;padding:22px clamp(16px,4vw,40px) 60px}
+    .hero{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+    .hero-banner{height:180px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center;position:relative}
+    .hero-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .hero-banner .init{font-size:3rem;font-weight:700;color:rgba(255,255,255,.85)}
+    .hero-body{padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .hero-body h1{margin:0;font-size:1.4rem}
+    .hero-body p{margin:3px 0 0;color:var(--muted);font-size:.85rem}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:20px;font-size:.74rem;font-weight:600;background:#f1ede6;color:var(--muted)}
+    .badge.green{background:var(--green-bg);color:var(--green)}.badge.amber{background:var(--amber-bg);color:var(--amber)}.badge.red{background:var(--red-bg);color:var(--red)}.badge.blue{background:var(--blue-bg);color:var(--blue)}
+    .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+    .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+    .stat .l{color:var(--muted);font-size:.72rem;font-weight:600}
+    .stat .v{font-size:1.05rem;font-weight:700;margin-top:4px}
+    .stat .s{color:var(--muted);font-size:.74rem}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+    .card-head h2{margin:0;font-size:1rem}
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th{background:#faf8f4;color:var(--muted);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:9px 15px;border-bottom:1px solid var(--line)}
+    td{padding:11px 15px;border-bottom:1px solid var(--line)}
+    tr:last-child td{border-bottom:0}
+    td .sub{display:block;color:var(--muted);font-size:.74rem}
+    .empty{padding:26px;text-align:center;color:var(--muted)}
+    .table-wrap{overflow-x:auto}
+    .cal-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:16px}
+    .cal-month h4{margin:0 0 7px;font-size:.76rem;text-align:center;color:var(--muted)}
+    .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+    .cal-d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.6rem;color:var(--muted);background:#f4f1ec}
+    .cal-d.booked{background:var(--espresso);color:#fff;font-weight:600}
+    .cal-d.today{outline:2px solid var(--gold)}
+    .cal-d.blank{background:transparent}
+    .cal-legend{display:flex;gap:14px;padding:0 16px 14px;font-size:.72rem;color:var(--muted)}
+    .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
+    .stmt{padding:14px 18px;font-size:.88rem}
+    .stmt-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)}
+    .stmt-row.total{border-bottom:0;border-top:2px solid var(--ink);font-weight:700;font-size:1rem;margin-top:4px}
+    .foot{text-align:center;color:var(--muted);font-size:.75rem;padding:10px 0 30px}
+    @media print{.top,.no-print,.cal-wrap,.cal-legend{display:none!important}body{background:#fff}.card,.hero,.stat{box-shadow:none;border-color:#ddd}}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><div class="brand-logo">TVM</div><div><strong>Owner Portal</strong><small>The Villa Managers</small></div></div>
+    <div class="top-right">
+      <select id="villa-select" style="display:none"></select>
+      <span id="who" style="color:var(--muted);font-size:.78rem"></span>
+      <button class="btn secondary" id="logout">Sign out</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero" id="hero"><div class="hero-banner"><span class="init">···</span></div><div class="hero-body"><div><h1>Loading…</h1><p>Fetching your villa</p></div></div></div>
+    <div class="stats" id="stats"></div>
+
+    <div class="card no-print"><div class="card-head"><h2>Availability — next 6 months</h2></div><div class="cal-wrap" id="calendar"></div>
+      <div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span></div></div>
+
+    <div class="card"><div class="card-head"><h2>Bookings</h2></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Status</th></tr></thead><tbody id="t-stays"></tbody></table></div></div>
+
+    <div class="card"><div class="card-head"><h2>Rent payments</h2></div><div class="table-wrap"><table><thead><tr><th>Period</th><th>Amount</th><th>Due</th><th>Status</th></tr></thead><tbody id="t-pay"></tbody></table></div></div>
+
+    <div class="card"><div class="card-head"><h2>Monthly statement</h2><div style="display:flex;gap:8px" class="no-print"><input type="month" id="stmt-month"><button class="btn" onclick="window.print()">Print / PDF</button></div></div><div class="stmt" id="stmt"></div></div>
+
+    <p class="foot">Prepared by The Villa Managers · thevillamanagers.cloud · Questions? WhatsApp +62 821 2292 2252</p>
+  </div>
+
+<script>
+  const $=s=>document.querySelector(s);
+  const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const fdate=v=>v?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(`${String(v).slice(0,10)}T00:00:00`)):'—';
+  const money=(a,c='IDR')=>a?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
+  const BAD={Paid:'green',Confirmed:'green','Checked-in':'green',Available:'green',Reminded:'amber',Due:'amber',Held:'amber',Reserved:'amber',Booked:'blue',Scheduled:'blue',Overdue:'red',Late:'red'};
+  const badge=v=>`<span class="badge ${BAD[v]||''}">${esc(v||'—')}</span>`;
+  const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  let data=null,currentVilla=null,month=new Date().toISOString().slice(0,7);
+
+  async function load(){
+    const r=await fetch('/api/owner/overview');
+    if(r.status===401){location.href='/admin/login';return}
+    data=await r.json();
+    $('#who').textContent=data.session?.name||'';
+    const sel=$('#villa-select');
+    if(data.villas.length>1){sel.style.display='';sel.innerHTML=data.villas.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+      sel.onchange=()=>{currentVilla=data.villas.find(v=>v.id===sel.value);render()}}
+    currentVilla=data.villas[0]||null;
+    $('#stmt-month').value=month;
+    $('#stmt-month').onchange=e=>{month=e.target.value||month;render()};
+    render();
+  }
+
+  function render(){
+    if(!currentVilla){$('#hero').innerHTML='<div class="hero-body"><div><h1>No villa linked</h1><p>Ask The Villa Managers to link your villa to this account.</p></div></div>';return}
+    const v=currentVilla;
+    const stays=data.tenancies.filter(t=>t.villaId===v.id);
+    const pays=data.installments.filter(p=>p.villaId===v.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+    const active=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+    const nextPay=pays.find(p=>p.status!=='Paid');
+    const deposits=data.deposits.filter(d=>d.villaId===v.id&&['Held','Partially refunded'].includes(d.status));
+    $('#hero').innerHTML=`<div class="hero-banner">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="">`:`<span class="init">${esc(initials(v.name))}</span>`}</div>
+      <div class="hero-body"><div><h1>${esc(v.name)}</h1><p>${esc(v.location||'Bali')} · ${v.bedrooms||0} BR · ${v.bathrooms||0} BA${v.pool?' · Pool':''}</p></div>${badge(v.status)}</div>`;
+    $('#stats').innerHTML=`
+      <div class="stat"><div class="l">Current guest</div><div class="v">${esc(active?.guestName||'None')}</div><div class="s">${active?`until ${fdate(active.checkOut)}`:'villa is free'}</div></div>
+      <div class="stat"><div class="l">Next rent due</div><div class="v">${nextPay?money(nextPay.amount,nextPay.currency):'—'}</div><div class="s">${nextPay?fdate(nextPay.dueDate):'nothing scheduled'}</div></div>
+      <div class="stat"><div class="l">Deposit held</div><div class="v">${deposits.length?money(deposits[0].amount,deposits[0].currency):'—'}</div><div class="s">${deposits.length?'in safekeeping':'none'}</div></div>
+      <div class="stat"><div class="l">Bookings</div><div class="v">${stays.length}</div><div class="s">all time</div></div>`;
+    // calendar
+    const bookings=stays.filter(t=>!['Cancelled','Enquiry'].includes(t.bookingStatus)&&t.checkIn&&t.checkOut);
+    const todayISO=new Date().toISOString().slice(0,10);let cal='';const base=new Date();
+    for(let m=0;m<6;m+=1){const y=base.getFullYear(),mo=base.getMonth()+m;const first=new Date(y,mo,1);
+      const label=first.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+      const daysIn=new Date(y,mo+1,0).getDate();const startDow=(first.getDay()+6)%7;
+      let cells='';for(let b=0;b<startDow;b+=1)cells+='<span class="cal-d blank"></span>';
+      for(let day=1;day<=daysIn;day+=1){const iso=`${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const bk=bookings.find(t=>t.checkIn<=iso&&iso<t.checkOut);
+        cells+=`<span class="cal-d${bk?' booked':''}${iso===todayISO?' today':''}">${day}</span>`}
+      cal+=`<div class="cal-month"><h4>${esc(label)}</h4><div class="cal-days">${cells}</div></div>`}
+    $('#calendar').innerHTML=cal;
+    $('#t-stays').innerHTML=stays.map(t=>`<tr><td><strong>${esc(t.guestName||'Guest')}</strong></td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td><td>${badge(t.bookingStatus)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No bookings yet.</td></tr>';
+    $('#t-pay').innerHTML=pays.map(p=>`<tr><td>${esc(p.period||p.code||'—')}</td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}${p.paidDate?`<span class="sub">paid ${fdate(p.paidDate)}</span>`:''}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No payments scheduled.</td></tr>';
+    // statement
+    const txns=data.transactions.filter(x=>x.villaId===v.id&&(x.date||'').startsWith(month));
+    const sum=a=>a.reduce((s,x)=>s+Number(x.amount||0),0);
+    const inc=sum(txns.filter(x=>x.type==='Income')),out=sum(txns.filter(x=>x.type==='Expense'));
+    const stayById=Object.fromEntries(data.tenancies.map(t=>[t.id,t]));
+    const comm=txns.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0)*Number(stayById[x.tenancyId]?.agencyCommissionPercent||0)/100,0);
+    $('#stmt').innerHTML=`
+      ${txns.map(x=>`<div class="stmt-row"><span>${fdate(x.date)} · ${esc(x.description||x.category||'')}</span><span style="color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</span></div>`).join('')||'<div class="stmt-row"><span style="color:var(--muted)">No transactions this month.</span><span></span></div>'}
+      <div class="stmt-row"><span><strong>Income</strong></span><span style="color:var(--green);font-weight:600">+${money(inc)}</span></div>
+      <div class="stmt-row"><span>Agency commission</span><span style="color:var(--red)">−${money(comm)}</span></div>
+      <div class="stmt-row"><span>Expenses</span><span style="color:var(--red)">−${money(out)}</span></div>
+      <div class="stmt-row total"><span>Your payout</span><span style="color:${inc-comm-out>=0?'var(--green)':'var(--red)'}">${money(inc-comm-out)}</span></div>`;
+  }
+
+  $('#logout').addEventListener('click',async()=>{await fetch('/api/admin/logout',{method:'POST'});location.href='/admin/login'});
+  load().catch(e=>{document.body.innerHTML='<p style="padding:40px;text-align:center;color:#8b8478">Could not load the portal. Please sign in again at <a href="/admin/login">the login page</a>.</p>'});
+</script>
+</body>
+</html>

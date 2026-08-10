@@ -73,7 +73,7 @@ async function verify(username, password) {
   const store = await read();
   const user = store.users.find(u => u.username === String(username || '').toLowerCase());
   if (!user || !verifyHash(password, user.passwordHash)) return null;
-  return { username: user.username, name: user.name, role: user.role };
+  return { username: user.username, name: user.name, role: user.role, villaIds: user.villaIds || [] };
 }
 
 async function exists(username) {
@@ -86,15 +86,18 @@ async function listUsers() {
   return store.users.map(({ passwordHash, ...u }) => u);
 }
 
-async function addUser({ username, name, password, role }) {
+async function addUser({ username, name, password, role, villaIds }) {
   username = String(username || '').toLowerCase().trim();
   if (!/^[a-z0-9_.-]{3,30}$/.test(username)) throw new Error('Username: 3-30 chars, letters/numbers/._- only.');
   if (String(password || '').length < 8) throw new Error('Password must be at least 8 characters.');
-  if (!['admin', 'staff'].includes(role)) role = 'staff';
+  if (!['admin', 'staff', 'owner'].includes(role)) role = 'staff';
+  const villas = Array.isArray(villaIds) ? villaIds.map(v => String(v).slice(0, 80)).slice(0, 20) : [];
+  if (role === 'owner' && villas.length === 0) throw new Error('An owner account needs at least one villa assigned.');
   return mutate(store => {
     if (store.users.some(u => u.username === username)) throw new Error('Username already exists.');
     const user = {
       username, name: String(name || username).slice(0, 80), role,
+      villaIds: role === 'owner' ? villas : [],
       passwordHash: hashPassword(password), createdAt: new Date().toISOString(),
     };
     store.users.push(user);

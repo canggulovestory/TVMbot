@@ -242,7 +242,7 @@ async function handleAdminApi(req, res, url) {
       return sendJson(res, 401, { error: 'Incorrect username or password.' });
     }
     loginAttempts.delete(ip);
-    const token = signSession({ user: account.username, role: account.role, name: account.name, exp: Date.now() + SESSION_AGE_SECONDS * 1000, nonce: crypto.randomUUID() });
+    const token = signSession({ user: account.username, role: account.role, name: account.name, villaIds: account.villaIds || [], exp: Date.now() + SESSION_AGE_SECONDS * 1000, nonce: crypto.randomUUID() });
     audit.add(account.username, 'signed in', `role ${account.role}`);
     return sendJson(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(token) });
   }
@@ -253,6 +253,7 @@ async function handleAdminApi(req, res, url) {
 
   const session = await getSession(req);
   if (!session) return sendJson(res, 401, { error: 'Authentication required.' });
+  if (session.role === 'owner') return sendJson(res, 403, { error: 'Owner accounts use the owner portal at /owner.' });
   const requireAdmin = () => session.role === 'admin';
 
   if (url.pathname === '/api/admin/session' && req.method === 'GET') {
@@ -443,6 +444,25 @@ const server = http.createServer(async (req, res) => {
         }));
       return sendJson(res, 200, publicVillas, { 'Cache-Control': 'public, max-age=300' });
     }
+    if (url.pathname === '/api/owner/overview' && req.method === 'GET') {
+      const session = await getSession(req);
+      if (!session) return sendJson(res, 401, { error: 'Authentication required.' });
+      const ids = session.role === 'owner' ? (session.villaIds || []) : null; // admins may preview all
+      const data = await villaData.getAll();
+      const villas = data.villas
+        .filter(v => !ids || ids.includes(v.id))
+        .map(({ marketingNotes, ownerAgreementUrl, photosFolderUrl, ...v }) => v);
+      const allowed = new Set(villas.map(v => v.id));
+      return sendJson(res, 200, {
+        generatedAt: new Date().toISOString(),
+        session: { user: session.user, role: session.role, name: session.name },
+        villas,
+        tenancies: data.tenancies.filter(t => allowed.has(t.villaId)).map(({ idDocumentUrl, notes, guestPhone, guestEmail, ...t }) => t),
+        installments: data.installments.filter(p => allowed.has(p.villaId)).map(({ proofUrl, ...p }) => p),
+        deposits: data.deposits.filter(d => allowed.has(d.villaId)).map(({ refundProofUrl, inventoryUrl, deductionNotes, ...d }) => d),
+        transactions: data.transactions.filter(x => allowed.has(x.villaId)).map(({ proofUrl, notes, sourceId, ...x }) => x),
+      });
+    }
     if (url.pathname.startsWith('/api/admin/')) {
       return await handleAdminApi(req, res, url);
     }
@@ -451,8 +471,15 @@ const server = http.createServer(async (req, res) => {
       return await sendHtml(res, 'login.html');
     }
     if ((url.pathname === '/admin' || url.pathname === '/admin/') && req.method === 'GET') {
-      if (!(await isAuthenticated(req))) return redirect(res, '/admin/login');
+      const session = await getSession(req);
+      if (!session) return redirect(res, '/admin/login');
+      if (session.role === 'owner') return redirect(res, '/owner');
       return await sendHtml(res, 'index.html');
+    }
+    if ((url.pathname === '/owner' || url.pathname === '/owner/') && req.method === 'GET') {
+      const session = await getSession(req);
+      if (!session) return redirect(res, '/admin/login');
+      return await sendHtml(res, 'owner.html');
     }
     return sendJson(res, 404, { error: 'Not found.' });
   } catch (error) {

@@ -420,7 +420,8 @@
               <div class="f"><label>Username</label><input name="username" required pattern="[A-Za-z0-9_.-]{3,30}" placeholder="e.g. syifa"></div>
               <div class="f"><label>Full name</label><input name="name" placeholder="Syifa"></div>
               <div class="f"><label>Password (min 8 chars)</label><input name="password" type="password" required minlength="8"></div>
-              <div class="f"><label>Role</label><select name="role"><option value="staff">Staff — everything except delete & team</option><option value="admin">Admin — full access</option></select></div>
+              <div class="f"><label>Role</label><select name="role" id="new-role"><option value="staff">Staff — everything except delete & team</option><option value="admin">Admin — full access</option><option value="owner">Villa owner — read-only, own villa only</option></select></div>
+              <div class="f" id="owner-villas" style="display:none"><label>Which villa(s) can this owner see?</label><div id="owner-villa-list" style="display:grid;gap:7px;max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:11px"></div></div>
               <button class="btn" type="submit">Create account</button>
             </form></div>
           </div>
@@ -1034,10 +1035,15 @@
     $('#refresh').addEventListener('click',()=>load());
 
     async function loadTeam(){try{const users=await api('/api/admin/users');
-      $('#t-users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.name||u.username)}</strong><span class="sub">${esc(u.username)}</span></td><td>${badge(u.role==='admin'?'Paid':'Scheduled').replace(/>(.*?)</,`>${esc(u.role)}<`)}</td><td>${fdate(u.createdAt)}</td><td><div class="row-actions">${u.username!==(state.session?.user)?`<button class="btn danger sm" data-user-del="${esc(u.username)}">Remove</button>`:'<span class="sub">you</span>'}</div></td></tr>`).join('')}catch(e){toast(e.message)}}
+      $('#t-users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.name||u.username)}</strong><span class="sub">${esc(u.username)}${u.role==='owner'?` · ${(u.villaIds||[]).length} villa(s)`:''}</span></td><td>${badge(u.role==='admin'?'Paid':u.role==='owner'?'Booked':'Scheduled').replace(/>(.*?)</,`>${esc(u.role)}<`)}</td><td>${fdate(u.createdAt)}</td><td><div class="row-actions">${u.username!==(state.session?.user)?`<button class="btn danger sm" data-user-del="${esc(u.username)}">Remove</button>`:'<span class="sub">you</span>'}</div></td></tr>`).join('')}catch(e){toast(e.message)}}
     async function loadActivity(){try{const rows=await api('/api/admin/audit');
       $('#t-audit').innerHTML=rows.map(r=>`<tr><td style="white-space:nowrap">${new Date(r.at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td><strong>${esc(r.user)}</strong></td><td>${esc(r.action)}</td><td style="max-width:380px">${esc(r.detail)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No activity yet.</td></tr>'}catch(e){toast(e.message)}}
-    $('#form-user').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/admin/users',{method:'POST',body:JSON.stringify(formData(e.target))});e.target.reset();toast('Account created.');loadTeam()}catch(err){toast(err.message)}});
+    $('#new-role').addEventListener('change',e=>{const isOwner=e.target.value==='owner';$('#owner-villas').style.display=isOwner?'':'none';
+      if(isOwner)$('#owner-villa-list').innerHTML=state.villaData.villas.map(v=>`<label style="display:flex;gap:9px;align-items:center;font-size:.83rem"><input type="checkbox" value="${esc(v.id)}" class="ov-check"> ${esc(v.name)}</label>`).join('')||'<span style="color:var(--muted);font-size:.8rem">No villas yet.</span>'});
+    $('#form-user').addEventListener('submit',async e=>{e.preventDefault();try{
+      const payload=formData(e.target);
+      if(payload.role==='owner')payload.villaIds=$$('.ov-check:checked').map(c=>c.value);
+      await api('/api/admin/users',{method:'POST',body:JSON.stringify(payload)});e.target.reset();$('#owner-villas').style.display='none';toast('Account created.');loadTeam()}catch(err){toast(err.message)}});
     document.addEventListener('click',async e=>{const b=e.target.closest('[data-user-del]');if(!b)return;
       if(confirm(`Remove account "${b.dataset.userDel}"?`)){try{await api('/api/admin/users/delete',{method:'POST',body:JSON.stringify({username:b.dataset.userDel})});toast('Account removed.');loadTeam()}catch(err){toast(err.message)}}});
     async function load(){try{const d=await api('/api/admin/overview');Object.assign(state,d);
