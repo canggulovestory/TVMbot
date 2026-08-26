@@ -157,7 +157,19 @@ function saveEnquiry(input, req) {
       email: clean(input.email, 160),
       phone: clean(input.phone, 80),
       message: clean(input.message, 2000),
-      status: 'new',
+      leadType: clean(input.leadType, 40) || 'General',
+      villaName: clean(input.villaName, 160),
+      rentalTerm: clean(input.rentalTerm, 60),
+      moveInDate: clean(input.moveInDate || input.availableFrom, 20),
+      budget: clean(input.budget, 80),
+      utmSource: clean(input.utmSource, 100),
+      utmMedium: clean(input.utmMedium, 100),
+      utmCampaign: clean(input.utmCampaign, 160),
+      landingPage: clean(input.landingPage, 500),
+      assignee: '',
+      nextFollowUp: '',
+      internalNotes: '',
+      status: 'New',
       ip: clean((req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0], 80),
     };
     enquiries.unshift(record);
@@ -168,6 +180,35 @@ function saveEnquiry(input, req) {
     return record;
   });
   enquiryWriteQueue = task.catch(() => {}); // keep the queue healthy if a write fails
+  return task;
+}
+
+const LEAD_STAGES = new Set(['New', 'Contacted', 'Qualified', 'Viewing', 'Negotiation', 'Won', 'Lost']);
+
+function normalizeLeadStage(value) {
+  const legacy = { new: 'New', replied: 'Contacted', won: 'Won', lost: 'Lost' };
+  return legacy[String(value || '').toLowerCase()] || (LEAD_STAGES.has(value) ? value : 'New');
+}
+
+function updateEnquiry(input) {
+  const task = enquiryWriteQueue.then(async () => {
+    const enquiries = await readEnquiries();
+    const record = enquiries.find(item => item.id === clean(input.id, 80));
+    if (!record) return null;
+    record.status = normalizeLeadStage(input.status || record.status);
+    record.assignee = clean(input.assignee, 100);
+    record.nextFollowUp = clean(input.nextFollowUp, 20);
+    record.budget = clean(input.budget, 80);
+    record.rentalTerm = clean(input.rentalTerm, 60);
+    record.moveInDate = clean(input.moveInDate, 20);
+    record.internalNotes = clean(input.internalNotes, 2000);
+    record.updatedAt = new Date().toISOString();
+    const temp = `${ENQUIRIES_FILE}.tmp`;
+    await fs.writeFile(temp, JSON.stringify(enquiries, null, 2), { mode: 0o600 });
+    await fs.rename(temp, ENQUIRIES_FILE);
+    return record;
+  });
+  enquiryWriteQueue = task.catch(() => {});
   return task;
 }
 
@@ -353,27 +394,17 @@ async function handleAdminApi(req, res, url) {
   }
   if (url.pathname === '/api/admin/enquiries/status' && req.method === 'POST') {
     const body = await readBody(req);
-    const id = clean(body.id, 80);
-    const status = clean(body.status, 20);
-    if (!['new', 'replied', 'won', 'lost'].includes(status)) {
-      return sendJson(res, 422, { error: 'Status must be new, replied, won, or lost.' });
-    }
-    const task = enquiryWriteQueue.then(async () => {
-      const enquiries = await readEnquiries();
-      const target = enquiries.find(item => item.id === id);
-      if (target) {
-        target.status = status;
-        const temp = `${ENQUIRIES_FILE}.tmp`;
-        await fs.writeFile(temp, JSON.stringify(enquiries, null, 2), { mode: 0o600 });
-        await fs.rename(temp, ENQUIRIES_FILE);
-      }
-      return target || null;
-    });
-    enquiryWriteQueue = task.catch(() => {});
-    const updated = await task;
+    if (!LEAD_STAGES.has(body.status)) return sendJson(res, 422, { error: 'Invalid lead stage.' });
+    const updated = await updateEnquiry(body);
     if (!updated) return sendJson(res, 404, { error: 'Enquiry not found.' });
-    audit.add(session.user, 'enquiry status', `${updated.name || id} -> ${status}`);
+    audit.add(session.user, 'lead stage', `${updated.name || updated.id} -> ${updated.status}`);
     return sendJson(res, 200, { ok: true });
+  }
+  if (url.pathname === '/api/admin/enquiries/update' && req.method === 'POST') {
+    const updated = await updateEnquiry(await readBody(req));
+    if (!updated) return sendJson(res, 404, { error: 'Lead not found.' });
+    audit.add(session.user, 'updated lead', updated.name || updated.id);
+    return sendJson(res, 200, { ok: true, lead: updated });
   }
   if (url.pathname === '/api/admin/villas/photo' && req.method === 'POST') {
     const body = await readBody(req, 8 * 1024 * 1024); // photos are bigger than JSON
@@ -455,9 +486,9 @@ const server = http.createServer(async (req, res) => {
       // Sanitized public list — no owner data, no rates, no internal notes.
       const data = await villaData.getAll();
       const publicVillas = data.villas
-        .filter(v => ['Available', 'Booked'].includes(v.status))
+        .filter(v => v.published !== false && ['Available', 'Booked'].includes(v.status))
         .map(v => ({
-          name: v.name, location: v.location || '', bedrooms: v.bedrooms || 0,
+          name: v.name, slug: v.slug || '', summary: v.summary || '', location: v.location || '', bedrooms: v.bedrooms || 0,
           bathrooms: v.bathrooms || 0, pool: !!v.pool, maxGuests: v.maxGuests || 0,
           status: v.status, photoUrl: v.photoUrl || '', facilities: v.facilities || '',
           // Sanitized availability: date ranges only, never guest details.

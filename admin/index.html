@@ -274,7 +274,7 @@
         <button data-view="finance"><i class="icon">📊</i>Finance<span class="count" id="n-finance">0</span></button>
         <div class="g-label">Workspace</div>
         <button data-view="tasks"><i class="icon">✓</i>Tasks<span class="count" id="n-tasks">0</span></button>
-        <button data-view="enquiries"><i class="icon">✉</i>Enquiries<span class="count" id="n-enquiries">0</span></button>
+        <button data-view="enquiries"><i class="icon">✉</i>Leads<span class="count" id="n-enquiries">0</span></button>
         <button data-view="bots"><i class="icon">◎</i>Bots</button>
         <button data-view="team" class="admin-only"><i class="icon">👥</i>Team</button>
         <button data-view="activity" class="admin-only"><i class="icon">🕐</i>Activity</button>
@@ -315,7 +315,7 @@
             <div class="stat"><div class="s-ico">🧳</div><div class="label">Active stays</div><div class="value" id="m-stays">—</div><div class="sub" id="m-checkouts"></div></div>
             <div class="stat"><div class="s-ico">💳</div><div class="label">Payments to act on</div><div class="value" id="m-payments">—</div><div class="sub" id="m-overdue"></div></div>
             <div class="stat"><div class="s-ico">🔒</div><div class="label">Deposits held</div><div class="value" id="m-deposits">—</div><div class="sub" id="m-refunds"></div></div>
-            <div class="stat"><div class="s-ico">✉</div><div class="label">New enquiries</div><div class="value" id="m-enquiries">—</div><div class="sub">from websites</div></div>
+            <div class="stat"><div class="s-ico">✉</div><div class="label">New leads</div><div class="value" id="m-enquiries">—</div><div class="sub">from websites</div></div>
             <div class="stat"><div class="s-ico">✓</div><div class="label">Open tasks</div><div class="value" id="m-tasks">—</div><div class="sub" id="m-high"></div></div>
           </div>
           <div class="grid-3 section-gap">
@@ -392,7 +392,7 @@
 
         <!-- FINANCE -->
         <section class="view" id="view-finance">
-          <div class="page-head"><div><h2>Finance</h2><p>Income and expenses across all villas. Rent is booked automatically when a payment is marked paid.</p></div><div style="display:flex;gap:9px"><button class="btn secondary" id="fin-csv">Export CSV</button><button class="btn" data-open="transactions">+ Add transaction</button></div></div>
+          <div class="page-head"><div><h2>Agency finance</h2><p>TVM's internal income and expenses: retainers, placement commissions, campaigns, contractors and operating costs. Rent is booked automatically when a payment is marked paid.</p></div><div style="display:flex;gap:9px"><button class="btn secondary" id="fin-csv">Export CSV</button><button class="btn" data-open="transactions">+ Add transaction</button></div></div>
           <div class="stats">
             <div class="stat"><div class="s-ico">↑</div><div class="label">Income (this month)</div><div class="value" id="f-income" style="font-size:1.25rem">—</div><div class="sub" id="f-income-all"></div></div>
             <div class="stat"><div class="s-ico">↓</div><div class="label">Expenses (this month)</div><div class="value" id="f-expense" style="font-size:1.25rem">—</div><div class="sub" id="f-expense-all"></div></div>
@@ -410,8 +410,8 @@
 
         <!-- ENQUIRIES -->
         <section class="view" id="view-enquiries">
-          <div class="page-head"><div><h2>Enquiries</h2><p>Villa submissions and requests from the public websites.</p></div></div>
-          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Source</th><th>Person</th><th>Contact</th><th>Message</th><th>Status</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
+          <div class="page-head"><div><h2>Leads</h2><p>Owner, renter and furniture opportunities from the public websites. Keep the next follow-up date current.</p></div></div>
+          <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Type & source</th><th>Person</th><th>Contact</th><th>Next follow-up</th><th>Stage</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
         </section>
 
         <!-- TEAM (admin) -->
@@ -444,7 +444,7 @@
               <span class="badge" id="wa-badge">Checking…</span>
               <h3 style="margin:10px 0 4px">WhatsApp</h3>
               <p id="wa-detail" style="color:var(--muted);margin:0">Checking session…</p>
-              <form class="pair-row" id="pair-form"><input name="phone" inputmode="tel" placeholder="62821… (with country code)" required><button class="btn" type="submit">Get pairing code</button></form>
+              <form class="pair-row" id="pair-form"><input name="phone" inputmode="tel" placeholder="6287777278270 (dedicated bot number)" required><button class="btn" type="submit">Get pairing code</button></form>
               <button class="btn secondary sm" type="button" id="qr-btn" style="margin-top:10px">Show QR code instead</button>
               <div class="pair-code" id="pair-code"><span>Pairing code</span><strong></strong><small>WhatsApp → Linked devices → Link with phone number</small></div>
               <div class="pair-qr" id="pair-qr"><img alt="WhatsApp linking QR code"><small>WhatsApp → Linked devices → Link a device → scan this QR code.</small></div>
@@ -467,6 +467,7 @@
       <div class="f"><label>Villa name *</label><input name="name" required></div>
       <div class="f"><label>Villa code</label><input name="code" placeholder="VA-01"></div>
       <div class="f"><label>Status</label><select name="status"><option>Available</option><option>Booked</option><option>Off-market</option><option>Maintenance</option></select></div>
+      <div class="f-check"><input name="published" type="checkbox" id="ck-published" checked><label for="ck-published"><strong>Publish on the TVM website</strong></label></div>
       <div class="f"><label>Location</label><input name="location" placeholder="Berawa, Canggu"></div>
       <div class="f"><label>Bedrooms</label><input name="bedrooms" type="number" min="0"></div>
       <div class="f"><label>Bathrooms</label><input name="bathrooms" type="number" min="0"></div>
@@ -482,8 +483,10 @@
       <div class="f"><label>Google Maps link</label><input name="mapUrl" type="url"></div>
       <div class="f"><label>Photos folder (Drive)</label><input name="photosFolderUrl" type="url"></div>
       <div class="f"><label>Public listing link</label><input name="listingUrl" type="url"></div>
+      <div class="f"><label>Public URL slug</label><input name="slug" placeholder="auto-from-villa-name"></div>
       <div class="f full"><label>Owner agency agreement (Drive PDF)</label><input name="ownerAgreementUrl" type="url"></div>
       <div class="f full"><label>Villa photo (JPG/PNG — shown on the card and villa page)</label><input type="file" name="photoFile" accept="image/jpeg,image/png,image/webp"></div>
+      <div class="f full"><label>Public villa summary</label><textarea name="summary" placeholder="A short, client-facing description for the villa page."></textarea></div>
       <div class="f full"><label>Marketing notes</label><textarea name="marketingNotes"></textarea></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villas">Cancel</button><button class="btn" type="submit">Save villa</button></div></form>
   </dialog>
@@ -607,8 +610,8 @@
     <form id="form-transactions"><div class="modal-body"><div class="form-grid">
       <input type="hidden" name="id"><input type="hidden" name="sourceId">
       <div class="f"><label>Type *</label><select name="type"><option>Income</option><option>Expense</option></select></div>
-      <div class="f"><label>Category</label><select name="category"><option>Rent</option><option>Deposit</option><option>Cleaning</option><option>Repairs</option><option>Utilities</option><option>Pool service</option><option>Garden</option><option>Staff</option><option>Supplies</option><option>Commission</option><option>Marketing</option><option>Other</option></select></div>
-      <div class="f"><label>Villa *</label><select name="villaId" data-villa-select required></select></div>
+      <div class="f"><label>Category</label><select name="category"><option>Owner retainer</option><option>Placement commission</option><option>Marketing package</option><option>Advertising</option><option>Content production</option><option>Software</option><option>Contractor</option><option>Furniture</option><option>Rent</option><option>Deposit</option><option>Cleaning</option><option>Repairs</option><option>Utilities</option><option>Commission</option><option>Other</option></select></div>
+      <div class="f"><label>Villa / client (optional)</label><select name="villaId" data-villa-select></select></div>
       <div class="f"><label>Stay (optional)</label><select name="tenancyId" data-tenancy-select></select></div>
       <div class="f full"><label>Description *</label><input name="description" required placeholder="e.g. AC repair bedroom 2"></div>
       <div class="f"><label>Amount *</label><input name="amount" type="number" min="0" required></div>
@@ -618,6 +621,19 @@
       <div class="f full"><label>Receipt / proof (Drive link)</label><input name="proofUrl" type="url"></div>
       <div class="f full"><label>Notes</label><textarea name="notes"></textarea></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="transactions">Cancel</button><button class="btn" type="submit">Save transaction</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-enquiry"><div class="modal-head"><h3>Lead details</h3><button class="modal-close" data-close="enquiry">✕</button></div>
+    <form id="form-enquiry"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id">
+      <div class="f"><label>Pipeline stage</label><select name="status"><option>New</option><option>Contacted</option><option>Qualified</option><option>Viewing</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></div>
+      <div class="f"><label>Assigned to</label><input name="assignee" placeholder="e.g. Afni"></div>
+      <div class="f"><label>Next follow-up</label><input name="nextFollowUp" type="date"></div>
+      <div class="f"><label>Budget</label><input name="budget" placeholder="e.g. IDR 45m/month"></div>
+      <div class="f"><label>Rental term</label><select name="rentalTerm"><option value="">Not set</option><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
+      <div class="f"><label>Target move-in</label><input name="moveInDate" type="date"></div>
+      <div class="f full"><label>Internal notes</label><textarea name="internalNotes" placeholder="Qualification details, next action, owner response…"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="enquiry">Cancel</button><button class="btn" type="submit">Save lead</button></div></form>
   </dialog>
 
   <dialog id="dlg-villaTasks"><div class="modal-head"><h3 id="ttl-villaTasks">Add villa task</h3><button class="modal-close" data-close="villaTasks">✕</button></div>
@@ -662,11 +678,12 @@
     const money=(a,c='IDR')=>a?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
     const safeUrl=v=>{try{const u=new URL(v);return['https:','http:'].includes(u.protocol)?u.href:''}catch(_){return''}};
     const flink=(u,l='Open')=>safeUrl(u)?`<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener noreferrer">${esc(l)} ↗</a>`:'—';
-    const BADGE={Paid:'green',Refunded:'green',Confirmed:'green','Checked-in':'green',Available:'green',Sent:'green',
+    const BADGE={Paid:'green',Refunded:'green',Confirmed:'green','Checked-in':'green',Available:'green',Sent:'green',Won:'green',
       Reminded:'amber',Due:'amber',Held:'amber',Reserved:'amber','Awaiting collection':'amber','Partially refunded':'amber',
-      Booked:'blue',Scheduled:'blue',Enquiry:'blue',High:'red',Mid:'amber',Low:'green',
-      Overdue:'red',Late:'red',Forfeited:'red',Cancelled:'red',Maintenance:'red','Off-market':'red'};
+      Booked:'blue',Scheduled:'blue',Enquiry:'blue',New:'blue',Qualified:'blue',Viewing:'blue',Contacted:'amber',Negotiation:'amber',High:'red',Mid:'amber',Low:'green',
+      Overdue:'red',Late:'red',Forfeited:'red',Cancelled:'red',Maintenance:'red','Off-market':'red',Lost:'red'};
     const badge=v=>`<span class="badge ${BADGE[v]||''}">${esc(v||'—')}</span>`;
+    const leadStage=v=>({new:'New',replied:'Contacted',won:'Won',lost:'Lost'}[String(v||'').toLowerCase()]||v||'New');
     const vMap=()=>Object.fromEntries(state.villaData.villas.map(v=>[v.id,v]));
     const sMap=()=>Object.fromEntries(state.villaData.tenancies.map(t=>[t.id,t]));
     const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -675,7 +692,7 @@
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
 
     // ── Navigation ──
-    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Finance',tasks:'Tasks',enquiries:'Enquiries',bots:'Messaging bots',team:'Team',activity:'Activity'};
+    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Agency finance',tasks:'Tasks',enquiries:'Leads',bots:'Messaging bots',team:'Team',activity:'Activity'};
     function show(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
       $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
       $$('#bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
@@ -685,12 +702,13 @@
     document.addEventListener('click',e=>{
       const g=e.target.closest('[data-goto]');if(g)return show(g.dataset.goto);
       const vn=e.target.closest('[data-villa-nav]');if(vn)return openVilla(vn.dataset.villaNav);
+      const editLead=e.target.closest('[data-edit-lead]');if(editLead){const lead=state.enquiries.find(x=>x.id===editLead.dataset.editLead);if(lead)openModal('enquiry',{...lead,status:leadStage(lead.status)});return}
       const ch=e.target.closest('.chip');
       if(ch&&ch.dataset.vfilter!==undefined){state._villaFilter=ch.dataset.vfilter;$$('#villa-chips .chip').forEach(c=>c.classList.toggle('active',c===ch));render()}
       if(ch&&ch.dataset.pfilter!==undefined){state._payFilter=ch.dataset.pfilter;$$('#pay-chips .chip').forEach(c=>c.classList.toggle('active',c===ch));render()}});
     document.addEventListener('change',async e=>{
       if(e.target.matches('.enq-status')){
-        try{await api('/api/admin/enquiries/status',{method:'POST',body:JSON.stringify({id:e.target.dataset.enq,status:e.target.value})});toast('Enquiry updated.');await load()}
+        try{await api('/api/admin/enquiries/status',{method:'POST',body:JSON.stringify({id:e.target.dataset.enq,status:e.target.value})});toast('Lead updated.');await load()}
         catch(err){toast(err.message)}}});
     $('#menu-toggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('open')});
     $('#scrim').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open')});
@@ -717,6 +735,8 @@
       const c=e.target.closest('[data-close]');if(c)$(`#dlg-${c.dataset.close}`).close();
     });
     $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
+    $('#form-enquiry').addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
+      try{await api('/api/admin/enquiries/update',{method:'POST',body:JSON.stringify(formData(e.target))});$('#dlg-enquiry').close();await load();toast('Lead saved.')}catch(err){toast(err.message)}finally{btn.disabled=false}});
     $('#vd-add-stay').addEventListener('click',()=>openModal('tenancies',null,{villaId:currentVillaId}));
     $('#vd-add-doc').addEventListener('click',()=>openModal('documents',null,{villaId:currentVillaId}));
     $('#vd-add-task').addEventListener('click',()=>openModal('villaTasks',null,{villaId:currentVillaId}));
@@ -928,7 +948,7 @@
       const active=d.tenancies.filter(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
       const act=d.installments.filter(p=>['Reminded','Due','Overdue','Late'].includes(p.status));
       const held=d.deposits.filter(x=>['Held','Partially refunded','Awaiting collection'].includes(x.status));
-      const fresh=state.enquiries.filter(x=>x.status==='new').length;
+      const fresh=state.enquiries.filter(x=>leadStage(x.status)==='New').length;
       // sidebar counts
       $('#n-villas').textContent=d.villas.length;$('#n-stays').textContent=d.tenancies.length;$('#n-payments').textContent=d.installments.filter(p=>p.status!=='Paid').length;$('#n-deposits').textContent=held.length;$('#n-documents').textContent=d.documents.length;$('#n-tasks').textContent=state.tasks.length;$('#n-enquiries').textContent=fresh;
       // stats
@@ -1015,13 +1035,15 @@
       $('#f-net').textContent=money(netM);$('#f-net').style.color=netM>=0?'var(--green)':'var(--red)';
       $('#f-net-all').textContent=`all time ${money(netAll)}`;
       $('#t-finance').innerHTML=d.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(x=>{const v=V[x.villaId]||{};
-        return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'—')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — click “+ Add transaction”, or mark a payment paid to auto-book rent income.</td></tr>';
+        return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'TVM internal')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — add an agency retainer, commission, campaign cost, or another internal item.</td></tr>';
       // tasks & enquiries
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
-      $('#t-enquiries').innerHTML=state.enquiries.map(x=>{const wa=String(x.phone||'').replace(/\D/g,'');
-        return`<tr><td>${fdate(x.createdAt)}</td><td>${esc(x.source||'—')}<span class="sub">${esc(x.business||'')}</span></td><td>${esc(x.name)}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}</td><td style="max-width:380px">${esc(x.message)}</td>
-        <td><select class="enq-status" data-enq="${esc(x.id)}" style="padding:5px 8px;border:1px solid #ddd5c8;border-radius:8px;font-size:.76rem">${['new','replied','won','lost'].map(s=>`<option ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
-        <td><div class="row-actions">${wa?`<a class="btn sm" style="text-decoration:none" href="https://wa.me/${wa}?text=${encodeURIComponent('Hi '+(x.name||'')+', thanks for reaching out to The Villa Managers!')}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button class="btn secondary sm" data-enquiry-stay="${esc(x.id)}">→ Stay</button></div></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No enquiries yet.</td></tr>';
+      $('#t-enquiries').innerHTML=state.enquiries.map(x=>{const wa=String(x.phone||'').replace(/\D/g,''),stage=leadStage(x.status),isRenter=/find a villa|renter/i.test(`${x.business||''} ${x.leadType||''}`);
+        const source=[x.utmSource||x.source||'—',x.utmCampaign].filter(Boolean).join(' · ');
+        const follow=x.nextFollowUp?`${fdate(x.nextFollowUp)}${x.assignee?`<span class="sub">${esc(x.assignee)}</span>`:''}`:'—';
+        return`<tr><td>${fdate(x.createdAt)}</td><td><strong>${esc(x.leadType||x.business||'General')}</strong><span class="sub">${esc(source)}</span></td><td>${esc(x.name||'—')}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}<span class="sub">${esc(x.villaName||x.budget||'')}</span></td><td>${follow}</td>
+        <td><select class="enq-status" data-enq="${esc(x.id)}" style="padding:5px 8px;border:1px solid #ddd5c8;border-radius:8px;font-size:.76rem">${['New','Contacted','Qualified','Viewing','Negotiation','Won','Lost'].map(s=>`<option ${stage===s?'selected':''}>${s}</option>`).join('')}</select></td>
+        <td><div class="row-actions"><button class="btn secondary sm" data-edit-lead="${esc(x.id)}">Details</button>${wa?`<a class="btn sm" style="text-decoration:none" href="https://wa.me/${wa}?text=${encodeURIComponent('Hi '+(x.name||'')+', thanks for reaching out to The Villa Managers!')}" target="_blank" rel="noopener">WhatsApp</a>`:''}${isRenter?`<button class="btn secondary sm" data-enquiry-stay="${esc(x.id)}">→ Stay</button>`:''}</div></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No leads yet.</td></tr>';
       // bots
       const wa=state.bots.whatsapp||{},tg=state.bots.telegram||{};
       $('#wa-badge').className=`badge ${wa.connected?'green':'red'}`;$('#wa-badge').textContent=wa.connected?'Connected':'Offline';

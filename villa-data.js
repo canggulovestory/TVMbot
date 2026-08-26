@@ -11,7 +11,7 @@ const path = require('path');
 const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks'];
 const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC', transactions: 'TRX', villaTasks: 'VTK' };
 const FIELDS = {
-  villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes', 'photoUrl'],
+  villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes', 'photoUrl', 'published', 'slug', 'summary'],
   tenancies: ['code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'nationality', 'idDocumentUrl', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'guestCount', 'rentAmount', 'currency', 'paymentFrequency', 'source', 'agencyCommissionPercent', 'contractUrl', 'notes'],
   installments: ['code', 'tenancyId', 'villaId', 'installmentNumber', 'installmentTotal', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'gracePeriodDays', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'lateFee', 'ownerPayoutStatus'],
   deposits: ['code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'deductionNotes', 'refundDate', 'refundProofUrl', 'inventoryUrl'],
@@ -20,7 +20,7 @@ const FIELDS = {
   villaTasks: ['title', 'villaId', 'category', 'priority', 'status', 'dueDate', 'assignee', 'cost', 'notes'],
 };
 const NUMBER_FIELDS = new Set(['bedrooms', 'bathrooms', 'maxGuests', 'monthlyRate', 'yearlyRate', 'guestCount', 'rentAmount', 'agencyCommissionPercent', 'installmentNumber', 'installmentTotal', 'amount', 'gracePeriodDays', 'lateFee', 'deductions', 'cost']);
-const BOOLEAN_FIELDS = new Set(['pool', 'signed']);
+const BOOLEAN_FIELDS = new Set(['pool', 'signed', 'published']);
 let filePath;
 let writeQueue = Promise.resolve();
 
@@ -47,6 +47,12 @@ function normalizeUrl(value) {
   }
 }
 
+function slugify(value) {
+  return clean(value, 160).toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
+}
+
 function normalize(collection, input, existing = {}) {
   if (!COLLECTIONS.includes(collection)) throw new Error('Unknown record type');
   const next = { ...existing };
@@ -56,6 +62,11 @@ function normalize(collection, input, existing = {}) {
     else if (NUMBER_FIELDS.has(field)) next[field] = Number.isFinite(Number(input[field])) ? Number(input[field]) : 0;
     else if (/Url$/.test(field)) next[field] = normalizeUrl(input[field]);
     else next[field] = clean(input[field], field === 'notes' || field === 'marketingNotes' || field === 'deductionNotes' ? 4000 : 500);
+  }
+  if (collection === 'villas') {
+    if (!existing.id && !('published' in input)) next.published = true;
+    const slug = slugify(('slug' in input ? input.slug : next.slug) || next.name);
+    if (slug) next.slug = slug;
   }
   return next;
 }

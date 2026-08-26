@@ -453,7 +453,7 @@
     try {
       const r = await fetch('/api/public/enquiries', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, source: 'afni' }),
+        body: JSON.stringify({ ...data, source: new URLSearchParams(location.search).get('utm_source') || 'Afni portfolio', leadType: 'Afni client', utmSource: new URLSearchParams(location.search).get('utm_source'), utmMedium: new URLSearchParams(location.search).get('utm_medium'), utmCampaign: new URLSearchParams(location.search).get('utm_campaign'), landingPage: location.pathname }),
       });
       if (!r.ok) throw new Error((await r.json()).error || 'Failed');
       f.reset(); msg.textContent = '✓ Sent! I\'ll reply within a day.';

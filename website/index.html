@@ -383,6 +383,8 @@
       transition: color .25s ease, background .25s ease;
     }
     .villa-card:hover .round-arrow { color: var(--white); background: var(--espresso); }
+    .public-villa-empty { grid-column: 1 / -1; margin: 0; padding: 34px 0; color: var(--muted); text-align: center; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .villa-placeholder { display: grid; height: 100%; min-height: 260px; place-items: center; color: var(--espresso); background: linear-gradient(135deg, #e6dccd, #cdb79a); font-family: var(--serif); font-size: 2rem; letter-spacing: .08em; }
     .villa-cta { display: flex; justify-content: center; margin-top: 72px; }
 
     /* About */
@@ -756,48 +758,7 @@
           <p class="lead">A considered collection of Bali homes presented for monthly, yearly, and long-term rental opportunities.</p>
         </div>
 
-        <div class="villa-grid">
-          <a class="villa-card reveal" href="/villa/?v=Villa%20Ann" data-villa="Villa Ann">
-            <div class="villa-photo">
-              <span class="villa-no">01</span>
-              <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Villa Ann modern exterior and swimming pool" loading="lazy">
-            </div>
-            <div class="villa-meta"><div><h3>Villa Ann</h3><p>Bali</p></div><span class="round-arrow">↗</span></div>
-          </a>
-
-          <a class="villa-card reveal" href="/villa/?v=Villa%20Alysaa" data-villa="Villa Alysaa">
-            <div class="villa-photo">
-              <span class="villa-no">02</span>
-              <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&amp;fit=crop&amp;w=1000&amp;q=85" alt="Villa Alysaa bright interior overlooking tropical greenery" loading="lazy">
-            </div>
-            <div class="villa-meta"><div><h3>Villa Alysaa</h3><p>Bali</p></div><span class="round-arrow">↗</span></div>
-          </a>
-
-          <a class="villa-card reveal" href="/villa/?v=Villa%20Diane" data-villa="Villa Diane">
-            <div class="villa-photo">
-              <span class="villa-no">03</span>
-              <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Villa Diane exterior framed by palm trees" loading="lazy">
-            </div>
-            <div class="villa-meta"><div><h3>Villa Diane</h3><p>Bali</p></div><span class="round-arrow">↗</span></div>
-          </a>
-
-          <a class="villa-card reveal" href="/villa/?v=Villa%20Lourinka" data-villa="Villa Lourinka">
-            <div class="villa-photo">
-              <span class="villa-no">04</span>
-              <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&amp;fit=crop&amp;w=1400&amp;q=85" alt="Villa Lourinka with a spacious modern facade" loading="lazy">
-            </div>
-            <div class="villa-meta"><div><h3>Villa Lourinka</h3><p>Bali</p></div><span class="round-arrow">↗</span></div>
-          </a>
-
-          <a class="villa-card reveal" href="/villa/?v=Villa%20LYSA" data-villa="Villa LYSA">
-            <div class="villa-photo">
-              <span class="villa-no">05</span>
-              <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Villa LYSA contemporary poolside living" loading="lazy">
-            </div>
-            <div class="villa-meta"><div><h3>Villa LYSA</h3><p>Bali</p></div><span class="round-arrow">↗</span></div>
-          </a>
-
-        </div>
+        <div class="villa-grid" id="public-villa-grid" aria-live="polite"><p class="public-villa-empty">Loading available villas…</p></div>
 
         <div class="villa-cta reveal"><a class="button button--outline" href="#contact" data-interest="The Villa Managers — Find a villa">Find a villa <span class="arrow">→</span></a></div>
       </div>
@@ -971,6 +932,13 @@
             <div class="field"><label for="available-from">Available from</label><input id="available-from" name="availableFrom" type="date"></div>
             <div class="field"><label for="listing-link">Photos or current listing link</label><input id="listing-link" name="listingLink" type="url" placeholder="https://"></div>
           </div>
+          <div class="owner-fields" id="renter-fields" aria-hidden="true">
+            <div class="owner-fields-head"><strong>Tell us about your ideal stay</strong><span>These details help us match you with suitable monthly, yearly, or long-term villas.</span></div>
+            <div class="field"><label for="renter-location">Preferred area</label><input id="renter-location" name="preferredLocation" placeholder="Canggu, Uluwatu, Ubud…"></div>
+            <div class="field"><label for="renter-term">Rental term</label><select id="renter-term" name="rentalTerm"><option value="">Choose a term</option><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
+            <div class="field"><label for="move-in-date">Move-in date</label><input id="move-in-date" name="moveInDate" type="date"></div>
+            <div class="field"><label for="renter-budget">Monthly budget</label><input id="renter-budget" name="budget" placeholder="e.g. IDR 45m"></div>
+          </div>
           <div class="field field--full"><label for="message">Tell us what you need</label><textarea id="message" name="message" required></textarea></div>
           <button class="button" type="submit">Send via WhatsApp <span class="arrow">→</span></button>
           <p class="form-note">Your enquiry is saved to TVM HQ, then opens in WhatsApp for review. Submitting does not guarantee representation.</p>
@@ -1035,6 +1003,7 @@
 
     const interestSelect = document.getElementById('interest');
     const ownerFields = document.getElementById('owner-fields');
+    const renterFields = document.getElementById('renter-fields');
     const ownerRequiredFields = [
       document.getElementById('villa-name'),
       document.getElementById('villa-location'),
@@ -1042,9 +1011,12 @@
     ];
     const updateOwnerFields = () => {
       const isOwnerSubmission = interestSelect.value === 'The Villa Managers — Submit a villa';
+      const isRenter = interestSelect.value === 'The Villa Managers — Find a villa';
       ownerFields.classList.toggle('visible', isOwnerSubmission);
       ownerFields.setAttribute('aria-hidden', String(!isOwnerSubmission));
       ownerRequiredFields.forEach(field => { field.required = isOwnerSubmission; });
+      renterFields.classList.toggle('visible', isRenter);
+      renterFields.setAttribute('aria-hidden', String(!isRenter));
     };
     interestSelect.addEventListener('change', updateOwnerFields);
 
@@ -1090,7 +1062,13 @@
         data.get('availableFrom') ? `Available from: ${data.get('availableFrom')}` : '',
         data.get('listingLink') ? `Photos/listing: ${data.get('listingLink')}` : ''
       ].filter(Boolean) : [];
-      const enquiryMessage = [data.get('message'), ...ownerDetails].filter(Boolean).join('\n');
+      const renterDetails = data.get('interest') === 'The Villa Managers — Find a villa' ? [
+        data.get('preferredLocation') ? `Preferred area: ${data.get('preferredLocation')}` : '',
+        data.get('rentalTerm') ? `Rental term: ${data.get('rentalTerm')}` : '',
+        data.get('moveInDate') ? `Move-in: ${data.get('moveInDate')}` : '',
+        data.get('budget') ? `Budget: ${data.get('budget')}` : ''
+      ].filter(Boolean) : [];
+      const enquiryMessage = [data.get('message'), ...ownerDetails, ...renterDetails].filter(Boolean).join('\n');
       const text = [
         'Hello TVM,',
         '',
@@ -1106,14 +1084,24 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            source: 'tvm',
+            source: new URLSearchParams(location.search).get('utm_source') || 'Website',
             business: data.get('interest'),
+            leadType: data.get('interest') === 'The Villa Managers — Submit a villa' ? 'Villa owner' : data.get('interest') === 'The Villa Managers — Find a villa' ? 'Renter' : 'Furniture client',
             name: fullName,
             email: data.get('email'),
             phone: data.get('phone'),
-            message: enquiryMessage
+            message: enquiryMessage,
+            villaName: data.get('villaName'),
+            rentalTerm: data.get('rentalTerm'),
+            moveInDate: data.get('moveInDate') || data.get('availableFrom'),
+            budget: data.get('budget'),
+            utmSource: new URLSearchParams(location.search).get('utm_source'),
+            utmMedium: new URLSearchParams(location.search).get('utm_medium'),
+            utmCampaign: new URLSearchParams(location.search).get('utm_campaign'),
+            landingPage: location.pathname
           })
         });
+        if (typeof gtag === 'function') gtag('event', 'generate_lead', { lead_type: data.get('interest') });
       } catch (_) {
         // WhatsApp remains available if the HQ capture service is temporarily offline.
       }
@@ -1124,25 +1112,34 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 <script>
-/* Live villa photos: when a photo is uploaded in the TVM dashboard, it appears here automatically. */
-fetch('/api/public/villas').then(r => r.json()).then(villas => {
-  document.querySelectorAll('.villa-card').forEach(card => {
-    const cardName = (card.dataset.villa || '').toLowerCase();
-    const match = villas.find(v => {
-      const n = v.name.toLowerCase();
-      return n === cardName || cardName.includes(n) || n.includes(cardName);
-    });
-    if (!match) return;
-    if (match.photoUrl) {
-      const img = card.querySelector('img');
-      if (img) { img.src = match.photoUrl; img.srcset = ''; }
-    }
-    if (match.status === 'Booked') {
-      const meta = card.querySelector('.villa-meta p');
-      if (meta && !/booked/i.test(meta.textContent)) meta.textContent += ' · Currently booked';
-    }
-  });
-}).catch(() => {});
+/* The public villa collection is published from TVM HQ — no separate website update needed. */
+const publicVillaGrid = document.getElementById('public-villa-grid');
+const publicEsc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+const publicInitials = value => String(value || 'TVM').split(/\s+/).map(word => word[0]).join('').slice(0, 2).toUpperCase();
+fetch('/api/public/villas').then(response => {
+  if (!response.ok) throw new Error('Could not load villas');
+  return response.json();
+}).then(villas => {
+  if (!villas.length) {
+    publicVillaGrid.innerHTML = '<p class="public-villa-empty">Our current villa collection is being prepared. Tell us what you are looking for and we will help.</p>';
+    return;
+  }
+  publicVillaGrid.innerHTML = villas.map((villa, index) => {
+    const name = publicEsc(villa.name);
+    const location = publicEsc(villa.location || 'Bali');
+    const href = `/villa/?v=${encodeURIComponent(villa.slug || villa.name)}`;
+    const image = villa.photoUrl
+      ? `<img src="${publicEsc(villa.photoUrl)}" alt="${name}" loading="lazy">`
+      : `<span class="villa-placeholder" aria-label="${name}">${publicEsc(publicInitials(villa.name))}</span>`;
+    const availability = villa.status === 'Booked' ? `${location} · Currently booked` : location;
+    return `<a class="villa-card reveal visible" href="${href}" data-villa="${name}">
+      <div class="villa-photo"><span class="villa-no">${String(index + 1).padStart(2, '0')}</span>${image}</div>
+      <div class="villa-meta"><div><h3>${name}</h3><p>${publicEsc(availability)}</p></div><span class="round-arrow">↗</span></div>
+    </a>`;
+  }).join('');
+}).catch(() => {
+  publicVillaGrid.innerHTML = '<p class="public-villa-empty">The villa collection is temporarily unavailable. Please send us an enquiry and we will help directly.</p>';
+});
 </script>
 </body>
 </html>
