@@ -428,11 +428,10 @@ async function handleAdminApi(req, res, url) {
     });
     return sendJson(res, 200, { ...pairing, qr: qrDataUrl });
   }
-  if (url.pathname === '/api/admin/bots/whatsapp/test' && req.method === 'POST') {
+  if (url.pathname === '/api/admin/bots/whatsapp/disconnect' && req.method === 'POST') {
     if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
-    const sent = await whatsapp.sendToPhone(process.env.AFNI_PHONE || '6282122922252', 'Hi Afni');
-    if (!sent) return sendJson(res, 503, { error: 'WhatsApp is not connected.' });
-    audit.add(session.user, 'sent WhatsApp bot test', 'Hi Afni');
+    await whatsapp.disconnect();
+    audit.add(session.user, 'disconnected WhatsApp bot', 'ready to pair the dedicated bot number');
     return sendJson(res, 200, { ok: true });
   }
 

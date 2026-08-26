@@ -14,6 +14,7 @@ let sock = null;
 let connected = false;
 let starting = null;
 let reconnectTimer = null;
+let suppressReconnect = false;
 let status = 'disconnected';
 let lastError = '';
 let lastConnectedAt = null;
@@ -24,6 +25,7 @@ let pairingReadyResolve = null;
 
 async function start() {
   if (starting) return starting;
+  suppressReconnect = false;
   starting = createConnection().finally(() => { starting = null; });
   return starting;
 }
@@ -94,7 +96,7 @@ async function createConnection() {
       sock = null;
       const code = lastDisconnect?.error?.output?.statusCode;
       lastError = lastDisconnect?.error?.message || `Disconnected (${code || 'unknown'})`;
-      if (code !== DisconnectReason.loggedOut) {
+      if (!suppressReconnect && code !== DisconnectReason.loggedOut) {
         status = 'reconnecting';
         console.log('[WA] Reconnecting in 5 seconds...');
         reconnectTimer = setTimeout(() => start().catch(error => {
@@ -179,6 +181,29 @@ async function requestPairingQr() {
   return { connected: false, qr: pairingQr, message: 'Open WhatsApp → Linked devices → Link a device, then scan this QR code.' };
 }
 
+async function disconnect() {
+  clearTimeout(reconnectTimer);
+  suppressReconnect = true;
+  const activeSocket = sock;
+  sock = null;
+  connected = false;
+  qrAvailable = false;
+  pairingQr = '';
+  status = 'logged_out';
+  try {
+    if (activeSocket) await activeSocket.logout();
+  } catch (error) {
+    // The credential removal below still prevents this server from reconnecting.
+    lastError = error.message;
+  }
+  try {
+    require('fs').rmSync(process.env.WA_SESSION_PATH || './wa-session', { recursive: true, force: true });
+  } catch (error) {
+    lastError = error.message;
+  }
+  return true;
+}
+
 async function sendToPhone(phone, text) {
   if (!sock || !connected) {
     console.log('[WA] Not connected — skipping send');
@@ -200,4 +225,4 @@ function getStatus() {
   return { connected, status, qrAvailable, lastError, lastConnectedAt };
 }
 
-module.exports = { start, sendToPhone, isConnected, getStatus, requestPairingCode, requestPairingQr };
+module.exports = { start, sendToPhone, isConnected, getStatus, requestPairingCode, requestPairingQr, disconnect };
