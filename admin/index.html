@@ -235,6 +235,9 @@
     .pair-row input{flex:1;padding:9px 11px;border:1px solid #ddd5c8;border-radius:9px;font:inherit}
     .pair-code{display:none;margin-top:12px;padding:15px;background:var(--espresso);color:#fff;border-radius:11px;text-align:center}
     .pair-code strong{display:block;font-size:1.5rem;letter-spacing:.15em}
+    .pair-qr{display:none;margin-top:14px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:11px;text-align:center}
+    .pair-qr img{display:block;width:min(100%,280px);margin:0 auto 10px;border-radius:6px}
+    .pair-qr small{display:block;color:var(--muted);font-size:.76rem}
     .mobile-scrim{display:none}
     @media(max-width:1120px){.grid-3{grid-template-columns:1fr}}
     @media(max-width:960px){
@@ -442,7 +445,9 @@
               <h3 style="margin:10px 0 4px">WhatsApp</h3>
               <p id="wa-detail" style="color:var(--muted);margin:0">Checking session…</p>
               <form class="pair-row" id="pair-form"><input name="phone" inputmode="tel" placeholder="62821… (with country code)" required><button class="btn" type="submit">Get pairing code</button></form>
+              <button class="btn secondary sm" type="button" id="qr-btn" style="margin-top:10px">Show QR code instead</button>
               <div class="pair-code" id="pair-code"><span>Pairing code</span><strong></strong><small>WhatsApp → Linked devices → Link with phone number</small></div>
+              <div class="pair-qr" id="pair-qr"><img alt="WhatsApp linking QR code"><small>WhatsApp → Linked devices → Link a device → scan this QR code.</small></div>
             </div>
             <div class="card bot-card">
               <span class="badge" id="tg-badge">Checking…</span>
@@ -1031,6 +1036,11 @@
     $('#pair-form').addEventListener('submit',async e=>{e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;
       try{const r=await api('/api/admin/bots/whatsapp/pair',{method:'POST',body:JSON.stringify({phone:e.target.phone.value})});
         if(r.pairingCode){$('#pair-code strong').textContent=r.pairingCode;$('#pair-code').style.display='block';toast('Pairing code created.')}}catch(err){toast(err.message)}finally{b.disabled=false}});
+    $('#qr-btn').addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;
+      try{const r=await api('/api/admin/bots/whatsapp/qr');
+        if(r.connected){toast('WhatsApp is already connected.');return}
+        $('#pair-qr img').src=r.qr;$('#pair-qr').style.display='block';toast('QR code ready — scan it from WhatsApp.');
+      }catch(err){toast(err.message)}finally{b.disabled=false}});
     $('#logout').addEventListener('click',async e=>{e.preventDefault();await api('/api/admin/logout',{method:'POST'});location.href='/admin/login'});
     $('#refresh').addEventListener('click',()=>load());
 

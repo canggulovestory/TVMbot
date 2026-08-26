@@ -18,6 +18,7 @@ let status = 'disconnected';
 let lastError = '';
 let lastConnectedAt = null;
 let qrAvailable = false;
+let pairingQr = '';
 let pairingReadyPromise = Promise.resolve();
 let pairingReadyResolve = null;
 
@@ -74,11 +75,13 @@ async function createConnection() {
     }
     if (qr) {
       qrAvailable = true;
+      pairingQr = qr;
       status = 'pairing_required';
     }
     if (connection === 'open') {
       connected = true;
       qrAvailable = false;
+      pairingQr = '';
       status = 'connected';
       lastError = '';
       lastConnectedAt = new Date().toISOString();
@@ -101,6 +104,7 @@ async function createConnection() {
       } else {
         status = 'logged_out';
         qrAvailable = false;
+        pairingQr = '';
         // Stale credentials block re-pairing — clear them so the next
         // "Get pairing code" from Admin HQ starts a clean session.
         try {
@@ -161,6 +165,20 @@ async function requestPairingCode(phone) {
   };
 }
 
+async function requestPairingQr() {
+  if (connected) return { connected: true, message: 'WhatsApp is already connected.' };
+  if (!sock) await start();
+
+  const deadline = Date.now() + 20000;
+  while (!pairingQr && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  if (!pairingQr) {
+    throw new Error('WhatsApp did not provide a QR code. Try again in a few seconds.');
+  }
+  return { connected: false, qr: pairingQr, message: 'Open WhatsApp → Linked devices → Link a device, then scan this QR code.' };
+}
+
 async function sendToPhone(phone, text) {
   if (!sock || !connected) {
     console.log('[WA] Not connected — skipping send');
@@ -182,4 +200,4 @@ function getStatus() {
   return { connected, status, qrAvailable, lastError, lastConnectedAt };
 }
 
-module.exports = { start, sendToPhone, isConnected, getStatus, requestPairingCode };
+module.exports = { start, sendToPhone, isConnected, getStatus, requestPairingCode, requestPairingQr };

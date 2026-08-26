@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs/promises');
 const http = require('http');
 const path = require('path');
+const QRCode = require('qrcode');
 const cron = require('node-cron');
 const notion = require('./notion');
 const assistant = require('./assistant');
@@ -414,6 +415,18 @@ async function handleAdminApi(req, res, url) {
     const phone = clean(body.phone, 30).replace(/\D/g, '');
     if (phone.length < 9) return sendJson(res, 422, { error: 'Enter the WhatsApp number with country code.' });
     return sendJson(res, 200, await whatsapp.requestPairingCode(phone));
+  }
+  if (url.pathname === '/api/admin/bots/whatsapp/qr' && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    const pairing = await whatsapp.requestPairingQr();
+    if (pairing.connected) return sendJson(res, 200, pairing);
+    const qrDataUrl = await QRCode.toDataURL(pairing.qr, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 360,
+      color: { dark: '#1c1915', light: '#ffffff' },
+    });
+    return sendJson(res, 200, { ...pairing, qr: qrDataUrl });
   }
 
   return sendJson(res, 404, { error: 'Not found.' });
