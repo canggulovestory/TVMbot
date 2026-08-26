@@ -162,6 +162,8 @@ function saveEnquiry(input, req) {
       rentalTerm: clean(input.rentalTerm, 60),
       moveInDate: clean(input.moveInDate || input.availableFrom, 20),
       budget: clean(input.budget, 80),
+      projectTimeline: clean(input.projectTimeline, 100),
+      preferredLanguage: clean(input.preferredLanguage, 30),
       utmSource: clean(input.utmSource, 100),
       utmMedium: clean(input.utmMedium, 100),
       utmCampaign: clean(input.utmCampaign, 160),
@@ -267,7 +269,42 @@ async function handlePublicEnquiry(req, res) {
     return sendJson(res, 422, { error: 'Name, message, and email or phone are required.' });
   }
   const record = await saveEnquiry(body, req);
+  // Alerts are best-effort: a saved lead must never depend on a chat channel being online.
+  void notifyNewLead(record).catch(error => console.error('[Lead] alert failed:', error.message));
   return sendJson(res, 201, { ok: true, id: record.id });
+}
+
+async function notifyNewLead(lead) {
+  const user = brain.USERS.afni;
+  if (!user) return;
+  const contact = lead.phone || lead.email || 'No contact provided';
+  const details = [lead.rentalTerm, lead.moveInDate, lead.budget, lead.projectTimeline].filter(Boolean).join(' · ');
+  const message = [
+    '✦ *New lead*',
+    `*${lead.leadType || 'General'}* — ${lead.name || 'Unknown'}`,
+    `${lead.business || lead.source || 'Website'}`,
+    contact,
+    details || null,
+    lead.message ? `_${lead.message.slice(0, 500)}_` : null,
+    'Open TVM HQ → Leads to qualify and schedule follow-up.',
+  ].filter(Boolean).join('\n');
+  const [wa, tg] = await Promise.allSettled([
+    Promise.resolve().then(() => whatsapp.sendToPhone(user.phone, message)),
+    user.telegramId ? Promise.resolve().then(() => telegram.sendToChat(user.telegramId, message)) : Promise.resolve(false),
+  ]);
+  console.log(`[Lead] ${lead.id} alert WA=${wa.status === 'fulfilled' && wa.value} TG=${tg.status === 'fulfilled' && tg.value}`);
+}
+
+async function leadActionSummary() {
+  const leads = await readEnquiries();
+  const today = new Date().toISOString().slice(0, 10);
+  const stage = value => normalizeLeadStage(value);
+  const open = leads.filter(lead => !['Won', 'Lost'].includes(stage(lead.status)));
+  const fresh = leads.filter(lead => stage(lead.status) === 'New').length;
+  const followUps = open.filter(lead => lead.nextFollowUp && lead.nextFollowUp <= today);
+  if (!fresh && !followUps.length) return '';
+  return `✦ *Leads*\n${fresh} new · ${followUps.length} follow-up${followUps.length === 1 ? '' : 's'} due today\n` +
+    followUps.slice(0, 5).map(lead => `• ${lead.name || 'Unnamed'} — ${lead.leadType || 'General'}`).join('\n');
 }
 
 async function handleAdminApi(req, res, url) {
@@ -551,7 +588,8 @@ async function sendMorningDMs() {
     try {
       const briefing = await brain.buildMorningDM(userKey);
       const villaActions = await villaData.getActionSummary();
-      const message = [briefing, villaActions].filter(Boolean).join('\n\n');
+      const leadActions = userKey === 'afni' ? await leadActionSummary() : '';
+      const message = [briefing, villaActions, leadActions].filter(Boolean).join('\n\n');
       if (!message) continue;
       const user = brain.USERS[userKey];
       const waSent = await whatsapp.sendToPhone(user.phone, message);
