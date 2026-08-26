@@ -557,7 +557,8 @@ async function backupData() {
 }
 
 async function boot() {
-  console.log('=== TVM Digital HQ v5.2 starting ===');
+  const version = require('./package.json').version;
+  console.log(`=== TVM Digital HQ v${version} starting ===`);
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
   villaData.init(DATA_DIR);
   assistant.init(DATA_DIR);
@@ -573,7 +574,7 @@ async function boot() {
   cron.schedule('* * * * *', deliverDueReminders); // minute-level reminder delivery
   cron.schedule('0 2 * * *', backupData, { timezone: 'Asia/Makassar' }); // nightly data backup
   server.listen(PORT, '127.0.0.1', () => console.log(`[HTTP] http://127.0.0.1:${PORT}`));
-  console.log('=== TVM Digital HQ v5.2 running ===');
+  console.log(`=== TVM Digital HQ v${version} running ===`);
 }
 
 boot().catch(error => {

@@ -1,0 +1,17 @@
+[Unit]
+Description=TVM Hermes Agent harness API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/tvmbot-v4
+Environment=HOME=/root
+ExecStart=/usr/local/bin/hermes -p tvm gateway run
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

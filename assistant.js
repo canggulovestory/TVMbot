@@ -1,7 +1,7 @@
 /**
  * assistant.js — Reminders, memory, and villa ops schedules.
- * Works fully WITHOUT AI credits via structured commands (/remind, /remember, /ops).
- * AI tools in brain.js call the same functions when credits are available.
+ * Structured commands work without a model provider (/remind, /remember, /ops).
+ * Hermes uses agent-tools.js for the same operations from natural language.
  * Storage: data/assistant.json (gitignored, private).
  */
 'use strict';

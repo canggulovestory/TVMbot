@@ -8,33 +8,28 @@ set -e
 VPS="root@212.85.24.204"
 REMOTE_DIR="/root/tvmbot-v4"
 PUBLIC_DIR="/root/tvm-website"
-OLD_DIR="/root/claude-chatbot"
 
 echo "=== TVMbot v4 Deploy ==="
 
-# 1. Back up old bot (first time only)
-echo "[1/6] Backing up old bot..."
-ssh $VPS "[ -d ${OLD_DIR} ] && [ ! -d ${OLD_DIR}-backup ] && cp -r ${OLD_DIR} ${OLD_DIR}-backup || echo 'Backup exists or not needed'"
-
-# 2. Stop old bot
-echo "[2/6] Stopping old bot..."
+# 1. Stop the legacy PM2 process if it still exists
+echo "[1/5] Stopping legacy bot process..."
 ssh $VPS "pm2 stop tvmbot 2>/dev/null || true"
 
-# 3. Copy v4 files (exclude .env, node_modules, wa-session)
-echo "[3/6] Uploading v4..."
+# 2. Copy v4 files (exclude .env, node_modules, wa-session)
+echo "[2/5] Uploading v4..."
 rsync -avz --exclude='.git' --exclude='node_modules' --exclude='.env' --exclude='wa-session' \
   ./ $VPS:$REMOTE_DIR/
 
-# 4. Install dependencies & set up env
-echo "[4/6] Installing deps..."
+# 3. Install dependencies
+echo "[3/5] Installing deps..."
 ssh $VPS "cd $REMOTE_DIR && npm install --production"
 
-# 5. Publish all public routes and the versioned Nginx routing
-echo "[5/6] Publishing website + protected routes..."
+# 4. Publish all public routes and the versioned Nginx routing
+echo "[4/5] Publishing website + protected routes..."
 ssh $VPS "install -d -m 755 $PUBLIC_DIR && rsync -a --delete $REMOTE_DIR/website/ $PUBLIC_DIR/ && install -m 644 $REMOTE_DIR/ops/nginx-tvmbot.conf /etc/nginx/sites-available/tvmbot && ln -sfn /etc/nginx/sites-available/tvmbot /etc/nginx/sites-enabled/tvmbot && nginx -t && systemctl reload nginx"
 
-# 6. Start with PM2
-echo "[6/6] Starting v4..."
+# 5. Start with PM2
+echo "[5/5] Starting v4..."
 ssh $VPS "cd $REMOTE_DIR && pm2 delete tvmbot-v4 2>/dev/null || true && pm2 start index.js --name tvmbot-v4 && pm2 save"
 
 # Keep GitHub and the VPS synchronized after every future push to main.
