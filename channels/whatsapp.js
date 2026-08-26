@@ -28,16 +28,29 @@ async function start() {
 }
 
 async function createConnection() {
-  const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore, Browsers } = await baileysModule;
+  const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason,
+    makeCacheableSignalKeyStore,
+    Browsers,
+    fetchLatestWaWebVersion,
+  } = await baileysModule;
   clearTimeout(reconnectTimer);
   status = 'connecting';
   pairingReadyPromise = new Promise(resolve => {
     pairingReadyResolve = resolve;
-    setTimeout(resolve, 5000);
+    setTimeout(() => resolve(false), 20000);
   });
   const sessionPath = process.env.WA_SESSION_PATH || './wa-session';
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   const logger = pino({ level: 'silent' });
+  let version;
+  try {
+    ({ version } = await fetchLatestWaWebVersion());
+  } catch (error) {
+    console.warn('[WA] Could not fetch the latest protocol version; using the bundled version:', error.message);
+  }
 
   sock = makeWASocket({
     auth: {
@@ -45,7 +58,8 @@ async function createConnection() {
       keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
     logger,
-    browser: Browsers.macOS('Google Chrome'),
+    ...(version ? { version } : {}),
+    browser: Browsers.windows('Chrome'),
     syncFullHistory: false,
     generateHighQualityLinkPreview: false,
   });
@@ -54,8 +68,8 @@ async function createConnection() {
 
   sock.ev.on('connection.update', update => {
     const { connection, lastDisconnect, qr } = update;
-    if (connection === 'connecting' || qr) {
-      pairingReadyResolve?.();
+    if (qr) {
+      pairingReadyResolve?.(true);
       pairingReadyResolve = null;
     }
     if (qr) {
@@ -71,6 +85,8 @@ async function createConnection() {
       console.log('[WA] Connected');
     }
     if (connection === 'close') {
+      pairingReadyResolve?.(false);
+      pairingReadyResolve = null;
       connected = false;
       sock = null;
       const code = lastDisconnect?.error?.output?.statusCode;
@@ -129,7 +145,10 @@ async function createConnection() {
 async function requestPairingCode(phone) {
   if (connected) return { connected: true, message: 'WhatsApp is already connected.' };
   if (!sock) await start();
-  await pairingReadyPromise;
+  const ready = await pairingReadyPromise;
+  if (!ready) {
+    throw new Error('WhatsApp did not become ready for pairing. Try again in a few seconds.');
+  }
   if (!sock || typeof sock.requestPairingCode !== 'function') {
     throw new Error('Pairing is not ready. Restart the bot and try again.');
   }
