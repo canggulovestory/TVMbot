@@ -254,7 +254,7 @@ async function adminOverview() {
     projects: value(1),
     payments: value(2),
     enquiries: value(3),
-    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], villaTasks: [] }),
+    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], invoices: [], villaTasks: [] }),
     bots: { whatsapp: whatsapp.getStatus(), telegram: telegram.getStatus() },
     errors: results.map((result, index) => result.status === 'rejected'
       ? ['tasks', 'projects', 'payments', 'enquiries', 'villa records'][index]
@@ -421,7 +421,7 @@ async function handleAdminApi(req, res, url) {
     audit.add(session.user, 'marked legacy payment paid', clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
-  const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'villaTasks'];
+  const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'villaTasks'];
   if (url.pathname === '/api/admin/records' && req.method === 'POST') {
     const body = await readBody(req);
     const collection = clean(body.collection, 40);
@@ -429,12 +429,16 @@ async function handleAdminApi(req, res, url) {
       return sendJson(res, 422, { error: 'Unknown record type.' });
     }
     try {
-      const record = collection === 'tenancies'
+      let record = collection === 'tenancies'
         ? await villaData.createTenancyBundle(body.record || {})
         : await villaData.upsert(collection, body.record || {});
       // Auto-book rent income when an installment is marked Paid
       if (collection === 'installments' && record.status === 'Paid') {
         await villaData.recordPaymentIncome(record).catch(err => console.error('[Finance] auto-income failed:', err.message));
+      }
+      if (collection === 'invoices' && record.status === 'Paid') {
+        const settled = await villaData.markInvoicePaid(record.id, record);
+        record = settled.invoice;
       }
       audit.add(session.user, `saved ${collection.slice(0, -1)}`, record.name || record.guestName || record.title || record.code || record.description || record.id);
       return sendJson(res, 201, { ok: true, record });
@@ -442,6 +446,13 @@ async function handleAdminApi(req, res, url) {
       if (error.statusCode === 409) return sendJson(res, 409, { error: error.message });
       throw error;
     }
+  }
+  if (url.pathname === '/api/admin/invoices/paid' && req.method === 'POST') {
+    const body = await readBody(req);
+    const result = await villaData.markInvoicePaid(body.id, body);
+    if (!result) return sendJson(res, 404, { error: 'Invoice not found.' });
+    audit.add(session.user, 'marked invoice paid', result.invoice.code || result.invoice.id);
+    return sendJson(res, 200, { ok: true, invoice: result.invoice, transaction: result.transaction, createdIncome: result.createdIncome });
   }
   if (url.pathname === '/api/admin/enquiries/status' && req.method === 'POST') {
     const body = await readBody(req);
