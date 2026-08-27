@@ -630,8 +630,11 @@
       <div class="f"><label>Assigned to</label><input name="assignee" placeholder="e.g. Afni"></div>
       <div class="f"><label>Next follow-up</label><input name="nextFollowUp" type="date"></div>
       <div class="f"><label>Budget</label><input name="budget" placeholder="e.g. IDR 45m/month"></div>
+      <div class="f"><label>Expected agency value</label><input name="expectedValue" placeholder="e.g. 12,000,000"></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
       <div class="f"><label>Rental term</label><select name="rentalTerm"><option value="">Not set</option><option>Monthly</option><option>Yearly</option><option>Long-term</option><option>Flexible</option></select></div>
       <div class="f"><label>Target move-in</label><input name="moveInDate" type="date"></div>
+      <div class="f full"><label>Lost reason (only if lost)</label><input name="lostReason" placeholder="e.g. Budget, timing, chose another villa, no response"></div>
       <div class="f full"><label>Internal notes</label><textarea name="internalNotes" placeholder="Qualification details, next action, owner response…"></textarea></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="enquiry">Cancel</button><button class="btn" type="submit">Save lead</button></div></form>
   </dialog>
@@ -684,6 +687,14 @@
       Overdue:'red',Late:'red',Forfeited:'red',Cancelled:'red',Maintenance:'red','Off-market':'red',Lost:'red'};
     const badge=v=>`<span class="badge ${BADGE[v]||''}">${esc(v||'—')}</span>`;
     const leadStage=v=>({new:'New',replied:'Contacted',won:'Won',lost:'Lost'}[String(v||'').toLowerCase()]||v||'New');
+    const leadAttention=lead=>{const stage=leadStage(lead.status);if(['Won','Lost'].includes(stage))return'';
+      const age=(Date.now()-Date.parse(lead.createdAt||Date.now()))/36e5;
+      if(stage==='New'&&age>=48)return '<span class="badge red">Contact overdue</span>';
+      if(stage==='New'&&age>=24)return '<span class="badge amber">Contact today</span>';
+      const today=new Date().toISOString().slice(0,10);
+      if(lead.nextFollowUp&&lead.nextFollowUp<today)return '<span class="badge red">Follow-up overdue</span>';
+      if(lead.nextFollowUp===today)return '<span class="badge amber">Follow-up today</span>';
+      return ''};
     const vMap=()=>Object.fromEntries(state.villaData.villas.map(v=>[v.id,v]));
     const sMap=()=>Object.fromEntries(state.villaData.tenancies.map(t=>[t.id,t]));
     const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -1040,7 +1051,7 @@
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
       $('#t-enquiries').innerHTML=state.enquiries.map(x=>{const wa=String(x.phone||'').replace(/\D/g,''),stage=leadStage(x.status),isRenter=/find a villa|renter/i.test(`${x.business||''} ${x.leadType||''}`);
         const source=[x.utmSource||x.source||'—',x.utmCampaign].filter(Boolean).join(' · ');
-        const follow=x.nextFollowUp?`${fdate(x.nextFollowUp)}${x.assignee?`<span class="sub">${esc(x.assignee)}</span>`:''}`:'—';
+        const follow=x.nextFollowUp?`${fdate(x.nextFollowUp)}${x.assignee?`<span class="sub">${esc(x.assignee)}</span>`:''}${leadAttention(x)}`:leadAttention(x)||'—';
         return`<tr><td>${fdate(x.createdAt)}</td><td><strong>${esc(x.leadType||x.business||'General')}</strong><span class="sub">${esc(source)}</span></td><td>${esc(x.name||'—')}</td><td>${x.email?`<a href="mailto:${encodeURIComponent(x.email)}">${esc(x.email)}</a>`:esc(x.phone||'—')}<span class="sub">${esc(x.villaName||x.budget||'')}</span></td><td>${follow}</td>
         <td><select class="enq-status" data-enq="${esc(x.id)}" style="padding:5px 8px;border:1px solid #ddd5c8;border-radius:8px;font-size:.76rem">${['New','Contacted','Qualified','Viewing','Negotiation','Won','Lost'].map(s=>`<option ${stage===s?'selected':''}>${s}</option>`).join('')}</select></td>
         <td><div class="row-actions"><button class="btn secondary sm" data-edit-lead="${esc(x.id)}">Details</button>${wa?`<a class="btn sm" style="text-decoration:none" href="https://wa.me/${wa}?text=${encodeURIComponent('Hi '+(x.name||'')+', thanks for reaching out to The Villa Managers!')}" target="_blank" rel="noopener">WhatsApp</a>`:''}${isRenter?`<button class="btn secondary sm" data-enquiry-stay="${esc(x.id)}">→ Stay</button>`:''}</div></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No leads yet.</td></tr>';

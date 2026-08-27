@@ -135,6 +135,12 @@ function clean(value, max = 500) {
   return String(value || '').trim().replace(/[\u0000-\u001f]/g, ' ').slice(0, max);
 }
 
+function isoDateInDays(days) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 async function readEnquiries() {
   try {
     return JSON.parse(await fs.readFile(ENQUIRIES_FILE, 'utf8'));
@@ -169,8 +175,12 @@ function saveEnquiry(input, req) {
       utmCampaign: clean(input.utmCampaign, 160),
       landingPage: clean(input.landingPage, 500),
       assignee: '',
-      nextFollowUp: '',
+      nextFollowUp: clean(input.nextFollowUp, 20) || isoDateInDays(1),
       internalNotes: '',
+      lastContactedAt: '',
+      expectedValue: clean(input.expectedValue, 80),
+      currency: ['IDR', 'USD'].includes(input.currency) ? input.currency : 'IDR',
+      lostReason: '',
       status: 'New',
       ip: clean((req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0], 80),
     };
@@ -198,12 +208,16 @@ function updateEnquiry(input) {
     const record = enquiries.find(item => item.id === clean(input.id, 80));
     if (!record) return null;
     record.status = normalizeLeadStage(input.status || record.status);
-    record.assignee = clean(input.assignee, 100);
-    record.nextFollowUp = clean(input.nextFollowUp, 20);
-    record.budget = clean(input.budget, 80);
-    record.rentalTerm = clean(input.rentalTerm, 60);
-    record.moveInDate = clean(input.moveInDate, 20);
-    record.internalNotes = clean(input.internalNotes, 2000);
+    if ('assignee' in input) record.assignee = clean(input.assignee, 100);
+    if ('nextFollowUp' in input) record.nextFollowUp = clean(input.nextFollowUp, 20);
+    if ('budget' in input) record.budget = clean(input.budget, 80);
+    if ('rentalTerm' in input) record.rentalTerm = clean(input.rentalTerm, 60);
+    if ('moveInDate' in input) record.moveInDate = clean(input.moveInDate, 20);
+    if ('internalNotes' in input) record.internalNotes = clean(input.internalNotes, 2000);
+    if ('expectedValue' in input) record.expectedValue = clean(input.expectedValue, 80);
+    if ('currency' in input) record.currency = ['IDR', 'USD'].includes(input.currency) ? input.currency : (record.currency || 'IDR');
+    if ('lostReason' in input) record.lostReason = clean(input.lostReason, 500);
+    if (record.status !== 'New' && !record.lastContactedAt) record.lastContactedAt = new Date().toISOString();
     record.updatedAt = new Date().toISOString();
     const temp = `${ENQUIRIES_FILE}.tmp`;
     await fs.writeFile(temp, JSON.stringify(enquiries, null, 2), { mode: 0o600 });
