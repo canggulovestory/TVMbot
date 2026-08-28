@@ -1,12 +1,12 @@
 ---
 name: tvm-operations
-description: Safely create and review TVM tasks, payment status, reminders, memory, and recurring villa operations from authenticated internal chats.
+description: Safely review TVM leads, finance, invoices, tasks, reminders, memory, and recurring operations from authenticated internal chats.
 version: 1.0.0
 author: The Villa Managers
 platforms: [linux]
 metadata:
   hermes:
-    tags: [tvm, notion, reminders, operations]
+    tags: [tvm, leads, finance, invoices, notion, reminders, operations]
     category: business
 ---
 
@@ -37,6 +37,18 @@ Available actions and inputs:
 - `list_memory`: `{}`
 - `add_ops_schedule`: `{"villa":"...","task":"...","frequency":"daily|weekly:1..7|monthly:1..31","assignee":"..."}`
 - `list_ops`: `{}`
+- `business_brief`: `{}` — read-only snapshot of leads, receivables, invoices, payments, and villa activity
+- `list_leads`: `{"stage":"New|Contacted|Qualified|Viewing|Negotiation|Won|Lost|due","search":"","limit":20}` — read-only lead list
+- `lead_detail`: `{"search":"lead name, email, phone, or id"}` — private lead details for drafting only
+- `finance_summary`: `{}` — read-only income, expenses, receivables, and outstanding invoices
+
+For business briefings, lead questions, finance questions, and invoice questions,
+use the matching read-only action first. Summarize the real result; do not invent
+numbers, clients, or payment status.
+
+You may draft a WhatsApp/email reply from `lead_detail`, but never send a client
+message, mark an invoice/payment paid, delete data, or change a financial record
+without an explicit confirmation in the same chat. State that drafts are not sent.
 
 Treat dates and times as WITA (`Asia/Makassar`). Translate natural language into
 the exact JSON format. Always use the quoted `TVM_JSON` heredoc form above so

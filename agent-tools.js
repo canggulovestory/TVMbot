@@ -15,10 +15,12 @@ const path = require('path');
 const fs = require('fs');
 const notion = require('./notion');
 const assistant = require('./assistant');
+const villaData = require('./villa-data');
 
 const ALLOWED_USERS = new Set(['afni', 'syifa']);
 const ALLOWED_PRIORITIES = new Set(['High', 'Mid', 'Low']);
 const ALLOWED_RECURRENCES = /^(daily|weekly:[1-7]|monthly:([1-9]|[12]\d|3[01]))$/;
+const NOTION_ACTIONS = new Set(['create_task', 'complete_task', 'list_tasks', 'mark_paid']);
 
 function requireText(value, name, max = 500) {
   const text = String(value || '').trim();
@@ -39,6 +41,110 @@ function parseWitaDateTime(value) {
   const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})$/);
   if (!match) throw new Error('datetime must be YYYY-MM-DD HH:MM in WITA');
   return assistant.witaToEpoch(+match[1], +match[2], +match[3], +match[4], +match[5]);
+}
+
+function leadStage(value) {
+  return ({ new: 'New', replied: 'Contacted', won: 'Won', lost: 'Lost' }[String(value || '').toLowerCase()] || value || 'New');
+}
+
+async function readLeads() {
+  const file = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'enquiries.json');
+  try {
+    const leads = JSON.parse(await require('fs/promises').readFile(file, 'utf8'));
+    return Array.isArray(leads) ? leads : [];
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+function currencyTotals(records) {
+  return records.reduce((out, item) => {
+    const currency = item.currency || 'IDR';
+    out[currency] = (out[currency] || 0) + Number(item.amount || 0);
+    return out;
+  }, {});
+}
+
+function leadPreview(lead, { includePrivate = false } = {}) {
+  const preview = {
+    id: lead.id, name: lead.name || '', type: lead.leadType || lead.business || 'General',
+    stage: leadStage(lead.status), source: lead.utmSource || lead.source || '',
+    nextFollowUp: lead.nextFollowUp || '', budget: lead.budget || '',
+    createdAt: lead.createdAt || '', assignee: lead.assignee || '',
+  };
+  if (includePrivate) Object.assign(preview, {
+    email: lead.email || '', phone: lead.phone || '', message: lead.message || '',
+    internalNotes: lead.internalNotes || '', rentalTerm: lead.rentalTerm || '', moveInDate: lead.moveInDate || '',
+  });
+  return preview;
+}
+
+async function businessBrief() {
+  const [leads, data] = await Promise.all([readLeads(), villaData.getAll()]);
+  const today = new Date().toISOString().slice(0, 10);
+  const openLeads = leads.filter(lead => !['Won', 'Lost'].includes(leadStage(lead.status)));
+  const dueLeads = openLeads.filter(lead => lead.nextFollowUp && lead.nextFollowUp <= today);
+  const invoices = data.invoices || [];
+  const receivables = invoices.filter(invoice => !['Paid', 'Void'].includes(invoice.status));
+  const dueInvoices = receivables.filter(invoice => invoice.dueDate && invoice.dueDate <= today);
+  const month = today.slice(0, 7);
+  const income = data.transactions.filter(item => item.type === 'Income' && (item.date || '').startsWith(month));
+  const expenses = data.transactions.filter(item => item.type === 'Expense' && (item.date || '').startsWith(month));
+  return {
+    asOf: today,
+    leads: {
+      new: leads.filter(lead => leadStage(lead.status) === 'New').length,
+      open: openLeads.length,
+      followUpsDue: dueLeads.length,
+      followUps: dueLeads.slice(0, 10).map(lead => leadPreview(lead)),
+    },
+    finance: {
+      incomeThisMonth: currencyTotals(income), expensesThisMonth: currencyTotals(expenses),
+      receivables: currencyTotals(receivables), invoicesOverdue: dueInvoices.length,
+      invoicesDue: dueInvoices.slice(0, 10).map(invoice => ({ code: invoice.code || '', clientName: invoice.clientName || '', amount: invoice.amount || 0, currency: invoice.currency || 'IDR', dueDate: invoice.dueDate || '', status: invoice.status || 'Draft' })),
+    },
+    operations: {
+      villasAvailable: data.villas.filter(villa => villa.status === 'Available').length,
+      unpaidInstallments: data.installments.filter(item => item.status !== 'Paid').length,
+      depositsAwaitingAction: data.deposits.filter(item => !['Refunded', 'Forfeited'].includes(item.status)).length,
+    },
+  };
+}
+
+async function listLeads(input) {
+  const today = new Date().toISOString().slice(0, 10);
+  const query = String(input.search || '').trim().toLowerCase();
+  const stage = String(input.stage || '').trim();
+  const limit = Math.min(Math.max(Number(input.limit) || 20, 1), 50);
+  const leads = await readLeads();
+  return leads.filter(lead => {
+    if (stage === 'due' && !(lead.nextFollowUp && lead.nextFollowUp <= today && !['Won', 'Lost'].includes(leadStage(lead.status)))) return false;
+    if (stage && stage !== 'due' && leadStage(lead.status).toLowerCase() !== stage.toLowerCase()) return false;
+    return !query || `${lead.name} ${lead.business} ${lead.leadType} ${lead.source}`.toLowerCase().includes(query);
+  }).slice(0, limit).map(lead => leadPreview(lead));
+}
+
+async function leadDetail(input) {
+  const search = requireText(input.search, 'search', 160).toLowerCase();
+  const leads = await readLeads();
+  const lead = leads.find(item => item.id === search || `${item.name} ${item.email} ${item.phone}`.toLowerCase().includes(search));
+  return lead ? leadPreview(lead, { includePrivate: true }) : null;
+}
+
+async function financeSummary() {
+  const data = await villaData.getAll();
+  const today = new Date().toISOString().slice(0, 10);
+  const month = today.slice(0, 7);
+  const invoices = data.invoices || [];
+  const receivables = invoices.filter(item => !['Paid', 'Void'].includes(item.status));
+  return {
+    asOf: today,
+    incomeThisMonth: currencyTotals(data.transactions.filter(item => item.type === 'Income' && (item.date || '').startsWith(month))),
+    expensesThisMonth: currencyTotals(data.transactions.filter(item => item.type === 'Expense' && (item.date || '').startsWith(month))),
+    receivables: currencyTotals(receivables),
+    invoices: invoices.filter(item => item.dueDate && !['Paid', 'Void'].includes(item.status)).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 20).map(item => ({ code: item.code || '', clientName: item.clientName || '', category: item.category || '', amount: item.amount || 0, currency: item.currency || 'IDR', dueDate: item.dueDate || '', status: item.status || 'Draft' })),
+  };
 }
 
 async function run(action, userKey, input) {
@@ -91,6 +197,14 @@ async function run(action, userKey, input) {
     }
     case 'list_ops':
       return assistant.listOpsSchedules();
+    case 'business_brief':
+      return businessBrief();
+    case 'list_leads':
+      return listLeads(input);
+    case 'lead_detail':
+      return leadDetail(input);
+    case 'finance_summary':
+      return financeSummary();
     default:
       throw new Error(`Unsupported action: ${action}`);
   }
@@ -102,7 +216,10 @@ async function main() {
   if (!ALLOWED_USERS.has(userKey)) throw new Error('Unknown TVM user');
 
   assistant.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
-  notion.init();
+  villaData.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
+  // Briefings and CRM/finance lookups are fully local and must remain available
+  // even if Notion is temporarily unavailable or not configured.
+  if (NOTION_ACTIONS.has(action)) notion.init();
   const result = await run(action, userKey, parseInput(fs.readFileSync(0, 'utf8').trim()));
   process.stdout.write(`${JSON.stringify({ ok: true, result })}\n`);
 }
