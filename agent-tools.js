@@ -22,6 +22,7 @@ const ALLOWED_USERS = new Set(['afni', 'syifa']);
 const ALLOWED_PRIORITIES = new Set(['High', 'Mid', 'Low']);
 const ALLOWED_RECURRENCES = /^(daily|weekly:[1-7]|monthly:([1-9]|[12]\d|3[01]))$/;
 const NOTION_ACTIONS = new Set(['create_task', 'complete_task', 'list_tasks', 'mark_paid']);
+const RECORD_COLLECTIONS = new Set(['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'payables', 'villaTasks']);
 
 function requireText(value, name, max = 500) {
   const text = String(value || '').trim();
@@ -65,6 +66,62 @@ function currencyTotals(records) {
     out[currency] = (out[currency] || 0) + Number(item.amount || 0);
     return out;
   }, {});
+}
+
+function safeRecordInput(value) {
+  if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error('record must be an object');
+  return Object.fromEntries(Object.entries(value).slice(0, 40));
+}
+
+function includesQuery(record, query, extra = '') {
+  if (!query) return true;
+  return `${Object.values(record).join(' ')} ${extra}`.toLowerCase().includes(query);
+}
+
+function compactRecord(record, fields) {
+  return Object.fromEntries(fields.map(field => [field, record[field] ?? '']));
+}
+
+/**
+ * Private, bounded operation lookup. It gives Hermes the real structured data
+ * needed for questions such as "when does the contract expire?" and
+ * "what deposit does guest B have?" without exposing a general file shell.
+ */
+async function searchOperations(input) {
+  const data = await villaData.getAll();
+  const query = String(input.search || '').trim().toLowerCase();
+  const limit = Math.min(Math.max(Number(input.limit) || 20, 1), 50);
+  const villas = Object.fromEntries(data.villas.map(item => [item.id, item]));
+  const stays = Object.fromEntries(data.tenancies.map(item => [item.id, item]));
+  const villaName = id => villas[id]?.name || '';
+  const guestName = id => stays[id]?.guestName || '';
+  const match = (record, extra = '') => includesQuery(record, query, extra);
+
+  return {
+    asOf: new Date().toISOString().slice(0, 10),
+    villas: data.villas.filter(item => match(item)).slice(0, limit).map(item => compactRecord(item, ['id', 'name', 'code', 'status', 'location', 'ownerName', 'monthlyRate', 'yearlyRate', 'currency', 'listingUrl', 'ownerAgreementUrl'])),
+    stays: data.tenancies.filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'rentAmount', 'currency', 'paymentFrequency', 'contractUrl']), villaName: villaName(item.villaId) })),
+    installments: data.installments.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'status', 'paidDate', 'proofUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
+    deposits: data.deposits.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'refundDate', 'refundProofUrl', 'inventoryUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
+    documents: data.documents.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'title', 'type', 'villaId', 'tenancyId', 'driveUrl', 'signed', 'signedDate', 'expiryDate', 'notes']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
+    transactions: data.transactions.filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'villaId', 'type', 'category', 'description', 'amount', 'currency', 'date', 'proofUrl', 'notes']), villaName: villaName(item.villaId) })),
+    invoices: data.invoices.filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'clientName', 'clientEmail', 'villaId', 'category', 'description', 'amount', 'currency', 'issueDate', 'dueDate', 'status', 'paidDate', 'proofUrl']), villaName: villaName(item.villaId) })),
+    payables: (data.payables || []).filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'vendorName', 'villaId', 'category', 'description', 'amount', 'currency', 'issueDate', 'dueDate', 'status', 'paidDate', 'proofUrl']), villaName: villaName(item.villaId) })),
+    tasks: data.villaTasks.filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'title', 'villaId', 'category', 'priority', 'status', 'dueDate', 'assignee', 'cost', 'notes']), villaName: villaName(item.villaId) })),
+  };
+}
+
+async function saveRecord(input) {
+  const collection = String(input.collection || '').trim();
+  if (!RECORD_COLLECTIONS.has(collection)) throw new Error('Unsupported record collection');
+  const recordInput = safeRecordInput(input.record);
+  let record = collection === 'tenancies'
+    ? await villaData.createTenancyBundle(recordInput)
+    : await villaData.upsert(collection, recordInput);
+  if (collection === 'installments' && record.status === 'Paid') await villaData.recordPaymentIncome(record);
+  if (collection === 'invoices' && record.status === 'Paid') record = (await villaData.markInvoicePaid(record.id, record)).invoice;
+  if (collection === 'payables' && record.status === 'Paid') record = (await villaData.markPayablePaid(record.id, record)).payable;
+  return { collection, record };
 }
 
 function leadPreview(lead, { includePrivate = false } = {}) {
@@ -138,13 +195,16 @@ async function financeSummary() {
   const today = new Date().toISOString().slice(0, 10);
   const month = today.slice(0, 7);
   const invoices = data.invoices || [];
+  const payables = data.payables || [];
   const receivables = invoices.filter(item => !['Paid', 'Void'].includes(item.status));
+  const openPayables = payables.filter(item => !['Paid', 'Void'].includes(item.status));
   return {
     asOf: today,
     incomeThisMonth: currencyTotals(data.transactions.filter(item => item.type === 'Income' && (item.date || '').startsWith(month))),
     expensesThisMonth: currencyTotals(data.transactions.filter(item => item.type === 'Expense' && (item.date || '').startsWith(month))),
     receivables: currencyTotals(receivables),
     invoices: invoices.filter(item => item.dueDate && !['Paid', 'Void'].includes(item.status)).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 20).map(item => ({ code: item.code || '', clientName: item.clientName || '', category: item.category || '', amount: item.amount || 0, currency: item.currency || 'IDR', dueDate: item.dueDate || '', status: item.status || 'Draft' })),
+    payables: openPayables.filter(item => item.dueDate).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 20).map(item => ({ code: item.code || '', vendorName: item.vendorName || '', category: item.category || '', amount: item.amount || 0, currency: item.currency || 'IDR', dueDate: item.dueDate || '', status: item.status || 'Scheduled' })),
   };
 }
 
@@ -208,8 +268,12 @@ async function run(action, userKey, input) {
       return listLeads(input);
     case 'lead_detail':
       return leadDetail(input);
+    case 'search_operations':
+      return searchOperations(input);
     case 'finance_summary':
       return financeSummary();
+    case 'save_record':
+      return saveRecord(input);
     case 'gmail_inbox':
       return gmailInbox();
     default:
