@@ -110,7 +110,11 @@ function googleOAuthState(session) {
 
 function validGoogleOAuthState(state, session) {
   const payload = verifySession(state);
-  return payload && payload.purpose === 'google-oauth' && payload.user === session.user;
+  // Google returns to us from another site. The normal admin cookie is
+  // SameSite=Strict and is correctly withheld on that cross-site hop, so the
+  // signed, short-lived state is the callback's authentication proof. When a
+  // session is present, also bind the state to that same user.
+  return payload && payload.purpose === 'google-oauth' && (!session || payload.user === session.user) ? payload : null;
 }
 
 function integrationPage(res, title, text, status = 200) {
@@ -703,16 +707,16 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/admin/integrations/google/callback' && req.method === 'GET') {
       const session = await getSession(req);
-      if (!session || session.role !== 'admin') return redirect(res, '/login');
       if (url.searchParams.get('error')) {
         return integrationPage(res, 'Google connection was not completed', 'No Google data was connected. You can return to TVM Admin and try again.', 400);
       }
-      if (!validGoogleOAuthState(url.searchParams.get('state') || '', session) || !url.searchParams.get('code')) {
+      const oauthState = validGoogleOAuthState(url.searchParams.get('state') || '', session);
+      if (!oauthState || !url.searchParams.get('code') || (session && session.role !== 'admin')) {
         return integrationPage(res, 'Google connection is awaiting approval', 'Open Google connection from TVM Admin, then sign in as info@thevillamanagers.com.', 400);
       }
       try {
         const connected = await googleWorkspace.completeAuthorization(url.searchParams.get('code'));
-        audit.add(session.user, 'connected Google Workspace', connected.email);
+        audit.add(oauthState.user, 'connected Google Workspace', connected.email);
         return integrationPage(res, 'Google Workspace connected', `${connected.email} is now connected for Gmail, private Drive uploads, TVM reporting Sheets, and calendar holds. Zuzu only creates drafts or holds after your confirmation.`);
       } catch (error) {
         console.error('[Google] OAuth callback failed:', error.message);
