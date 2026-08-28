@@ -121,6 +121,23 @@ async function processInternalMessage({ text, userKey }) {
   return processForUser({ text, user: { ...user, key: userKey } });
 }
 
+/** Personal Zuzu Life uses a separate Hermes conversation and never loads TVM records. */
+async function processPersonalMessage({ text, userKey }) {
+  const user = USERS[userKey];
+  const message = String(text || '').trim().slice(0, 2000);
+  if (!user || !message) return 'Write a message for Zuzu first.';
+  const personalCategories = new Set(['personal', 'preference', 'decision', 'relationship']);
+  const memories = (await assistant.searchMemory(userKey, message, 12).catch(() => [])).filter(item => personalCategories.has(item.category));
+  const prompt = `You are Zuzu, Afni's private personal-life assistant. Be warm, practical and brief.
+Help with reflection, routines, goals, planning, wellbeing, relationships, personal notes and life decisions.
+Never access, mention, search, infer, or use TVM business data, clients, finance, villa records, Google Workspace, or TVM operational tools in this conversation.
+Do not give medical, legal, financial, or mental-health diagnosis. Encourage professional help for urgent or high-stakes issues.
+Only ask to store a memory when Afni explicitly asks you to remember it. Current time: ${assistant.epochToWitaString(Date.now())} WITA.` +
+    (memories.length ? `\n\nAfni's relevant private memories:\n${memories.map(item => `- ${item.fact}`).join('\n')}` : '');
+  try { return await hermes.respond({ input: message, instructions: prompt, userKey: `${userKey}-life` }); }
+  catch (error) { console.error(`[Hermes personal] ${error.code || 'ERROR'}:`, error.message); return 'Zuzu is temporarily unavailable. Your personal lists are still saved here.'; }
+}
+
 async function processForUser({ text, user }) {
   const message = String(text || '').trim().slice(0, 2000);
   if (!message) return 'Write a message for Zuzu first.';
@@ -255,6 +272,6 @@ async function buildMorningDM(userKey) {
 }
 
 module.exports = {
-  init, processMessage, processInternalMessage, buildMorningDM,
+  init, processMessage, processInternalMessage, processPersonalMessage, buildMorningDM,
   identifyUser, isAllowed, USERS,
 };

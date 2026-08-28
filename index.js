@@ -23,6 +23,7 @@ const brain = require('./brain');
 const villaData = require('./villa-data');
 const googleWorkspace = require('./google-workspace');
 const zuzuIntake = require('./zuzu-intake');
+const personalLife = require('./personal-life');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
 
@@ -31,10 +32,12 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'afni';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || '';
 const SESSION_COOKIE = 'tvm_admin';
+const PERSONAL_SESSION_COOKIE = 'zuzu_life';
 const SESSION_AGE_SECONDS = 60 * 60 * 8;
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
 const ENQUIRIES_FILE = path.join(DATA_DIR, 'enquiries.json');
 const ADMIN_DIR = path.join(__dirname, 'admin');
+const PERSONAL_DIR = path.join(__dirname, 'personal');
 const loginAttempts = new Map();
 const zuzuRequests = new Map();
 let enquiryWriteQueue = Promise.resolve();
@@ -64,6 +67,14 @@ async function sendHtml(res, fileName, status = 200) {
     console.error('[HTTP] Admin file error:', error.message);
     sendJson(res, 500, { error: 'Admin interface unavailable.' });
   }
+}
+
+async function sendPersonalHtml(res) {
+  try {
+    const html = await fs.readFile(path.join(PERSONAL_DIR, 'index.html'));
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
+    res.end(html);
+  } catch (error) { console.error('[HTTP] Personal app error:', error.message); sendJson(res, 500, { error: 'Personal space unavailable.' }); }
 }
 
 function redirect(res, location) {
@@ -132,12 +143,22 @@ async function getSession(req) {
   return payload;
 }
 
+async function getPersonalSession(req) {
+  const payload = verifySession(parseCookies(req)[PERSONAL_SESSION_COOKIE]);
+  if (!payload || payload.purpose !== 'zuzu-life' || !(await authUsers.exists(payload.user))) return null;
+  return payload;
+}
+
 async function isAuthenticated(req) {
   return !!(await getSession(req));
 }
 
 function sessionCookie(value, maxAge = SESSION_AGE_SECONDS) {
   return `${SESSION_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+}
+
+function personalSessionCookie(value, maxAge = SESSION_AGE_SECONDS) {
+  return `${PERSONAL_SESSION_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
 }
 
 async function readBody(req, limit = 128 * 1024) {
@@ -654,9 +675,53 @@ async function handleAdminApi(req, res, url) {
   return sendJson(res, 404, { error: 'Not found.' });
 }
 
+function isPersonalHost(req) {
+  return String(req.headers.host || '').split(':')[0].toLowerCase() === 'app.zuzuzu.tech';
+}
+
+async function handlePersonalApp(req, res, url) {
+  if (url.pathname === '/api/zuzu/login' && req.method === 'POST') {
+    const body = await readBody(req);
+    const account = await authUsers.verify(body.username, body.password);
+    // This app deliberately accepts only Afni's own account. It is a separate
+    // host-only session and its data store contains no TVM operational data.
+    if (!account || account.username !== 'afni') return sendJson(res, 401, { error: 'Use your personal Zuzu Life login.' });
+    const token = signSession({ purpose: 'zuzu-life', user: account.username, name: account.name, exp: Date.now() + SESSION_AGE_SECONDS * 1000, nonce: crypto.randomUUID() });
+    return sendJson(res, 200, { ok: true }, { 'Set-Cookie': personalSessionCookie(token) });
+  }
+  if (url.pathname === '/api/zuzu/logout' && req.method === 'POST') return sendJson(res, 200, { ok: true }, { 'Set-Cookie': personalSessionCookie('', 0) });
+  const session = await getPersonalSession(req);
+  if (url.pathname === '/api/zuzu/overview' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
+    return sendJson(res, 200, await personalLife.overview(session.user));
+  }
+  if (url.pathname === '/api/zuzu/items' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
+    const item = await personalLife.add(session.user, await readBody(req));
+    return sendJson(res, 201, { ok: true, item });
+  }
+  if (url.pathname === '/api/zuzu/items/complete' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
+    const body = await readBody(req); const item = await personalLife.complete(session.user, clean(body.id, 100), body.done);
+    if (!item) return sendJson(res, 404, { error: 'Item not found.' });
+    return sendJson(res, 200, { ok: true, item });
+  }
+  if (url.pathname === '/api/zuzu/chat' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
+    const body = await readBody(req); const message = clean(body.message, 2000);
+    if (!message) return sendJson(res, 422, { error: 'Write a message for Zuzu first.' });
+    if (zuzuRateLimited(`life:${session.user}`)) return sendJson(res, 429, { error: 'Zuzu needs a short break. Try again in a few minutes.' });
+    const reply = await brain.processPersonalMessage({ text: message, userKey: session.user });
+    return sendJson(res, 200, { ok: true, reply: String(reply || '').slice(0, 6000) });
+  }
+  if ((url.pathname === '/' || url.pathname === '/login' || url.pathname === '/zuzu' || url.pathname === '/zuzu/') && req.method === 'GET') return sendPersonalHtml(res);
+  return sendJson(res, 404, { error: 'Not found.' });
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
+    if (isPersonalHost(req)) return await handlePersonalApp(req, res, url);
     if (url.pathname === '/health' && req.method === 'GET') {
       return sendJson(res, 200, {
         status: 'ok', version: require('./package.json').version,
@@ -831,6 +896,7 @@ async function boot() {
   villaData.init(DATA_DIR);
   googleWorkspace.init(DATA_DIR);
   zuzuIntake.init(DATA_DIR);
+  personalLife.init(DATA_DIR);
   assistant.init(DATA_DIR);
   audit.init(DATA_DIR);
   await authUsers.init(DATA_DIR);

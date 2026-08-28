@@ -12,6 +12,7 @@ REPO_DIR="/root/tvmbot-v4"
 PUBLIC_DIR="/root/tvm-website"
 BACKUP_DIR="/root/tvm-backups"
 NGINX_FILE="/etc/nginx/sites-available/tvmbot"
+ZUZU_NGINX_FILE="/etc/nginx/sites-available/zuzu-life"
 HERMES_SERVICE="/etc/systemd/system/tvm-hermes.service"
 
 git -C "$REPO_DIR" fetch origin main
@@ -45,6 +46,12 @@ curl -fsS --max-time 5 http://127.0.0.1:8642/health >/dev/null
 
 cp "$NGINX_FILE" "$NGINX_FILE.previous"
 install -m 644 "$REPO_DIR/ops/nginx-tvmbot.conf" "$NGINX_FILE"
+if [ -f /etc/letsencrypt/live/app.zuzuzu.tech/fullchain.pem ]; then
+  install -m 644 "$REPO_DIR/ops/nginx-zuzu-life-ssl.conf" "$ZUZU_NGINX_FILE"
+else
+  install -m 644 "$REPO_DIR/ops/nginx-zuzu-life-http.conf" "$ZUZU_NGINX_FILE"
+fi
+ln -sf "$ZUZU_NGINX_FILE" /etc/nginx/sites-enabled/zuzu-life
 if ! nginx -t; then
   mv "$NGINX_FILE.previous" "$NGINX_FILE"
   nginx -t
