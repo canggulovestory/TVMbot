@@ -88,7 +88,7 @@ function buildAuthorizationUrl(state) {
   const { clientId, redirectUri } = requireConfig();
   const query = new URLSearchParams({
     client_id: clientId, redirect_uri: redirectUri, response_type: 'code', scope: SCOPES.join(' '),
-    access_type: 'offline', include_granted_scopes: 'true', prompt: 'consent', state,
+    access_type: 'offline', include_granted_scopes: 'true', prompt: 'consent select_account', state,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${query}`;
 }
