@@ -8,8 +8,8 @@ const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
 
-const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'villaTasks'];
-const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC', transactions: 'TRX', invoices: 'INV', villaTasks: 'VTK' };
+const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'payables', 'villaTasks'];
+const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC', transactions: 'TRX', invoices: 'INV', payables: 'BILL', villaTasks: 'VTK' };
 const FIELDS = {
   villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes', 'photoUrl', 'published', 'slug', 'summary'],
   tenancies: ['code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'nationality', 'idDocumentUrl', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'guestCount', 'rentAmount', 'currency', 'paymentFrequency', 'source', 'agencyCommissionPercent', 'contractUrl', 'notes'],
@@ -18,6 +18,7 @@ const FIELDS = {
   documents: ['title', 'type', 'villaId', 'tenancyId', 'driveUrl', 'signed', 'signedDate', 'expiryDate', 'notes'],
   transactions: ['code', 'villaId', 'tenancyId', 'type', 'category', 'description', 'amount', 'currency', 'date', 'proofUrl', 'notes', 'sourceId'],
   invoices: ['code', 'clientName', 'clientEmail', 'villaId', 'category', 'description', 'amount', 'currency', 'issueDate', 'dueDate', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'notes', 'sourceId'],
+  payables: ['code', 'vendorName', 'villaId', 'category', 'description', 'amount', 'currency', 'issueDate', 'dueDate', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'notes', 'sourceId'],
   villaTasks: ['title', 'villaId', 'category', 'priority', 'status', 'dueDate', 'assignee', 'cost', 'notes'],
 };
 const NUMBER_FIELDS = new Set(['bedrooms', 'bathrooms', 'maxGuests', 'monthlyRate', 'yearlyRate', 'guestCount', 'rentAmount', 'agencyCommissionPercent', 'installmentNumber', 'installmentTotal', 'amount', 'gracePeriodDays', 'lateFee', 'deductions', 'cost']);
@@ -26,7 +27,7 @@ let filePath;
 let writeQueue = Promise.resolve();
 
 function emptyStore() {
-  return { version: 1, villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], invoices: [], villaTasks: [] };
+  return { version: 1, villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], invoices: [], payables: [], villaTasks: [] };
 }
 
 function init(dataDir) {
@@ -343,6 +344,45 @@ async function markInvoicePaid(id, input = {}) {
   });
 }
 
+/** Mark an outgoing bill paid and create one matching expense transaction (deduped by sourceId). */
+async function markPayablePaid(id, input = {}) {
+  return mutate(store => {
+    const payable = store.payables.find(item => item.id === clean(id, 80));
+    if (!payable) return null;
+    const now = new Date().toISOString();
+    payable.status = 'Paid';
+    payable.paidDate = clean(input.paidDate, 20) || payable.paidDate || now.slice(0, 10);
+    if ('paymentMethod' in input) payable.paymentMethod = clean(input.paymentMethod, 100);
+    if ('proofUrl' in input) payable.proofUrl = normalizeUrl(input.proofUrl);
+    payable.updatedAt = now;
+
+    const sourceId = `payable:${payable.id}`;
+    let transaction = store.transactions.find(item => item.sourceId === sourceId) || null;
+    let createdExpense = false;
+    if (!transaction) {
+      transaction = normalize('transactions', {
+        code: payable.code,
+        villaId: payable.villaId,
+        type: 'Expense',
+        category: payable.category || 'Other',
+        description: `Payable ${payable.code || payable.id}${payable.vendorName ? ` — ${payable.vendorName}` : ''}`,
+        amount: payable.amount,
+        currency: payable.currency || 'IDR',
+        date: payable.paidDate,
+        proofUrl: payable.proofUrl,
+        notes: payable.notes,
+        sourceId,
+      });
+      transaction.id = newId('transactions');
+      transaction.createdAt = now;
+      transaction.updatedAt = now;
+      store.transactions.unshift(transaction);
+      createdExpense = true;
+    }
+    return { payable, transaction, createdExpense };
+  });
+}
+
 async function getActionSummary() {
   const store = await getAll();
   const today = new Date().toISOString().slice(0, 10);
@@ -364,11 +404,15 @@ async function getActionSummary() {
     .filter(item => !['Paid', 'Void'].includes(item.status) && item.dueDate && item.dueDate <= addDays(today, 7))
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
     .slice(0, 5);
+  const payableActions = store.payables
+    .filter(item => !['Paid', 'Void'].includes(item.status) && item.dueDate && item.dueDate <= addDays(today, 7))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 5);
   const taskActions = store.villaTasks
     .filter(item => item.status !== 'Done' && item.dueDate && item.dueDate <= today)
     .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
     .slice(0, 6);
-  if (!paymentActions.length && !refundActions.length && !documentActions.length && !invoiceActions.length && !taskActions.length) return '';
+  if (!paymentActions.length && !refundActions.length && !documentActions.length && !invoiceActions.length && !payableActions.length && !taskActions.length) return '';
   const lines = ['TVM operations follow-ups:'];
   for (const item of paymentActions) {
     const villa = villas[item.villaId]?.name || 'Villa';
@@ -387,6 +431,9 @@ async function getActionSummary() {
   for (const item of invoiceActions) {
     lines.push(`• Invoice: ${item.code || item.clientName || 'Client'}, ${item.currency || 'IDR'} ${item.amount || 0}, due ${item.dueDate}`);
   }
+  for (const item of payableActions) {
+    lines.push(`• Payable: ${item.code || item.vendorName || item.category || 'Expense'}, ${item.currency || 'IDR'} ${item.amount || 0}, due ${item.dueDate}`);
+  }
   for (const item of taskActions) {
     const villa = villas[item.villaId]?.name || 'Villa';
     lines.push(`• ${item.category || 'Task'}: ${villa} — ${item.title}${item.assignee ? ` (${item.assignee})` : ''}, due ${item.dueDate}`);
@@ -401,7 +448,7 @@ async function remove(collection, id) {
     if (index < 0) return null;
     // Protect villas with linked history — orphaned stays/finance would be unreachable.
     if (collection === 'villas') {
-      const linked = ['tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'villaTasks']
+      const linked = ['tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'payables', 'villaTasks']
         .filter(coll => store[coll].some(item => item.villaId === id));
       if (linked.length) {
         const err = new Error(`This villa still has linked ${linked.join(', ')}. Delete those first, or set the villa to Off-market instead.`);
@@ -419,4 +466,4 @@ async function remove(collection, id) {
   });
 }
 
-module.exports = { init, getAll, getActionSummary, upsert, remove, recordPaymentIncome, markInvoicePaid, createTenancyBundle, stayLength, addDays, addMonths };
+module.exports = { init, getAll, getActionSummary, upsert, remove, recordPaymentIncome, markInvoicePaid, markPayablePaid, createTenancyBundle, stayLength, addDays, addMonths };

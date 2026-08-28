@@ -281,7 +281,7 @@ async function adminOverview() {
     projects: value(1),
     payments: value(2),
     enquiries: value(3),
-    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], invoices: [], villaTasks: [] }),
+    villaData: value(4, { villas: [], tenancies: [], installments: [], deposits: [], documents: [], transactions: [], invoices: [], payables: [], villaTasks: [] }),
     bots: { whatsapp: whatsapp.getStatus(), telegram: telegram.getStatus() },
     errors: results.map((result, index) => result.status === 'rejected'
       ? ['tasks', 'projects', 'payments', 'enquiries', 'villa records'][index]
@@ -470,7 +470,7 @@ async function handleAdminApi(req, res, url) {
     audit.add(session.user, 'marked legacy payment paid', clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
-  const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'villaTasks'];
+  const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'payables', 'villaTasks'];
   if (url.pathname === '/api/admin/records' && req.method === 'POST') {
     const body = await readBody(req);
     const collection = clean(body.collection, 40);
@@ -489,6 +489,10 @@ async function handleAdminApi(req, res, url) {
         const settled = await villaData.markInvoicePaid(record.id, record);
         record = settled.invoice;
       }
+      if (collection === 'payables' && record.status === 'Paid') {
+        const settled = await villaData.markPayablePaid(record.id, record);
+        record = settled.payable;
+      }
       audit.add(session.user, `saved ${collection.slice(0, -1)}`, record.name || record.guestName || record.title || record.code || record.description || record.id);
       return sendJson(res, 201, { ok: true, record });
     } catch (error) {
@@ -502,6 +506,13 @@ async function handleAdminApi(req, res, url) {
     if (!result) return sendJson(res, 404, { error: 'Invoice not found.' });
     audit.add(session.user, 'marked invoice paid', result.invoice.code || result.invoice.id);
     return sendJson(res, 200, { ok: true, invoice: result.invoice, transaction: result.transaction, createdIncome: result.createdIncome });
+  }
+  if (url.pathname === '/api/admin/payables/paid' && req.method === 'POST') {
+    const body = await readBody(req);
+    const result = await villaData.markPayablePaid(body.id, body);
+    if (!result) return sendJson(res, 404, { error: 'Payable not found.' });
+    audit.add(session.user, 'marked payable paid', result.payable.code || result.payable.vendorName || result.payable.id);
+    return sendJson(res, 200, { ok: true, payable: result.payable, transaction: result.transaction, createdExpense: result.createdExpense });
   }
   if (url.pathname === '/api/admin/enquiries/status' && req.method === 'POST') {
     const body = await readBody(req);

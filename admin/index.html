@@ -399,15 +399,17 @@
 
         <!-- FINANCE -->
         <section class="view" id="view-finance">
-          <div class="page-head"><div><h2>Agency finance</h2><p>TVM's internal income and expenses: retainers, placement commissions, campaigns, contractors and operating costs. Marking an invoice paid records the income once, automatically.</p></div><div style="display:flex;gap:9px"><button class="btn secondary" id="fin-csv">Export CSV</button><button class="btn secondary" data-open="invoices">+ Create invoice</button><button class="btn" data-open="transactions">+ Add transaction</button></div></div>
+          <div class="page-head"><div><h2>Agency finance</h2><p>TVM's internal income, expenses and bills: retainers, placement commissions, campaigns, contractors and operating costs. Marking an invoice or payable paid records its transaction once, automatically.</p></div><div style="display:flex;gap:9px"><button class="btn secondary" id="fin-csv">Export CSV</button><button class="btn secondary" data-open="payables">+ Add payable</button><button class="btn secondary" data-open="invoices">+ Create invoice</button><button class="btn" data-open="transactions">+ Add transaction</button></div></div>
           <div class="stats">
             <div class="stat"><div class="s-ico">↑</div><div class="label">Income (this month)</div><div class="value" id="f-income" style="font-size:1.25rem">—</div><div class="sub" id="f-income-all"></div></div>
             <div class="stat"><div class="s-ico">↓</div><div class="label">Expenses (this month)</div><div class="value" id="f-expense" style="font-size:1.25rem">—</div><div class="sub" id="f-expense-all"></div></div>
             <div class="stat"><div class="s-ico">Σ</div><div class="label">Net (this month)</div><div class="value" id="f-net" style="font-size:1.25rem">—</div><div class="sub" id="f-net-all"></div></div>
             <div class="stat"><div class="s-ico">◷</div><div class="label">Receivables</div><div class="value" id="f-receivable" style="font-size:1.25rem">—</div><div class="sub" id="f-receivable-sub"></div></div>
+            <div class="stat"><div class="s-ico">↗</div><div class="label">Upcoming payables</div><div class="value" id="f-payable" style="font-size:1.25rem">—</div><div class="sub" id="f-payable-sub"></div></div>
           </div>
           <div class="card section-gap"><div class="card-head"><h3>Last 12 months — income vs expenses</h3></div><div class="bars" id="fin-bars"></div><div style="display:flex;gap:16px;padding:0 18px 16px;font-size:.74rem;color:var(--muted)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4f9066;margin-right:6px"></span>Income</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#cf8b80;margin-right:6px"></span>Expenses</span></div></div>
           <div class="card table-wrap section-gap"><div class="card-head"><h3>Invoices &amp; receivables</h3></div><table><thead><tr><th>Invoice</th><th>Client</th><th>Category</th><th>Issued</th><th>Due</th><th>Amount</th><th>Status</th><th>Proof</th><th></th></tr></thead><tbody id="t-invoices"></tbody></table></div>
+          <div class="card table-wrap section-gap"><div class="card-head"><h3>Upcoming payables by category</h3><span class="sub">Overdue and due in the next 30 days</span></div><table><thead><tr><th>Category</th><th>Vendor / payment</th><th>Villa</th><th>Due</th><th>Amount</th><th>Status</th><th>Proof</th><th></th></tr></thead><tbody id="t-payables"></tbody></table></div>
           <div class="card table-wrap"><table><thead><tr><th>Date</th><th>Villa</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Proof</th><th></th></tr></thead><tbody id="t-finance"></tbody></table></div>
         </section>
 
@@ -653,6 +655,26 @@
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="invoices">Cancel</button><button class="btn" type="submit">Save invoice</button></div></form>
   </dialog>
 
+  <dialog id="dlg-payables"><div class="modal-head"><h3 id="ttl-payables">Add payable</h3><button class="modal-close" data-close="payables">✕</button></div>
+    <form id="form-payables"><div class="modal-body"><div class="form-grid">
+      <input type="hidden" name="id"><input type="hidden" name="sourceId">
+      <div class="f"><label>Bill / reference number</label><input name="code" placeholder="e.g. TVM-BILL-001"></div>
+      <div class="f"><label>Status</label><select name="status"><option selected>Scheduled</option><option>Due</option><option>Paid</option><option>Void</option></select></div>
+      <div class="f"><label>Vendor / payee *</label><input name="vendorName" required placeholder="e.g. Meta Ads, contractor or landlord"></div>
+      <div class="f"><label>Villa (optional)</label><select name="villaId" data-villa-select></select></div>
+      <div class="f"><label>Category *</label><select name="category"><option>Marketing &amp; ads</option><option>Software &amp; AI</option><option>Contractors</option><option>Operations</option><option>Villa services</option><option>Furniture supplies</option><option>Utilities</option><option>Rent &amp; office</option><option>Tax &amp; legal</option><option>Other</option></select></div>
+      <div class="f"><label>Payment method</label><select name="paymentMethod"><option value="">Not set</option><option>Bank transfer</option><option>Cash</option><option>Wise</option><option>Card</option></select></div>
+      <div class="f full"><label>What is this payment for? *</label><input name="description" required placeholder="e.g. September Meta advertising budget"></div>
+      <div class="f"><label>Amount *</label><input name="amount" type="number" min="0" required></div>
+      <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Issue date</label><input name="issueDate" type="date"></div>
+      <div class="f"><label>Due date *</label><input name="dueDate" type="date" required></div>
+      <div class="f"><label>Paid date</label><input name="paidDate" type="date"></div>
+      <div class="f full"><label>Bill / payment proof (Drive link)</label><input name="proofUrl" type="url"></div>
+      <div class="f full"><label>Notes</label><textarea name="notes"></textarea></div>
+    </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="payables">Cancel</button><button class="btn" type="submit">Save payable</button></div></form>
+  </dialog>
+
   <dialog id="dlg-enquiry"><div class="modal-head"><h3>Lead details</h3><button class="modal-close" data-close="enquiry">✕</button></div>
     <form id="form-enquiry"><div class="modal-body"><div class="form-grid">
       <input type="hidden" name="id">
@@ -710,7 +732,7 @@
   </nav>
 
   <script>
-    const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],invoices:[],villaTasks:[]}};
+    const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],invoices:[],payables:[],villaTasks:[]}};
     let currentVillaId=null;
     const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
     const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -788,7 +810,8 @@
       if(prefill)Object.entries(prefill).forEach(([k,v])=>{const i=form.elements[k];if(i)i.value=v});
       if(name==='transactions'&&!record&&!form.elements.date.value)form.elements.date.value=new Date().toISOString().slice(0,10);
       if(name==='invoices'&&!record){const today=new Date().toISOString().slice(0,10);form.elements.issueDate.value=today;const due=new Date();due.setDate(due.getDate()+7);form.elements.dueDate.value=due.toISOString().slice(0,10);form.elements.code.value=`TVM-INV-${new Date().getFullYear()}-${String(state.villaData.invoices.length+1).padStart(3,'0')}`}
-      const ttl=$(`#ttl-${name}`);if(ttl)ttl.textContent=(record?'Edit ':'Add ')+({villas:'villa',tenancies:'guest stay',installments:'payment',deposits:'deposit',documents:'document',transactions:'transaction',invoices:'invoice',villaTasks:'villa task'}[name]||name);
+      if(name==='payables'&&!record){const today=new Date().toISOString().slice(0,10);form.elements.issueDate.value=today;const due=new Date();due.setDate(due.getDate()+7);form.elements.dueDate.value=due.toISOString().slice(0,10);form.elements.code.value=`TVM-BILL-${new Date().getFullYear()}-${String(state.villaData.payables.length+1).padStart(3,'0')}`}
+      const ttl=$(`#ttl-${name}`);if(ttl)ttl.textContent=(record?'Edit ':'Add ')+({villas:'villa',tenancies:'guest stay',installments:'payment',deposits:'deposit',documents:'document',transactions:'transaction',invoices:'invoice',payables:'payable',villaTasks:'villa task'}[name]||name);
       dlg.showModal()}
     document.addEventListener('click',e=>{
       const o=e.target.closest('[data-open]');if(o)openModal(o.dataset.open);
@@ -870,7 +893,7 @@
         return cols.map(c=>`"${String(rec[c]??'').replace(/"/g,'""')}"`).join(',')}));
       const blob=new Blob([lines.join('\n')],{type:'text/csv'});const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);toast('CSV downloaded.')}
-    $('#fin-csv').addEventListener('click',()=>exportCSV([...state.villaData.transactions,...state.villaData.invoices.map(x=>({...x,recordType:'Invoice'}))],'tvm-finance-all.csv'));
+    $('#fin-csv').addEventListener('click',()=>exportCSV([...state.villaData.transactions,...state.villaData.invoices.map(x=>({...x,recordType:'Invoice'})),...state.villaData.payables.map(x=>({...x,recordType:'Payable'}))],'tvm-finance-all.csv'));
     $('#vd-csv').addEventListener('click',()=>{const v=vMap()[currentVillaId];exportCSV(state.villaData.transactions.filter(x=>x.villaId===currentVillaId),`tvm-finance-${(v?.name||'villa').toLowerCase().replace(/\s+/g,'-')}.csv`)});
     // ── Owner statement ──
     let vdMonth=new Date().toISOString().slice(0,7);
@@ -905,7 +928,7 @@
     function formData(f){const d=Object.fromEntries([...new FormData(f).entries()].filter(([k,v])=>!(v instanceof File)));f.querySelectorAll('input[type=checkbox]').forEach(i=>d[i.name]=i.checked);return d}
     async function save(coll,rec){await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:rec})});await load()}
     function resizeImage(file,maxW=1600){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,maxW/img.width);const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};img.onerror=reject;img.src=URL.createObjectURL(file)})}
-    ['villas','tenancies','installments','deposits','documents','transactions','invoices','villaTasks'].forEach(coll=>{
+    ['villas','tenancies','installments','deposits','documents','transactions','invoices','payables','villaTasks'].forEach(coll=>{
       $(`#form-${coll}`).addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
         try{
           const res=await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:formData(e.target)})});
@@ -929,6 +952,7 @@
           return}
         if(t.dataset.pay){const r=state.villaData.installments.find(x=>x.id===t.dataset.pay);await save('installments',{...r,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});toast('Marked paid.');return}
         if(t.dataset.invoicePaid){const r=await api('/api/admin/invoices/paid',{method:'POST',body:JSON.stringify({id:t.dataset.invoicePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdIncome?'Invoice paid — income recorded.':'Invoice was already paid; no duplicate income created.');return}
+        if(t.dataset.payablePaid){const r=await api('/api/admin/payables/paid',{method:'POST',body:JSON.stringify({id:t.dataset.payablePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdExpense?'Payable paid — expense recorded.':'Payable was already paid; no duplicate expense created.');return}
         if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
         if(t.dataset.completeTask){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:t.dataset.completeTask})});await load();toast('Task completed.');return}
         if(t.dataset.doneVtask){const r=state.villaData.villaTasks.find(x=>x.id===t.dataset.doneVtask);await save('villaTasks',{...r,status:'Done'});toast('Task done.');return}
@@ -1093,15 +1117,24 @@
       const invoices=d.invoices||[];
       const receivables=invoices.filter(x=>!['Paid','Void'].includes(x.status));
       const invoiceOverdue=receivables.filter(x=>x.dueDate&&x.dueDate<today);
-      $('#n-finance').textContent=d.transactions.length+invoices.length;
+      const payables=d.payables||[];
+      const openPayables=payables.filter(x=>!['Paid','Void'].includes(x.status));
+      const payableEnd=new Date();payableEnd.setDate(payableEnd.getDate()+30);const payableEndDate=payableEnd.toISOString().slice(0,10);
+      const upcomingPayables=openPayables.filter(x=>x.dueDate&&x.dueDate<=payableEndDate);
+      const payableOverdue=openPayables.filter(x=>x.dueDate&&x.dueDate<today);
+      const payableStatus=x=>{if(['Paid','Void'].includes(x.status))return x.status;if(x.dueDate&&x.dueDate<today)return'Overdue';if(x.dueDate===today)return'Due';return x.status||'Scheduled'};
+      $('#n-finance').textContent=d.transactions.length+invoices.length+payables.length;
       $('#f-income').textContent=money(inM);$('#f-income-all').textContent=`all time ${money(sum(tin))}`;
       $('#f-expense').textContent=money(outM);$('#f-expense-all').textContent=`all time ${money(sum(tout))}`;
       const netM=inM-outM,netAll=sum(tin)-sum(tout);
       $('#f-net').textContent=money(netM);$('#f-net').style.color=netM>=0?'var(--green)':'var(--red)';
       $('#f-net-all').textContent=`all time ${money(netAll)}`;
       $('#f-receivable').textContent=moneyTotals(receivables);$('#f-receivable-sub').textContent=`${receivables.length} open · ${invoiceOverdue.length} overdue`;
+      $('#f-payable').textContent=moneyTotals(upcomingPayables);$('#f-payable-sub').textContent=`${upcomingPayables.length} due in 30 days · ${payableOverdue.length} overdue`;
       $('#t-invoices').innerHTML=invoices.slice().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(x=>{const shownStatus=!['Paid','Void'].includes(x.status)&&x.dueDate&&x.dueDate<today?'Overdue':x.status||'Draft';
         return`<tr><td><strong>${esc(x.code||'—')}</strong><span class="sub">${esc(x.description||'')}</span></td><td>${esc(x.clientName||'—')}<span class="sub">${esc(x.clientEmail||'')}</span></td><td>${esc(x.category||'—')}</td><td>${fdate(x.issueDate)}</td><td>${fdate(x.dueDate)}</td><td>${money(x.amount,x.currency)}</td><td>${badge(shownStatus)}${x.paidDate?`<span class="sub">paid ${fdate(x.paidDate)}</span>`:''}</td><td>${flink(x.proofUrl,'Open')}</td><td><div class="row-actions">${!['Paid','Void'].includes(x.status)?`<button class="btn sm" data-invoice-paid="${esc(x.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="invoices:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="invoices:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">No invoices yet — create a retainer, commission, or package invoice.</td></tr>';
+      const payableGroups=upcomingPayables.slice().sort((a,b)=>`${a.category||'Other'}:${a.dueDate||''}`.localeCompare(`${b.category||'Other'}:${b.dueDate||''}`)).reduce((out,x)=>{const key=x.category||'Other';(out[key]||(out[key]=[])).push(x);return out},{});
+      $('#t-payables').innerHTML=Object.entries(payableGroups).map(([category,items])=>`<tr><td colspan="8" style="background:var(--cream);font-weight:700">${esc(category)} <span class="sub" style="display:inline">· ${moneyTotals(items)}</span></td></tr>`+items.map(x=>{const v=V[x.villaId]||{},status=payableStatus(x);return`<tr><td>${esc(category)}</td><td><strong>${esc(x.vendorName||'—')}</strong><span class="sub">${esc(x.code||'')} · ${esc(x.description||'')}</span></td><td>${esc(v.name||'TVM internal')}</td><td>${fdate(x.dueDate)}</td><td>${money(x.amount,x.currency)}</td><td>${badge(status)}${x.paidDate?`<span class="sub">paid ${fdate(x.paidDate)}</span>`:''}</td><td>${flink(x.proofUrl,'Open')}</td><td><div class="row-actions"><button class="btn sm" data-payable-paid="${esc(x.id)}">Mark paid</button><button class="btn secondary sm" data-edit="payables:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="payables:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')).join('')||'<tr><td colspan="8" class="empty">No upcoming payables. Add supplier bills, ad spend, subscriptions, contractors or operating costs.</td></tr>';
       $('#t-finance').innerHTML=d.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(x=>{const v=V[x.villaId]||{};
         return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'TVM internal')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — add an agency retainer, commission, campaign cost, or another internal item.</td></tr>';
       // tasks & enquiries
