@@ -19,6 +19,7 @@ const authUsers = require('./auth-users');
 const audit = require('./audit');
 const brain = require('./brain');
 const villaData = require('./villa-data');
+const googleWorkspace = require('./google-workspace');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
 
@@ -97,6 +98,22 @@ function verifySession(token) {
   } catch (_) {
     return null;
   }
+}
+
+function googleOAuthState(session) {
+  return signSession({ purpose: 'google-oauth', user: session.user, exp: Date.now() + 10 * 60 * 1000, nonce: crypto.randomUUID() });
+}
+
+function validGoogleOAuthState(state, session) {
+  const payload = verifySession(state);
+  return payload && payload.purpose === 'google-oauth' && payload.user === session.user;
+}
+
+function integrationPage(res, title, text, status = 200) {
+  const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  const html = `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#edebe7;color:#191713;font:16px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}.card{width:min(500px,calc(100% - 40px));background:#fff;border:1px solid #e7e3db;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(27,24,19,.06)}h1{margin:0 0 9px;font-size:1.35rem}p{margin:0;color:#5d574d}a{display:inline-block;margin-top:20px;color:#fff;background:#1c1915;border-radius:10px;padding:10px 14px;text-decoration:none;font-weight:600}</style><main class="card"><h1>${escape(title)}</h1><p>${escape(text)}</p><a href="/admin/">Return to TVM Admin</a></main>`;
+  res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
+  res.end(html);
 }
 
 /** Returns the session payload {user, role, name} or null. Revokes sessions of deleted users. */
@@ -357,6 +374,17 @@ async function handleAdminApi(req, res, url) {
     overview.session = { user: session.user, role: session.role, name: session.name };
     return sendJson(res, 200, overview);
   }
+  if (url.pathname === '/api/admin/integrations/google/status' && req.method === 'GET') {
+    return sendJson(res, 200, await googleWorkspace.status());
+  }
+  if (url.pathname === '/api/admin/integrations/google/connect' && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    try {
+      return redirect(res, googleWorkspace.buildAuthorizationUrl(googleOAuthState(session)));
+    } catch (error) {
+      return sendJson(res, 503, { error: error.message });
+    }
+  }
 
   // ── Team management (admin only) ──
   if (url.pathname === '/api/admin/users' && req.method === 'GET') {
@@ -582,6 +610,24 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith('/api/admin/')) {
       return await handleAdminApi(req, res, url);
     }
+    if (url.pathname === '/admin/integrations/google/callback' && req.method === 'GET') {
+      const session = await getSession(req);
+      if (!session || session.role !== 'admin') return redirect(res, '/admin/login');
+      if (url.searchParams.get('error')) {
+        return integrationPage(res, 'Google connection was not completed', 'No Google data was connected. You can return to TVM Admin and try again.', 400);
+      }
+      if (!validGoogleOAuthState(url.searchParams.get('state') || '', session) || !url.searchParams.get('code')) {
+        return integrationPage(res, 'Google connection is awaiting approval', 'Open Google connection from TVM Admin, then sign in as info@thevillamanagers.com.', 400);
+      }
+      try {
+        const connected = await googleWorkspace.completeAuthorization(url.searchParams.get('code'));
+        audit.add(session.user, 'connected Google Workspace', connected.email);
+        return integrationPage(res, 'Google Workspace connected', `${connected.email} is now connected for Gmail, selected Drive files, and TVM reporting Sheets.`);
+      } catch (error) {
+        console.error('[Google] OAuth callback failed:', error.message);
+        return integrationPage(res, 'Google connection failed', error.message, 400);
+      }
+    }
     if ((url.pathname === '/admin/login' || url.pathname === '/admin/login/') && req.method === 'GET') {
       if (await isAuthenticated(req)) return redirect(res, '/admin/');
       return await sendHtml(res, 'login.html');
@@ -674,6 +720,7 @@ async function boot() {
   console.log(`=== TVM Digital HQ v${version} starting ===`);
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
   villaData.init(DATA_DIR);
+  googleWorkspace.init(DATA_DIR);
   assistant.init(DATA_DIR);
   audit.init(DATA_DIR);
   await authUsers.init(DATA_DIR);

@@ -16,6 +16,7 @@ const fs = require('fs');
 const notion = require('./notion');
 const assistant = require('./assistant');
 const villaData = require('./villa-data');
+const googleWorkspace = require('./google-workspace');
 
 const ALLOWED_USERS = new Set(['afni', 'syifa']);
 const ALLOWED_PRIORITIES = new Set(['High', 'Mid', 'Low']);
@@ -147,6 +148,10 @@ async function financeSummary() {
   };
 }
 
+async function gmailInbox() {
+  return googleWorkspace.gmailInbox();
+}
+
 async function run(action, userKey, input) {
   switch (action) {
     case 'create_task': {
@@ -205,6 +210,8 @@ async function run(action, userKey, input) {
       return leadDetail(input);
     case 'finance_summary':
       return financeSummary();
+    case 'gmail_inbox':
+      return gmailInbox();
     default:
       throw new Error(`Unsupported action: ${action}`);
   }
@@ -217,6 +224,7 @@ async function main() {
 
   assistant.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
   villaData.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
+  googleWorkspace.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
   // Briefings and CRM/finance lookups are fully local and must remain available
   // even if Notion is temporarily unavailable or not configured.
   if (NOTION_ACTIONS.has(action)) notion.init();

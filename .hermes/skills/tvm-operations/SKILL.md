@@ -41,6 +41,7 @@ Available actions and inputs:
 - `list_leads`: `{"stage":"New|Contacted|Qualified|Viewing|Negotiation|Won|Lost|due","search":"","limit":20}` — read-only lead list
 - `lead_detail`: `{"search":"lead name, email, phone, or id"}` — private lead details for drafting only
 - `finance_summary`: `{}` — read-only income, expenses, receivables, and outstanding invoices
+- `gmail_inbox`: `{}` — read-only inbox count and the newest 10 email metadata records from the approved TVM mailbox
 
 For business briefings, lead questions, finance questions, and invoice questions,
 use the matching read-only action first. Summarize the real result; do not invent
