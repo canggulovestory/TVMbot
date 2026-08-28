@@ -198,6 +198,7 @@
     .zuzu-panel.open{display:grid}.zuzu-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--espresso);color:#fff}.zuzu-head strong{font-size:1rem}.zuzu-head small{display:block;margin-top:2px;color:#d9cdc0;font-size:.72rem}.zuzu-close{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:8px;width:30px;height:30px;font-size:1.05rem;cursor:pointer}
     .zuzu-messages{overflow-y:auto;padding:16px;background:#f7f4ee;display:flex;flex-direction:column;gap:10px}.zuzu-msg{max-width:88%;padding:10px 12px;border-radius:13px;white-space:pre-wrap;font-size:.84rem;line-height:1.48}.zuzu-msg.assistant{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}.zuzu-msg.user{align-self:flex-end;background:#e9ddcc;color:#32271e;border-bottom-right-radius:4px}.zuzu-msg.thinking{color:var(--muted);font-style:italic}
     .zuzu-suggestions{display:flex;gap:6px;overflow-x:auto;padding:9px 14px 0;background:#fff}.zuzu-suggestions button{white-space:nowrap;border:1px solid var(--line);background:#faf8f4;color:#5d574d;border-radius:999px;padding:5px 9px;font:inherit;font-size:.7rem;cursor:pointer}.zuzu-form{display:flex;gap:8px;padding:12px 14px 14px;background:#fff;border-top:1px solid var(--line)}.zuzu-form textarea{flex:1;min-height:42px;max-height:110px;resize:vertical;border:1px solid #ddd5c8;border-radius:10px;padding:10px;font:inherit;font-size:.84rem}.zuzu-form textarea:focus{outline:2px solid #e8dcc6;border-color:var(--gold)}.zuzu-form button{align-self:flex-end;min-height:42px}
+    .zuzu-workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr);gap:18px}.zuzu-workspace .workspace-chat{min-height:610px;display:grid;grid-template-rows:auto 1fr auto;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}.workspace-head{padding:18px 20px;background:var(--espresso);color:#fff}.workspace-head h3{margin:0;font-size:1.1rem}.workspace-head p{margin:5px 0 0;color:#d9cdc0;font-size:.8rem}.workspace-chat .zuzu-messages{min-height:350px}.workspace-upload{border:1.5px dashed #cfc3b3;border-radius:13px;background:#faf7f2;padding:20px;text-align:center;cursor:pointer}.workspace-upload.drag{border-color:var(--gold);background:#f3eadc}.workspace-upload strong{display:block;margin-bottom:5px}.workspace-upload small{color:var(--muted)}.intake-list{display:grid;gap:10px;margin-top:12px}.intake-item{border:1px solid var(--line);border-radius:11px;padding:12px;background:#fff}.intake-item strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.intake-meta{font-size:.74rem;color:var(--muted);margin-top:4px}.intake-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.intake-draft{margin-top:8px;padding:9px;background:#f8f5ef;border-radius:8px;font-size:.75rem;color:#5d574d;white-space:pre-wrap}.google-note{margin-top:12px;padding:12px;border-radius:10px;background:#f7f4ee;color:#5d574d;font-size:.78rem}.google-note a{font-weight:700}
     .role-staff .admin-only{display:none!important}
     .role-staff .btn.danger{display:none!important}
     /* ── Quick actions ── */
@@ -255,6 +256,7 @@
       .menu-toggle{display:block}
       .search{display:none}
       .grid-2,.bot-grid{grid-template-columns:1fr}
+      .zuzu-workspace{grid-template-columns:1fr}.zuzu-workspace .workspace-chat{min-height:500px}
       .form-grid{grid-template-columns:1fr}
       .content{padding:16px 14px}
       .hello{display:none}
@@ -281,6 +283,7 @@
         <div class="g-label">Workspace</div>
         <button data-view="tasks"><i class="icon">✓</i>Tasks<span class="count" id="n-tasks">0</span></button>
         <button data-view="enquiries"><i class="icon">✉</i>Leads<span class="count" id="n-enquiries">0</span></button>
+        <button data-view="zuzu"><i class="icon">✦</i>Zuzu workspace</button>
         <button data-view="bots"><i class="icon">◎</i>Bots</button>
         <button data-view="team" class="admin-only"><i class="icon">👥</i>Team</button>
         <button data-view="activity" class="admin-only"><i class="icon">🕐</i>Activity</button>
@@ -413,6 +416,26 @@
           <div class="card table-wrap"><table><thead><tr><th>Date</th><th>Villa</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Proof</th><th></th></tr></thead><tbody id="t-finance"></tbody></table></div>
         </section>
 
+        <!-- ZUZU WORKSPACE -->
+        <section class="view" id="view-zuzu">
+          <div class="page-head"><div><h2>Zuzu workspace</h2><p>Your private AI operating desk. Zuzu can analyse the uploaded review drafts, prepare records and Google actions, but needs confirmation before making changes.</p></div><button class="btn secondary" data-zuzu-prompt="what needs attention today?">Today’s briefing</button></div>
+          <div class="zuzu-workspace">
+            <div class="workspace-chat">
+              <div class="workspace-head"><h3>✦ Talk to Zuzu</h3><p>Personal planning, TVM operations, finance, leads, Google Workspace and document review.</p></div>
+              <div class="zuzu-messages" id="zuzu-workspace-messages"><div class="zuzu-msg assistant">Hi Afni — this is your private workspace. You can ask about your day, a guest deposit, an invoice, a lead follow-up, or an uploaded contract.</div></div>
+              <div class="zuzu-suggestions"><button type="button" data-zuzu-prompt="briefing">Briefing</button><button type="button" data-zuzu-prompt="marketing pipeline">Marketing pipeline</button><button type="button" data-zuzu-prompt="finance">Finance</button><button type="button" data-zuzu-prompt="show uploaded documents">Uploads</button></div>
+              <form class="zuzu-form" id="zuzu-workspace-form"><textarea id="zuzu-workspace-input" maxlength="2000" placeholder="Ask Zuzu anything…"></textarea><button class="btn" type="submit">Send</button></form>
+            </div>
+            <div>
+              <div class="card" style="padding:18px"><div class="card-head"><h3>Drop a document</h3><span class="sub">Private review inbox</span></div>
+                <label class="workspace-upload" id="zuzu-dropzone" for="zuzu-file"><strong>Drop PDF, photo, TXT or CSV here</strong><small>Zuzu creates a review draft. Nothing is entered into TVM until you approve it.</small><input id="zuzu-file" type="file" accept="application/pdf,text/plain,text/csv,image/jpeg,image/png,image/webp" hidden></label>
+                <div class="google-note" id="zuzu-google-note">Checking Google Drive connection…</div>
+              </div>
+              <div class="card section-gap" style="padding:18px"><div class="card-head"><h3>Document review inbox</h3><button class="link" id="zuzu-reload-intake">Refresh</button></div><div class="intake-list" id="zuzu-intake-list"><div class="empty">No uploaded documents yet.</div></div></div>
+            </div>
+          </div>
+        </section>
+
         <!-- TASKS -->
         <section class="view" id="view-tasks">
           <div class="page-head"><div><h2>Tasks</h2><p>Stored in Notion. Also manageable from WhatsApp/Telegram.</p></div><button class="btn" data-open="task">+ Add task</button></div>
@@ -422,6 +445,7 @@
         <!-- ENQUIRIES -->
         <section class="view" id="view-enquiries">
           <div class="page-head"><div><h2>Leads</h2><p>Owner, renter and furniture opportunities from the public websites. Keep the next follow-up date current.</p></div></div>
+          <div class="stats" style="margin-bottom:18px"><div class="stat"><div class="s-ico">✉</div><div class="label">Pipeline</div><div class="value" id="lead-open">—</div><div class="sub">open opportunities</div></div><div class="stat"><div class="s-ico">◷</div><div class="label">Follow-ups due</div><div class="value" id="lead-due">—</div><div class="sub">need an answer today</div></div><div class="stat"><div class="s-ico">◎</div><div class="label">Won</div><div class="value" id="lead-won">—</div><div class="sub">all-time conversion</div></div><div class="stat"><div class="s-ico">↗</div><div class="label">Top source</div><div class="value" id="lead-source" style="font-size:1.05rem">—</div><div class="sub">from UTM / form data</div></div></div>
           <div class="card table-wrap"><table><thead><tr><th>Received</th><th>Type & source</th><th>Person</th><th>Contact</th><th>Next follow-up</th><th>Stage</th><th></th></tr></thead><tbody id="t-enquiries"></tbody></table></div>
         </section>
 
@@ -732,7 +756,7 @@
   </nav>
 
   <script>
-    const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],invoices:[],payables:[],villaTasks:[]}};
+    const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},zuzuIntake:[],villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],invoices:[],payables:[],villaTasks:[]}};
     let currentVillaId=null;
     const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
     const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -761,24 +785,32 @@
     function toastAction(m,label,fn,ms=6000){const el=$('#toast');el.textContent=m;const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{el.classList.remove('show');try{await fn()}catch(e){toast(e.message)}};el.appendChild(b);el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms)}
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
 
-    // ── Zuzu, private Hermes chat ──
-    function addZuzuMessage(role,text){const el=document.createElement('div');el.className=`zuzu-msg ${role}`;el.textContent=text;$('#zuzu-messages').appendChild(el);$('#zuzu-messages').scrollTop=$('#zuzu-messages').scrollHeight;return el}
+    // ── Zuzu, private Hermes chat + review inbox ──
+    function addZuzuMessage(role,text){const created=[];['#zuzu-messages','#zuzu-workspace-messages'].forEach(selector=>{const box=$(selector);if(!box)return;const el=document.createElement('div');el.className=`zuzu-msg ${role}`;el.textContent=text;box.appendChild(el);box.scrollTop=box.scrollHeight;created.push(el)});return created}
     function openZuzu(){const panel=$('#zuzu-panel');panel.classList.add('open');panel.setAttribute('aria-hidden','false');setTimeout(()=>$('#zuzu-input').focus(),80)}
     function closeZuzu(){const panel=$('#zuzu-panel');panel.classList.remove('open');panel.setAttribute('aria-hidden','true')}
-    async function askZuzu(message){const text=String(message||'').trim();if(!text)return;openZuzu();addZuzuMessage('user',text);const pending=addZuzuMessage('assistant thinking','Zuzu is thinking…');const submit=$('#zuzu-form button');submit.disabled=true;
-      try{const result=await api('/api/admin/assistant/chat',{method:'POST',body:JSON.stringify({message:text})});pending.remove();addZuzuMessage('assistant',result.reply)}catch(error){pending.remove();addZuzuMessage('assistant',`I couldn’t answer right now: ${error.message}`)}finally{submit.disabled=false;$('#zuzu-input').focus()}}
+    async function askZuzu(message,fromWorkspace=false){const text=String(message||'').trim();if(!text)return;if(!fromWorkspace)openZuzu();addZuzuMessage('user',text);const pending=addZuzuMessage('assistant thinking','Zuzu is thinking…');const submits=$$('.zuzu-form button');submits.forEach(button=>button.disabled=true);
+      try{const result=await api('/api/admin/assistant/chat',{method:'POST',body:JSON.stringify({message:text})});pending.forEach(node=>node.remove());addZuzuMessage('assistant',result.reply)}catch(error){pending.forEach(node=>node.remove());addZuzuMessage('assistant',`I couldn’t answer right now: ${error.message}`)}finally{submits.forEach(button=>button.disabled=false);(fromWorkspace?$('#zuzu-workspace-input'):$('#zuzu-input')).focus()}}
     $('#zuzu-open').addEventListener('click',openZuzu);$('#zuzu-close').addEventListener('click',closeZuzu);
     $('#zuzu-form').addEventListener('submit',event=>{event.preventDefault();const input=$('#zuzu-input');const text=input.value;input.value='';askZuzu(text)});
+    $('#zuzu-workspace-form').addEventListener('submit',event=>{event.preventDefault();const input=$('#zuzu-workspace-input');const text=input.value;input.value='';askZuzu(text,true)});
     $('#zuzu-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#zuzu-form').requestSubmit()}});
-    $$('.zuzu-suggestions [data-zuzu-prompt]').forEach(button=>button.addEventListener('click',()=>askZuzu(button.dataset.zuzuPrompt)));
+    $('#zuzu-workspace-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#zuzu-workspace-form').requestSubmit()}});
+    $$('[data-zuzu-prompt]').forEach(button=>button.addEventListener('click',()=>askZuzu(button.dataset.zuzuPrompt,button.closest('#view-zuzu')!==null)));
+    const bytes=v=>v<1024?`${v} B`:`${(v/1024/1024).toFixed(1)} MB`;
+    function renderIntake(){const box=$('#zuzu-intake-list');if(!box)return;const items=state.zuzuIntake||[];box.innerHTML=items.map(item=>`<div class="intake-item"><strong>${esc(item.fileName)}</strong><div class="intake-meta">${esc(item.draft?.suggestedType||'Document')} · ${bytes(item.bytes||0)} · ${esc(item.status)}</div>${item.draft?.extractedPreview?`<div class="intake-draft">${esc(item.draft.extractedPreview.slice(0,420))}</div>`:''}<div class="intake-actions"><a class="btn secondary sm" href="${esc(item.privateUrl||'#')}" target="_blank" rel="noopener">Open</a>${item.driveUrl?`<a class="btn secondary sm" href="${esc(item.driveUrl)}" target="_blank" rel="noopener">Drive</a>`:''}${item.status!=='Approved'?`<button class="btn sm" data-zuzu-approve="${esc(item.id)}">Review & approve</button>`:`<span class="badge green">Approved</span>`}</div></div>`).join('')||'<div class="empty">No uploaded documents yet.</div>'}
+    async function loadZuzuWorkspace(){try{const [intake,google]=await Promise.all([api('/api/admin/zuzu/intake'),api('/api/admin/integrations/google/status')]);state.zuzuIntake=intake.items||[];renderIntake();const note=$('#zuzu-google-note');if(google.connected&&!google.requiresReconnect)note.innerHTML='Google Workspace is connected. Files are copied to Drive and Zuzu can prepare Gmail drafts and calendar holds after confirmation.';else if(google.connected)note.innerHTML='Google needs a one-time re-connect to enable Drive copies, Gmail drafts and Calendar holds. <a href="/api/admin/integrations/google/connect">Reconnect Google</a>';else note.innerHTML='Connect the approved TVM Google account to copy uploads to Drive and use Gmail/Calendar. <a href="/api/admin/integrations/google/connect">Connect Google</a>'}catch(error){toast(error.message)}}
+    function readFileBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',').pop());reader.onerror=reject;reader.readAsDataURL(file)})}
+    async function uploadZuzuFile(file){if(!file)return;if(file.size>6*1024*1024)return toast('Keep documents under 6 MB.');const allowed=['application/pdf','text/plain','text/csv','image/jpeg','image/png','image/webp'];if(!allowed.includes(file.type))return toast('Use a PDF, TXT, CSV, JPG, PNG, or WebP.');try{toast('Uploading to Zuzu review inbox…');const dataBase64=await readFileBase64(file);await api('/api/admin/zuzu/intake',{method:'POST',body:JSON.stringify({fileName:file.name,mimeType:file.type,dataBase64})});await loadZuzuWorkspace();toast('Uploaded. Review the draft before approving.') }catch(error){toast(error.message)}}
+    $('#zuzu-file').addEventListener('change',event=>uploadZuzuFile(event.target.files[0]));$('#zuzu-reload-intake').addEventListener('click',loadZuzuWorkspace);['dragenter','dragover'].forEach(eventName=>$('#zuzu-dropzone').addEventListener(eventName,event=>{event.preventDefault();$('#zuzu-dropzone').classList.add('drag')}));['dragleave','drop'].forEach(eventName=>$('#zuzu-dropzone').addEventListener(eventName,event=>{event.preventDefault();$('#zuzu-dropzone').classList.remove('drag');if(eventName==='drop')uploadZuzuFile(event.dataTransfer.files[0])}));
 
     // ── Navigation ──
-    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Agency finance',tasks:'Tasks',enquiries:'Leads',bots:'Messaging bots',team:'Team',activity:'Activity'};
+    const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Agency finance',zuzu:'Zuzu workspace',tasks:'Tasks',enquiries:'Leads',bots:'Messaging bots',team:'Team',activity:'Activity'};
     function show(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
       $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
       $$('#bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===(name==='villa-detail'?'villas':name)));
       $('#page-title').textContent=TITLES[name]||name;$('#sidebar').classList.remove('open');$('#scrim').classList.remove('open');$('#search').value='';applySearch('');scrollTo(0,0);
-      if(name==='team')loadTeam();if(name==='activity')loadActivity()}
+      if(name==='team')loadTeam();if(name==='activity')loadActivity();if(name==='zuzu')loadZuzuWorkspace()}
     $$('.nav button[data-view]').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.view);if(b.dataset.view==='villas')$('#nav-villas-group').classList.add('open')}));
     document.addEventListener('click',e=>{
       const g=e.target.closest('[data-goto]');if(g)return show(g.dataset.goto);
@@ -942,6 +974,7 @@
     document.addEventListener('click',async e=>{
       const t=e.target;
       try{
+        if(t.dataset.zuzuApprove){const item=state.zuzuIntake.find(x=>x.id===t.dataset.zuzuApprove);if(!item)return;const title=prompt('Document title',item.draft?.suggestedTitle||item.fileName);if(title===null)return;const type=prompt('Document type',item.draft?.suggestedType||'Document');if(type===null)return;const expiryDate=prompt('Expiry date (YYYY-MM-DD, optional)','');if(expiryDate===null)return;await api(`/api/admin/zuzu/intake/${encodeURIComponent(item.id)}/approve`,{method:'POST',body:JSON.stringify({title,type,expiryDate})});await load();await loadZuzuWorkspace();toast('Document approved and added to TVM records.');return}
         if(t.dataset.edit){const[c,id]=t.dataset.edit.split(':');const r=state.villaData[c]?.find(x=>x.id===id);if(r)openModal(c,r);return}
         if(t.dataset.del){const[c,id]=t.dataset.del.split(':');
           if(c==='tenancies'){if(confirm('Delete this booking? Its payments and deposit are deleted too.')){await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();toast('Booking deleted.')}return}
@@ -1139,6 +1172,7 @@
         return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'TVM internal')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — add an agency retainer, commission, campaign cost, or another internal item.</td></tr>';
       // tasks & enquiries
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
+      const leadToday=new Date().toISOString().slice(0,10),openLeads=state.enquiries.filter(x=>!['Won','Lost'].includes(leadStage(x.status))),dueLeads=openLeads.filter(x=>x.nextFollowUp&&x.nextFollowUp<=leadToday),wonLeads=state.enquiries.filter(x=>leadStage(x.status)==='Won');const leadSources=state.enquiries.reduce((out,x)=>{const key=x.utmSource||x.source||'Direct';out[key]=(out[key]||0)+1;return out},{});const topSource=Object.entries(leadSources).sort((a,b)=>b[1]-a[1])[0];$('#lead-open').textContent=openLeads.length;$('#lead-due').textContent=dueLeads.length;$('#lead-won').textContent=wonLeads.length;$('#lead-source').textContent=topSource?`${topSource[0]} · ${topSource[1]}`:'—';
       $('#t-enquiries').innerHTML=state.enquiries.map(x=>{const wa=String(x.phone||'').replace(/\D/g,''),stage=leadStage(x.status),isRenter=/find a villa|renter/i.test(`${x.business||''} ${x.leadType||''}`);
         const source=[x.utmSource||x.source||'—',x.utmCampaign].filter(Boolean).join(' · ');
         const follow=x.nextFollowUp?`${fdate(x.nextFollowUp)}${x.assignee?`<span class="sub">${esc(x.assignee)}</span>`:''}${leadAttention(x)}`:leadAttention(x)||'—';

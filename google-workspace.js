@@ -15,8 +15,10 @@ const SCOPES = [
   'email',
   'profile',
   'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.compose',
   'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/calendar.events',
 ];
 
 let tokenFile = '';
@@ -123,7 +125,8 @@ async function status() {
   const current = config();
   if (!current.configured) return { configured: false, connected: false, allowedEmail: current.allowedEmail, scopes: SCOPES };
   const connection = await loadConnection();
-  return { configured: true, connected: Boolean(connection), allowedEmail: current.allowedEmail, email: connection?.email || '', connectedAt: connection?.connectedAt || '', scopes: connection?.scopes || SCOPES };
+  const missingScopes = requiredScopes(connection);
+  return { configured: true, connected: Boolean(connection), allowedEmail: current.allowedEmail, email: connection?.email || '', connectedAt: connection?.connectedAt || '', scopes: connection?.scopes || SCOPES, missingScopes, requiresReconnect: Boolean(connection && missingScopes.length) };
 }
 
 async function accessToken() {
@@ -152,4 +155,75 @@ async function gmailInbox() {
   return { mailbox: auth.email, unread: Number(inbox.messagesUnread || 0), messages };
 }
 
-module.exports = { init, status, buildAuthorizationUrl, completeAuthorization, gmailInbox, SCOPES };
+function emailAddress(value) {
+  const email = String(value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('A valid email address is required.');
+  return email;
+}
+
+function requiredScopes(connection) {
+  const granted = new Set(connection?.scopes || []);
+  return SCOPES.filter(scope => !['openid', 'email', 'profile'].includes(scope) && !granted.has(scope));
+}
+
+function rawEmail({ to, subject, body }) {
+  const lines = [
+    `To: ${emailAddress(to)}`,
+    `Subject: ${String(subject || '').replace(/[\r\n]/g, ' ').slice(0, 180)}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    '', String(body || '').slice(0, 12000),
+  ];
+  return Buffer.from(lines.join('\r\n'), 'utf8').toString('base64url');
+}
+
+async function createEmailDraft({ to, subject, body }) {
+  const auth = await accessToken();
+  const result = await googleFetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts', {
+    method: 'POST', headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: { raw: rawEmail({ to, subject, body }) } }),
+  });
+  return { id: result.id || '', messageId: result.message?.id || '', to: emailAddress(to), subject: String(subject || '').slice(0, 180), status: 'Draft created — not sent' };
+}
+
+function witaDateTime(value) {
+  const text = String(value || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text)) throw new Error('Use YYYY-MM-DDTHH:MM in WITA.');
+  return `${text}:00+08:00`;
+}
+
+async function calendarUpcoming() {
+  const auth = await accessToken();
+  const query = new URLSearchParams({ timeMin: new Date().toISOString(), maxResults: '10', singleEvents: 'true', orderBy: 'startTime' });
+  const result = await googleFetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${query}`, { headers: { Authorization: `Bearer ${auth.token}` } });
+  return (result.items || []).map(item => ({ id: item.id, title: item.summary || '(untitled)', start: item.start?.dateTime || item.start?.date || '', end: item.end?.dateTime || item.end?.date || '', link: item.htmlLink || '' }));
+}
+
+async function createCalendarHold({ title, start, end, description = '' }) {
+  const auth = await accessToken();
+  const event = {
+    summary: String(title || 'TVM hold').slice(0, 180), description: String(description || '').slice(0, 2000),
+    start: { dateTime: witaDateTime(start), timeZone: 'Asia/Makassar' },
+    end: { dateTime: witaDateTime(end), timeZone: 'Asia/Makassar' },
+  };
+  const result = await googleFetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    method: 'POST', headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event),
+  });
+  return { id: result.id || '', title: event.summary, start, end, link: result.htmlLink || '', status: 'Calendar hold created' };
+}
+
+async function uploadPrivateFile({ name, mimeType, buffer }) {
+  const auth = await accessToken();
+  const boundary = `tvm-${crypto.randomUUID()}`;
+  const metadata = JSON.stringify({ name: String(name || 'TVM document').slice(0, 180), description: 'Uploaded through private TVM Admin / Zuzu intake.' });
+  const body = Buffer.concat([
+    Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`, 'utf8'),
+    Buffer.from(buffer), Buffer.from(`\r\n--${boundary}--`, 'utf8'),
+  ]);
+  const result = await googleFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
+    method: 'POST', headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': `multipart/related; boundary=${boundary}` }, body,
+  });
+  return { id: result.id || '', name: result.name || name, url: result.webViewLink || (result.id ? `https://drive.google.com/open?id=${encodeURIComponent(result.id)}` : '') };
+}
+
+module.exports = { init, status, buildAuthorizationUrl, completeAuthorization, gmailInbox, createEmailDraft, calendarUpcoming, createCalendarHold, uploadPrivateFile, SCOPES, requiredScopes };

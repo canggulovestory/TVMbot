@@ -17,6 +17,7 @@ const notion = require('./notion');
 const assistant = require('./assistant');
 const villaData = require('./villa-data');
 const googleWorkspace = require('./google-workspace');
+const zuzuIntake = require('./zuzu-intake');
 
 const ALLOWED_USERS = new Set(['afni', 'syifa']);
 const ALLOWED_PRIORITIES = new Set(['High', 'Mid', 'Low']);
@@ -212,6 +213,27 @@ async function gmailInbox() {
   return googleWorkspace.gmailInbox();
 }
 
+async function marketingPipeline() {
+  const leads = await readLeads();
+  const open = leads.filter(lead => !['Won', 'Lost'].includes(leadStage(lead.status)));
+  const byStage = leads.reduce((out, lead) => {
+    const key = leadStage(lead.status); out[key] = (out[key] || 0) + 1; return out;
+  }, {});
+  const bySource = leads.reduce((out, lead) => {
+    const key = lead.utmSource || lead.source || 'Direct'; out[key] = (out[key] || 0) + 1; return out;
+  }, {});
+  const total = leads.length || 1;
+  return {
+    totalLeads: leads.length, openLeads: open.length, won: byStage.Won || 0, lost: byStage.Lost || 0,
+    conversionRate: Number((((byStage.Won || 0) / total) * 100).toFixed(1)), byStage, bySource,
+    followUpsDue: (await listLeads({ stage: 'due', limit: 20 })).map(lead => leadPreview(lead)),
+  };
+}
+
+async function documentIntakeDetail(input) {
+  return zuzuIntake.get(requireText(input.id, 'id', 100), { includeText: true });
+}
+
 async function run(action, userKey, input) {
   switch (action) {
     case 'create_task': {
@@ -283,6 +305,18 @@ async function run(action, userKey, input) {
       return saveRecord(input);
     case 'gmail_inbox':
       return gmailInbox();
+    case 'create_email_draft':
+      return googleWorkspace.createEmailDraft({ to: requireText(input.to, 'to', 180), subject: requireText(input.subject, 'subject', 180), body: requireText(input.body, 'body', 12000) });
+    case 'calendar_upcoming':
+      return googleWorkspace.calendarUpcoming();
+    case 'create_calendar_hold':
+      return googleWorkspace.createCalendarHold({ title: requireText(input.title, 'title', 180), start: requireText(input.start, 'start', 30), end: requireText(input.end, 'end', 30), description: String(input.description || '').slice(0, 2000) });
+    case 'marketing_pipeline':
+      return marketingPipeline();
+    case 'list_document_intake':
+      return zuzuIntake.list(input.limit || 30);
+    case 'document_intake_detail':
+      return documentIntakeDetail(input);
     default:
       throw new Error(`Unsupported action: ${action}`);
   }
@@ -296,6 +330,7 @@ async function main() {
   assistant.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
   villaData.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
   googleWorkspace.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
+  zuzuIntake.init(process.env.DATA_DIR || path.join(__dirname, 'data'));
   // Briefings and CRM/finance lookups are fully local and must remain available
   // even if Notion is temporarily unavailable or not configured.
   if (NOTION_ACTIONS.has(action)) notion.init();

@@ -22,6 +22,7 @@ const audit = require('./audit');
 const brain = require('./brain');
 const villaData = require('./villa-data');
 const googleWorkspace = require('./google-workspace');
+const zuzuIntake = require('./zuzu-intake');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
 
@@ -350,6 +351,19 @@ async function leadActionSummary() {
     followUps.slice(0, 5).map(lead => `• ${lead.name || 'Unnamed'} — ${lead.leadType || 'General'}`).join('\n');
 }
 
+async function marketingPipelineSummary() {
+  const leads = await readEnquiries();
+  const stage = value => normalizeLeadStage(value);
+  const sourceCounts = leads.reduce((out, lead) => {
+    const source = lead.utmSource || lead.source || 'Direct'; out[source] = (out[source] || 0) + 1; return out;
+  }, {});
+  const won = leads.filter(lead => stage(lead.status) === 'Won').length;
+  const open = leads.filter(lead => !['Won', 'Lost'].includes(stage(lead.status))).length;
+  const followUps = leads.filter(lead => !['Won', 'Lost'].includes(stage(lead.status)) && lead.nextFollowUp && lead.nextFollowUp <= new Date().toISOString().slice(0, 10)).length;
+  const topSources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([source, count]) => `${source}: ${count}`).join(' · ');
+  return `✦ *Weekly marketing pulse*\n${leads.length} total leads · ${open} open · ${won} won · ${followUps} follow-up${followUps === 1 ? '' : 's'} due\n${topSources ? `Top sources: ${topSources}` : 'No lead source data yet.'}`;
+}
+
 async function handleAdminApi(req, res, url) {
   if (url.pathname === '/api/admin/login' && req.method === 'POST') {
     const ip = clean((req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0], 80);
@@ -407,6 +421,49 @@ async function handleAdminApi(req, res, url) {
     if (!reply) return sendJson(res, 503, { error: 'Zuzu is temporarily unavailable.' });
     audit.add(session.user, 'asked Zuzu', 'admin assistant chat');
     return sendJson(res, 200, { ok: true, reply: String(reply).slice(0, 6000) });
+  }
+  if (url.pathname === '/api/admin/zuzu/intake' && req.method === 'GET') {
+    return sendJson(res, 200, { items: await zuzuIntake.list() });
+  }
+  if (url.pathname === '/api/admin/zuzu/intake' && req.method === 'POST') {
+    const body = await readBody(req, 9 * 1024 * 1024);
+    const google = await googleWorkspace.status().catch(() => ({ connected: false }));
+    const item = await zuzuIntake.ingest({
+      fileName: clean(body.fileName, 180), mimeType: clean(body.mimeType, 100), dataBase64: body.dataBase64,
+      uploadedBy: session.user,
+      driveUpload: google.connected ? googleWorkspace.uploadPrivateFile : null,
+    });
+    audit.add(session.user, 'uploaded Zuzu document', item.fileName);
+    return sendJson(res, 201, { ok: true, item });
+  }
+  const intakeFileMatch = url.pathname.match(/^\/api\/admin\/zuzu\/intake\/(UPL-[A-Za-z0-9-]+)\/file$/);
+  if (intakeFileMatch && req.method === 'GET') {
+    const found = await zuzuIntake.fileFor(intakeFileMatch[1]);
+    if (!found) return sendJson(res, 404, { error: 'Upload not found.' });
+    res.writeHead(200, {
+      'Content-Type': found.entry.mimeType || 'application/octet-stream',
+      'Content-Disposition': `inline; filename="${String(found.entry.fileName || 'document').replace(/["\\]/g, '_')}"`,
+      'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY',
+    });
+    return require('fs').createReadStream(found.filePath).pipe(res);
+  }
+  const intakeApproveMatch = url.pathname.match(/^\/api\/admin\/zuzu\/intake\/(UPL-[A-Za-z0-9-]+)\/approve$/);
+  if (intakeApproveMatch && req.method === 'POST') {
+    const body = await readBody(req);
+    const item = await zuzuIntake.get(intakeApproveMatch[1]);
+    if (!item) return sendJson(res, 404, { error: 'Upload not found.' });
+    if (item.status === 'Approved') return sendJson(res, 409, { error: 'This upload has already been approved.' });
+    const baseUrl = 'https://thevillamanagers.cloud';
+    const document = await villaData.upsert('documents', {
+      title: clean(body.title || item.draft?.suggestedTitle || item.fileName, 180),
+      type: clean(body.type || item.draft?.suggestedType || 'Document', 100), villaId: clean(body.villaId, 80), tenancyId: clean(body.tenancyId, 80),
+      driveUrl: item.driveUrl || `${baseUrl}/api/admin/zuzu/intake/${encodeURIComponent(item.id)}/file`,
+      signed: body.signed === true, signedDate: clean(body.signedDate, 20), expiryDate: clean(body.expiryDate, 20),
+      notes: clean(`${body.notes || ''}${body.notes ? '\n' : ''}Source: Zuzu intake ${item.id}`, 4000),
+    });
+    await zuzuIntake.markApproved(item.id, document.id);
+    audit.add(session.user, 'approved Zuzu document', document.title || document.id);
+    return sendJson(res, 201, { ok: true, document });
   }
 
   // ── Team management (admin only) ──
@@ -656,7 +713,7 @@ const server = http.createServer(async (req, res) => {
       try {
         const connected = await googleWorkspace.completeAuthorization(url.searchParams.get('code'));
         audit.add(session.user, 'connected Google Workspace', connected.email);
-        return integrationPage(res, 'Google Workspace connected', `${connected.email} is now connected for Gmail, selected Drive files, and TVM reporting Sheets.`);
+        return integrationPage(res, 'Google Workspace connected', `${connected.email} is now connected for Gmail, private Drive uploads, TVM reporting Sheets, and calendar holds. Zuzu only creates drafts or holds after your confirmation.`);
       } catch (error) {
         console.error('[Google] OAuth callback failed:', error.message);
         return integrationPage(res, 'Google connection failed', error.message, 400);
@@ -703,6 +760,20 @@ async function sendMorningDMs() {
     } catch (error) {
       console.error(`[Cron] ${userKey} morning DM failed:`, error.message);
     }
+  }
+}
+
+async function sendWeeklyMarketingBrief() {
+  try {
+    const message = await marketingPipelineSummary();
+    const user = brain.USERS.afni;
+    const [waSent, tgSent] = await Promise.all([
+      whatsapp.sendToPhone(user.phone, message).catch(() => false),
+      user.telegramId ? telegram.sendToChat(user.telegramId, message).catch(() => false) : false,
+    ]);
+    console.log(`[Cron] weekly marketing brief: WA=${waSent} TG=${tgSent}`);
+  } catch (error) {
+    console.error('[Cron] weekly marketing brief failed:', error.message);
   }
 }
 
@@ -755,6 +826,7 @@ async function boot() {
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
   villaData.init(DATA_DIR);
   googleWorkspace.init(DATA_DIR);
+  zuzuIntake.init(DATA_DIR);
   assistant.init(DATA_DIR);
   audit.init(DATA_DIR);
   await authUsers.init(DATA_DIR);
@@ -765,6 +837,7 @@ async function boot() {
     await telegram.start();
   }
   cron.schedule('0 9 * * *', sendMorningDMs, { timezone: 'Asia/Makassar' });
+  cron.schedule('10 9 * * 1', sendWeeklyMarketingBrief, { timezone: 'Asia/Makassar' });
   cron.schedule('* * * * *', deliverDueReminders); // minute-level reminder delivery
   cron.schedule('0 2 * * *', backupData, { timezone: 'Asia/Makassar' }); // nightly data backup
   server.listen(PORT, '127.0.0.1', () => console.log(`[HTTP] http://127.0.0.1:${PORT}`));
