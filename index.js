@@ -5,12 +5,14 @@
  */
 'use strict';
 
-require('dotenv').config();
+const path = require('path');
+// PM2 may start from a different working directory. Always load this checkout's
+// private environment file so channel credentials survive restarts and deploys.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const crypto = require('crypto');
 const fs = require('fs/promises');
 const http = require('http');
-const path = require('path');
 const QRCode = require('qrcode');
 const cron = require('node-cron');
 const notion = require('./notion');
