@@ -94,20 +94,19 @@ async function start() {
         bot.sendChatAction(msg.chat.id, 'typing').catch(() => {});
       }, 4000);
       let attachment;
-      let intakeNote = '';
       let text = caption;
       if (meta) {
         const uploaded = await downloadAttachment(meta);
         attachment = uploaded.dataUrl ? { mimeType: uploaded.mimeType, dataUrl: uploaded.dataUrl } : null;
         const preview = uploaded.item.draft?.extractedPreview ? `\n\nExtracted document text:\n${uploaded.item.draft.extractedPreview.slice(0, 5000)}` : '';
         text = `${caption || `Please review this ${meta.isImage ? 'photo' : 'file'} and tell me the important details.`}\n\nAttached file: ${uploaded.item.fileName}${preview}`;
-        intakeNote = `I received **${uploaded.item.fileName}** and added it to your private review inbox.\n\n`;
+        await sendReply(msg.chat.id, `I received **${uploaded.item.fileName}** and added it to your private review inbox. I’m reviewing it now.`);
       }
       const reply = await brain.processMessage({ text, telegramId, attachment });
       clearInterval(typing);
       typing = null;
       if (reply) {
-        await sendReply(msg.chat.id, `${intakeNote}${reply}`);
+        await sendReply(msg.chat.id, reply);
       }
     } catch (err) {
       console.error('[TG] Message error:', err.message);
