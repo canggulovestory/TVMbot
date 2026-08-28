@@ -9,7 +9,9 @@
 
 const DEFAULT_URL = 'http://127.0.0.1:8642';
 const DEFAULT_MODEL = 'tvm';
-const DEFAULT_TIMEOUT_MS = 120000;
+// Keep this below nginx's proxy timeout so the admin receives a clear Zuzu
+// response instead of an HTML 504 page when the model service is slow.
+const DEFAULT_TIMEOUT_MS = 45000;
 
 let config = null;
 
@@ -41,7 +43,7 @@ function init() {
     baseUrl: url.toString().replace(/\/$/, ''),
     apiKey,
     model: String(process.env.HERMES_API_MODEL || DEFAULT_MODEL).trim(),
-    timeoutMs: parsePositiveInt(process.env.HERMES_API_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
+    timeoutMs: Math.min(parsePositiveInt(process.env.HERMES_API_TIMEOUT_MS, DEFAULT_TIMEOUT_MS), DEFAULT_TIMEOUT_MS),
   };
 }
 

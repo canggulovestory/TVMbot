@@ -8,6 +8,7 @@
 const notion = require('./notion');
 const assistant = require('./assistant');
 const hermes = require('./hermes-client');
+const { businessBrief, financeSummary, marketingPipeline } = require('./agent-tools');
 
 function init() {
   hermes.init();
@@ -138,6 +139,30 @@ Only ask to store a memory when Afni explicitly asks you to remember it. Current
   catch (error) { console.error(`[Hermes personal] ${error.code || 'ERROR'}:`, error.message); return 'Zuzu is temporarily unavailable. Your personal lists are still saved here.'; }
 }
 
+function formatMoneyTotals(totals) {
+  const entries = Object.entries(totals || {});
+  return entries.length ? entries.map(([currency, amount]) => `${currency} ${Number(amount || 0).toLocaleString('en-US')}`).join(' · ') : '—';
+}
+
+/** Fast, read-only answers for the workspace shortcuts. They do not depend on a model call. */
+async function quickWorkspaceReply(message) {
+  const text = String(message || '').trim().toLowerCase();
+  if (/^(briefing|what needs attention( today)?)$/.test(text)) {
+    const brief = await businessBrief();
+    return `Today’s TVM brief\n• Leads: ${brief.leads.open} open; ${brief.leads.followUpsDue} follow-up${brief.leads.followUpsDue === 1 ? '' : 's'} due\n• Finance: ${formatMoneyTotals(brief.finance.receivables)} receivable; ${brief.finance.invoicesOverdue} overdue invoice${brief.finance.invoicesOverdue === 1 ? '' : 's'}\n• Operations: ${brief.operations.villasAvailable} villa${brief.operations.villasAvailable === 1 ? '' : 's'} available; ${brief.operations.unpaidInstallments} unpaid installment${brief.operations.unpaidInstallments === 1 ? '' : 's'}; ${brief.operations.depositsAwaitingAction} deposit${brief.operations.depositsAwaitingAction === 1 ? '' : 's'} awaiting action.`;
+  }
+  if (/^(finance|finance summary)$/.test(text)) {
+    const finance = await financeSummary();
+    const next = finance.payables[0] || finance.invoices[0];
+    return `Finance snapshot\n• Income this month: ${formatMoneyTotals(finance.incomeThisMonth)}\n• Expenses this month: ${formatMoneyTotals(finance.expensesThisMonth)}\n• Open receivables: ${formatMoneyTotals(finance.receivables)}\n${next ? `• Next due: ${next.code || next.vendorName || next.clientName || 'Record'} — ${next.dueDate || 'no date'}` : '• No dated invoices or payables yet.'}`;
+  }
+  if (/^(marketing pipeline|pipeline)$/.test(text)) {
+    const pipeline = await marketingPipeline();
+    return `Marketing pipeline\n• ${pipeline.totalLeads} total lead${pipeline.totalLeads === 1 ? '' : 's'} · ${pipeline.openLeads} open · ${pipeline.won} won\n• Conversion: ${pipeline.conversionRate}%\n• Follow-ups due: ${pipeline.followUpsDue.length}${pipeline.followUpsDue.length ? ` (${pipeline.followUpsDue.slice(0, 3).map(item => item.name || 'Unnamed lead').join(', ')})` : ''}`;
+  }
+  return null;
+}
+
 async function processForUser({ text, user }) {
   const message = String(text || '').trim().slice(0, 2000);
   if (!message) return 'Write a message for Zuzu first.';
@@ -145,6 +170,9 @@ async function processForUser({ text, user }) {
   // Structured commands remain deterministic and do not need a model provider.
   const commandReply = await assistant.tryCommand(message, user.key);
   if (commandReply) return commandReply;
+
+  const quickReply = await quickWorkspaceReply(message);
+  if (quickReply) return quickReply;
 
   try {
     // Recall only memories relevant to this message. This keeps Zuzu useful

@@ -338,7 +338,11 @@ async function main() {
   process.stdout.write(`${JSON.stringify({ ok: true, result })}\n`);
 }
 
-main().catch(error => {
-  process.stdout.write(`${JSON.stringify({ ok: false, error: error.message })}\n`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch(error => {
+    process.stdout.write(`${JSON.stringify({ ok: false, error: error.message })}\n`);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { businessBrief, financeSummary, marketingPipeline };
