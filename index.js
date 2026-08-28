@@ -33,6 +33,7 @@ const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data
 const ENQUIRIES_FILE = path.join(DATA_DIR, 'enquiries.json');
 const ADMIN_DIR = path.join(__dirname, 'admin');
 const loginAttempts = new Map();
+const zuzuRequests = new Map();
 let enquiryWriteQueue = Promise.resolve();
 
 function sendJson(res, status, payload, extraHeaders = {}) {
@@ -256,6 +257,15 @@ function recordLoginFailure(ip) {
   loginAttempts.set(ip, [...(loginAttempts.get(ip) || []), Date.now()]);
 }
 
+function zuzuRateLimited(user) {
+  const now = Date.now();
+  const recent = (zuzuRequests.get(user) || []).filter(time => now - time < 10 * 60 * 1000);
+  recent.push(now);
+  zuzuRequests.set(user, recent);
+  if (zuzuRequests.size > 100) zuzuRequests.clear();
+  return recent.length > 20;
+}
+
 async function adminOverview() {
   const results = await Promise.allSettled([
     notion.getTasks(),
@@ -384,6 +394,17 @@ async function handleAdminApi(req, res, url) {
     } catch (error) {
       return sendJson(res, 503, { error: error.message });
     }
+  }
+  if (url.pathname === '/api/admin/assistant/chat' && req.method === 'POST') {
+    const body = await readBody(req);
+    const message = clean(body.message, 2000);
+    if (!message) return sendJson(res, 422, { error: 'Write a message for Zuzu first.' });
+    if (!brain.USERS[session.user]) return sendJson(res, 403, { error: 'Zuzu is not configured for this team account.' });
+    if (zuzuRateLimited(session.user)) return sendJson(res, 429, { error: 'Zuzu needs a short break. Please try again in a few minutes.' });
+    const reply = await brain.processInternalMessage({ text: message, userKey: session.user });
+    if (!reply) return sendJson(res, 503, { error: 'Zuzu is temporarily unavailable.' });
+    audit.add(session.user, 'asked Zuzu', 'admin assistant chat');
+    return sendJson(res, 200, { ok: true, reply: String(reply).slice(0, 6000) });
   }
 
   // ── Team management (admin only) ──

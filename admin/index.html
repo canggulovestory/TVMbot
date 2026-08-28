@@ -193,6 +193,11 @@
     .toast{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;align-items:center;gap:14px;background:var(--espresso);color:#fff;padding:12px 18px;border-radius:11px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
     .toast.show{opacity:1;transform:none;pointer-events:auto}
     .toast button{background:var(--gold);border:0;color:var(--espresso);font:600 .78rem inherit;padding:6px 13px;border-radius:8px;cursor:pointer}
+    /* ── Zuzu private assistant ── */
+    .zuzu-panel{position:fixed;z-index:90;right:22px;bottom:22px;width:min(410px,calc(100vw - 28px));height:min(620px,calc(100vh - 48px));display:none;grid-template-rows:auto 1fr auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 70px rgba(27,24,19,.24);overflow:hidden}
+    .zuzu-panel.open{display:grid}.zuzu-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--espresso);color:#fff}.zuzu-head strong{font-size:1rem}.zuzu-head small{display:block;margin-top:2px;color:#d9cdc0;font-size:.72rem}.zuzu-close{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:8px;width:30px;height:30px;font-size:1.05rem;cursor:pointer}
+    .zuzu-messages{overflow-y:auto;padding:16px;background:#f7f4ee;display:flex;flex-direction:column;gap:10px}.zuzu-msg{max-width:88%;padding:10px 12px;border-radius:13px;white-space:pre-wrap;font-size:.84rem;line-height:1.48}.zuzu-msg.assistant{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}.zuzu-msg.user{align-self:flex-end;background:#e9ddcc;color:#32271e;border-bottom-right-radius:4px}.zuzu-msg.thinking{color:var(--muted);font-style:italic}
+    .zuzu-suggestions{display:flex;gap:6px;overflow-x:auto;padding:9px 14px 0;background:#fff}.zuzu-suggestions button{white-space:nowrap;border:1px solid var(--line);background:#faf8f4;color:#5d574d;border-radius:999px;padding:5px 9px;font:inherit;font-size:.7rem;cursor:pointer}.zuzu-form{display:flex;gap:8px;padding:12px 14px 14px;background:#fff;border-top:1px solid var(--line)}.zuzu-form textarea{flex:1;min-height:42px;max-height:110px;resize:vertical;border:1px solid #ddd5c8;border-radius:10px;padding:10px;font:inherit;font-size:.84rem}.zuzu-form textarea:focus{outline:2px solid #e8dcc6;border-color:var(--gold)}.zuzu-form button{align-self:flex-end;min-height:42px}
     .role-staff .admin-only{display:none!important}
     .role-staff .btn.danger{display:none!important}
     /* ── Quick actions ── */
@@ -227,6 +232,7 @@
       .content{padding-bottom:86px}
       .btn{min-height:42px}
       .btn.sm{min-height:34px}
+      .zuzu-panel{right:10px;bottom:76px;width:calc(100vw - 20px);height:min(610px,calc(100vh - 96px))}
     }
     /* ── Bots ── */
     .bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -302,6 +308,7 @@
               <button data-qa="villa"><span class="qi">🏝</span>Villa</button>
             </div>
           </div>
+          <button class="btn secondary sm" id="zuzu-open">✦ Ask Zuzu</button>
           <button class="btn secondary sm" id="refresh">Refresh</button><div class="avatar">A</div>
         </div>
       </div>
@@ -687,6 +694,13 @@
 
   <div class="toast" id="toast"></div>
 
+  <aside class="zuzu-panel" id="zuzu-panel" aria-label="Zuzu private assistant" aria-hidden="true">
+    <div class="zuzu-head"><div><strong>✦ Zuzu</strong><small>Your private TVM operating assistant</small></div><button class="zuzu-close" id="zuzu-close" aria-label="Close Zuzu">×</button></div>
+    <div class="zuzu-messages" id="zuzu-messages"><div class="zuzu-msg assistant">Hi, I’m Zuzu. Ask me for a briefing, leads due, finance, invoices, or your email inbox. I can prepare actions, but I will always ask before sending a client message or changing financial data.</div></div>
+    <div class="zuzu-suggestions"><button type="button" data-zuzu-prompt="briefing">Briefing</button><button type="button" data-zuzu-prompt="what needs attention?">What needs attention?</button><button type="button" data-zuzu-prompt="finance">Finance</button><button type="button" data-zuzu-prompt="email inbox">Email inbox</button></div>
+    <form class="zuzu-form" id="zuzu-form"><textarea id="zuzu-input" maxlength="2000" placeholder="Message Zuzu…" aria-label="Message Zuzu"></textarea><button class="btn" type="submit">Send</button></form>
+  </aside>
+
   <nav class="bottom-nav" id="bottom-nav">
     <button data-view="overview" class="active"><span class="bi">⌂</span>Home</button>
     <button data-view="villas"><span class="bi">🏝</span>Villas</button>
@@ -724,6 +738,17 @@
     function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3500)}
     function toastAction(m,label,fn,ms=6000){const el=$('#toast');el.textContent=m;const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{el.classList.remove('show');try{await fn()}catch(e){toast(e.message)}};el.appendChild(b);el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms)}
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+
+    // ── Zuzu, private Hermes chat ──
+    function addZuzuMessage(role,text){const el=document.createElement('div');el.className=`zuzu-msg ${role}`;el.textContent=text;$('#zuzu-messages').appendChild(el);$('#zuzu-messages').scrollTop=$('#zuzu-messages').scrollHeight;return el}
+    function openZuzu(){const panel=$('#zuzu-panel');panel.classList.add('open');panel.setAttribute('aria-hidden','false');setTimeout(()=>$('#zuzu-input').focus(),80)}
+    function closeZuzu(){const panel=$('#zuzu-panel');panel.classList.remove('open');panel.setAttribute('aria-hidden','true')}
+    async function askZuzu(message){const text=String(message||'').trim();if(!text)return;openZuzu();addZuzuMessage('user',text);const pending=addZuzuMessage('assistant thinking','Zuzu is thinking…');const submit=$('#zuzu-form button');submit.disabled=true;
+      try{const result=await api('/api/admin/assistant/chat',{method:'POST',body:JSON.stringify({message:text})});pending.remove();addZuzuMessage('assistant',result.reply)}catch(error){pending.remove();addZuzuMessage('assistant',`I couldn’t answer right now: ${error.message}`)}finally{submit.disabled=false;$('#zuzu-input').focus()}}
+    $('#zuzu-open').addEventListener('click',openZuzu);$('#zuzu-close').addEventListener('click',closeZuzu);
+    $('#zuzu-form').addEventListener('submit',event=>{event.preventDefault();const input=$('#zuzu-input');const text=input.value;input.value='';askZuzu(text)});
+    $('#zuzu-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#zuzu-form').requestSubmit()}});
+    $$('.zuzu-suggestions [data-zuzu-prompt]').forEach(button=>button.addEventListener('click',()=>askZuzu(button.dataset.zuzuPrompt)));
 
     // ── Navigation ──
     const TITLES={overview:'Overview',villas:'Villas','villa-detail':'Villa',stays:'Guest stays',payments:'Payments',deposits:'Deposits',documents:'Contracts & documents',finance:'Agency finance',tasks:'Tasks',enquiries:'Leads',bots:'Messaging bots',team:'Team',activity:'Activity'};

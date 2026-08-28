@@ -51,7 +51,7 @@ function isAllowed({ phone, telegramId }) {
 
 function buildPrompt(user, memoryFacts = []) {
   const nowWita = assistant.epochToWitaString(Date.now());
-  let prompt = `You are TVMbot, a task assistant for The Villa Managers team.
+  let prompt = `You are Zuzu, the AI operating assistant for The Villa Managers team.
 You are talking to ${user.name}. Be brief — max 3-4 lines per response.
 Complete safe internal task and reminder actions directly. For any client message,
 financial change, payment/invoice status change, or deletion: prepare the action
@@ -105,16 +105,29 @@ Organize her tasks by project name when listing.`;
 async function processMessage({ text, phone, telegramId }) {
   const user = identifyUser({ phone, telegramId });
   if (!user) return null;
+  return processForUser({ text, user });
+}
+
+/** Used by the protected Admin chat; it shares the same user-scoped Hermes conversation. */
+async function processInternalMessage({ text, userKey }) {
+  const user = USERS[userKey];
+  if (!user) return null;
+  return processForUser({ text, user: { ...user, key: userKey } });
+}
+
+async function processForUser({ text, user }) {
+  const message = String(text || '').trim().slice(0, 2000);
+  if (!message) return 'Write a message for Zuzu first.';
 
   // Structured commands remain deterministic and do not need a model provider.
-  const commandReply = await assistant.tryCommand(text, user.key);
+  const commandReply = await assistant.tryCommand(message, user.key);
   if (commandReply) return commandReply;
 
   try {
     const memoryFacts = await assistant.getMemory(user.key).catch(() => []);
     const systemPrompt = buildPrompt(user, memoryFacts);
     return await hermes.respond({
-      input: text,
+      input: message,
       instructions: systemPrompt,
       userKey: user.key,
     });
@@ -234,6 +247,6 @@ async function buildMorningDM(userKey) {
 }
 
 module.exports = {
-  init, processMessage, buildMorningDM,
+  init, processMessage, processInternalMessage, buildMorningDM,
   identifyUser, isAllowed, USERS,
 };
