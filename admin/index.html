@@ -737,7 +737,7 @@
     const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
     function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3500)}
     function toastAction(m,label,fn,ms=6000){const el=$('#toast');el.textContent=m;const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{el.classList.remove('show');try{await fn()}catch(e){toast(e.message)}};el.appendChild(b);el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms)}
-    async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/admin/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+    async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/login';throw new Error('Session expired')}const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
 
     // ── Zuzu, private Hermes chat ──
     function addZuzuMessage(role,text){const el=document.createElement('div');el.className=`zuzu-msg ${role}`;el.textContent=text;$('#zuzu-messages').appendChild(el);$('#zuzu-messages').scrollTop=$('#zuzu-messages').scrollHeight;return el}
@@ -1131,7 +1131,7 @@
         if(r.connected){toast('WhatsApp is already connected.');return}
         $('#pair-qr img').src=r.qr;$('#pair-qr').style.display='block';toast('QR code ready — scan it from WhatsApp.');
       }catch(err){toast(err.message)}finally{b.disabled=false}});
-    $('#logout').addEventListener('click',async e=>{e.preventDefault();await api('/api/admin/logout',{method:'POST'});location.href='/admin/login'});
+    $('#logout').addEventListener('click',async e=>{e.preventDefault();await api('/api/admin/logout',{method:'POST'});location.href='/login'});
     $('#refresh').addEventListener('click',()=>load());
 
     async function loadTeam(){try{const users=await api('/api/admin/users');

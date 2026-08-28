@@ -633,7 +633,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/admin/integrations/google/callback' && req.method === 'GET') {
       const session = await getSession(req);
-      if (!session || session.role !== 'admin') return redirect(res, '/admin/login');
+      if (!session || session.role !== 'admin') return redirect(res, '/login');
       if (url.searchParams.get('error')) {
         return integrationPage(res, 'Google connection was not completed', 'No Google data was connected. You can return to TVM Admin and try again.', 400);
       }
@@ -649,19 +649,19 @@ const server = http.createServer(async (req, res) => {
         return integrationPage(res, 'Google connection failed', error.message, 400);
       }
     }
-    if ((url.pathname === '/admin/login' || url.pathname === '/admin/login/') && req.method === 'GET') {
+    if ((url.pathname === '/login' || url.pathname === '/login/' || url.pathname === '/admin/login' || url.pathname === '/admin/login/') && req.method === 'GET') {
       if (await isAuthenticated(req)) return redirect(res, '/admin/');
       return await sendHtml(res, 'login.html');
     }
     if ((url.pathname === '/admin' || url.pathname === '/admin/') && req.method === 'GET') {
       const session = await getSession(req);
-      if (!session) return redirect(res, '/admin/login');
+      if (!session) return redirect(res, '/login');
       if (session.role === 'owner') return redirect(res, '/owner');
       return await sendHtml(res, 'index.html');
     }
     if ((url.pathname === '/owner' || url.pathname === '/owner/') && req.method === 'GET') {
       const session = await getSession(req);
-      if (!session) return redirect(res, '/admin/login');
+      if (!session) return redirect(res, '/login');
       return await sendHtml(res, 'owner.html');
     }
     return sendJson(res, 404, { error: 'Not found.' });
