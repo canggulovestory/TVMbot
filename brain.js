@@ -109,10 +109,10 @@ Organize her tasks by project name when listing.`;
 
 // ─── Process message ────────────────────────────────────────────────────────────
 
-async function processMessage({ text, phone, telegramId }) {
+async function processMessage({ text, phone, telegramId, attachment }) {
   const user = identifyUser({ phone, telegramId });
   if (!user) return null;
-  return processForUser({ text, user });
+  return processForUser({ text, user, attachment });
 }
 
 /** Used by the protected Admin chat; it shares the same user-scoped Hermes conversation. */
@@ -163,7 +163,15 @@ async function quickWorkspaceReply(message) {
   return null;
 }
 
-async function processForUser({ text, user }) {
+function messageWithAttachment(message, attachment) {
+  if (!attachment?.dataUrl || !String(attachment.mimeType || '').startsWith('image/')) return message;
+  return [{ role: 'user', content: [
+    { type: 'input_text', text: message },
+    { type: 'input_image', image_url: attachment.dataUrl, detail: 'high' },
+  ] }];
+}
+
+async function processForUser({ text, user, attachment }) {
   const message = String(text || '').trim().slice(0, 2000);
   if (!message) return 'Write a message for Zuzu first.';
 
@@ -180,7 +188,7 @@ async function processForUser({ text, user }) {
     const memoryFacts = await assistant.searchMemory(user.key, message, 12).catch(() => []);
     const systemPrompt = buildPrompt(user, memoryFacts);
     return await hermes.respond({
-      input: message,
+      input: messageWithAttachment(message, attachment),
       instructions: systemPrompt,
       userKey: user.key,
     });

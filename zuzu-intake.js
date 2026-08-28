@@ -17,6 +17,9 @@ const execFileAsync = promisify(execFile);
 const MAX_BYTES = 6 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set([
   'application/pdf', 'text/plain', 'text/csv', 'image/jpeg', 'image/png', 'image/webp',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel', 'application/msword',
 ]);
 let dataDir = '';
 let storePath = '';
@@ -36,6 +39,13 @@ function clean(value, max = 500) {
 function safeFileName(value) {
   const base = path.basename(clean(value, 180)).replace(/[^a-zA-Z0-9._ -]/g, '_');
   return base || 'upload';
+}
+
+function normalizeMimeType(fileName, value) {
+  const supplied = clean(value, 100).toLowerCase();
+  if (ACCEPTED_TYPES.has(supplied)) return supplied;
+  const ext = path.extname(String(fileName || '')).toLowerCase();
+  return ({ '.pdf': 'application/pdf', '.txt': 'text/plain', '.csv': 'text/csv', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.xls': 'application/vnd.ms-excel', '.doc': 'application/msword' })[ext] || supplied;
 }
 
 function emptyStore() { return { version: 1, intakes: [] }; }
@@ -89,7 +99,14 @@ function deriveDraft(fileName, text) {
 
 async function extractText(filePath, mimeType, buffer) {
   if (mimeType.startsWith('text/')) return buffer.toString('utf8').slice(0, 12000);
-  if (mimeType !== 'application/pdf') return '';
+  const office = new Set(['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+  if (office.has(mimeType)) {
+    try {
+      const { stdout } = await execFileAsync('unzip', ['-p', filePath], { maxBuffer: 512 * 1024, timeout: 8000 });
+      return stdout.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').slice(0, 12000);
+    } catch (_) { return ''; }
+  }
+  if (mimeType !== 'application/pdf' && mimeType !== 'application/vnd.ms-excel' && mimeType !== 'application/msword') return '';
   // `strings` is deliberately bounded. It is a best-effort preview; Zuzu must
   // never treat it as a verified contract interpretation without user review.
   try {
@@ -111,8 +128,8 @@ function publicIntake(entry, includePreview = false) {
 }
 
 async function ingest({ fileName, mimeType, dataBase64, uploadedBy, driveUpload }) {
-  const type = clean(mimeType, 100).toLowerCase();
-  if (!ACCEPTED_TYPES.has(type)) throw new Error('Use a PDF, TXT, CSV, JPG, PNG, or WebP file.');
+  const type = normalizeMimeType(fileName, mimeType);
+  if (!ACCEPTED_TYPES.has(type)) throw new Error('Use a PDF, Word, Excel, TXT, CSV, JPG, PNG, or WebP file.');
   const encoded = String(dataBase64 || '').replace(/^data:[^;]+;base64,/, '');
   if (!encoded) throw new Error('The uploaded file is empty.');
   const buffer = Buffer.from(encoded, 'base64');
@@ -175,4 +192,4 @@ async function markApproved(id, documentId) {
   });
 }
 
-module.exports = { init, ingest, list, get, fileFor, markApproved, MAX_BYTES };
+module.exports = { init, ingest, list, get, fileFor, markApproved, normalizeMimeType, MAX_BYTES };

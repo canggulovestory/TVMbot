@@ -66,3 +66,17 @@ test('respond exposes a bounded Hermes API error', async () => {
     global.fetch = originalFetch;
   }
 });
+
+test('respond preserves Responses image input', async () => {
+  const originalFetch = global.fetch;
+  let captured;
+  global.fetch = async (_url, options) => {
+    captured = JSON.parse(options.body);
+    return new Response(JSON.stringify({ output_text: 'Image read.' }), { status: 200 });
+  };
+  try {
+    const input = [{ role: 'user', content: [{ type: 'input_text', text: 'Read this' }, { type: 'input_image', image_url: 'data:image/jpeg;base64,AA==' }] }];
+    await hermes.respond({ input, instructions: '', userKey: 'afni' });
+    assert.deepEqual(captured.input, input);
+  } finally { global.fetch = originalFetch; }
+});

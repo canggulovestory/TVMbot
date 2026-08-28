@@ -119,7 +119,7 @@ async function respond({ input, instructions, userKey }) {
   const identity = safeId(userKey);
   const body = await request('/v1/responses', {
     model: current.model,
-    input: String(input || ''),
+    input: Array.isArray(input) ? input : String(input || ''),
     instructions: String(instructions || ''),
     conversation: `tvmbot-${identity}`,
     store: true,
