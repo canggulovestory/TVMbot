@@ -8,7 +8,7 @@
 const path = require('path');
 // PM2 may start from a different working directory. Always load this checkout's
 // private environment file so channel credentials survive restarts and deploys.
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 
 const crypto = require('crypto');
 const fs = require('fs/promises');

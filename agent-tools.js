@@ -247,9 +247,16 @@ async function run(action, userKey, input) {
     case 'cancel_reminder':
       return assistant.cancelReminder(userKey, requireText(input.search, 'search', 200));
     case 'remember_fact':
-      return assistant.remember(userKey, requireText(input.fact, 'fact', 400));
+      return assistant.remember(userKey, requireText(input.fact, 'fact', 400), {
+        category: String(input.category || 'reference').trim().toLowerCase(),
+        tags: Array.isArray(input.tags) ? input.tags : [], source: 'zuzu-confirmed',
+      });
     case 'list_memory':
       return assistant.getMemory(userKey);
+    case 'search_memory':
+      return assistant.searchMemory(userKey, String(input.search || ''), input.limit || 12, { category: input.category });
+    case 'forget_fact':
+      return assistant.forget(userKey, requireText(input.search, 'search', 200));
     case 'add_ops_schedule': {
       const frequency = requireText(input.frequency, 'frequency', 30);
       if (!ALLOWED_RECURRENCES.test(frequency)) throw new Error('Invalid frequency');

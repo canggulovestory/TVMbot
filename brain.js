@@ -88,7 +88,7 @@ Respond in the same language the user writes in (English or Indonesian).`;
 
   if (memoryFacts.length) {
     prompt += `\n\nKnown facts about ${user.name} (from memory):\n` +
-      memoryFacts.slice(0, 20).map(e => `- ${e.fact}`).join('\n');
+      memoryFacts.slice(0, 12).map(e => `- ${e.fact}${e.category && e.category !== 'reference' ? ` [${e.category}]` : ''}`).join('\n');
   }
 
   if (user.key === 'afni') {
@@ -129,7 +129,9 @@ async function processForUser({ text, user }) {
   if (commandReply) return commandReply;
 
   try {
-    const memoryFacts = await assistant.getMemory(user.key).catch(() => []);
+    // Recall only memories relevant to this message. This keeps Zuzu useful
+    // across long conversations without injecting every private fact at once.
+    const memoryFacts = await assistant.searchMemory(user.key, message, 12).catch(() => []);
     const systemPrompt = buildPrompt(user, memoryFacts);
     return await hermes.respond({
       input: message,

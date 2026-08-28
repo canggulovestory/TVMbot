@@ -13,6 +13,16 @@ let running = false;
 let botName = '';
 let lastError = '';
 
+async function sendReply(chatId, text) {
+  try {
+    await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+  } catch (error) {
+    // A model reply can contain an accidental Markdown character. The message
+    // is still useful, so retry as ordinary text instead of dropping it.
+    await bot.sendMessage(chatId, text);
+  }
+}
+
 async function start() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
@@ -38,6 +48,7 @@ async function start() {
   }
 
   bot.on('message', async (msg) => {
+    let typing = null;
     try {
       // Only private chats (DMs)
       if (msg.chat.type !== 'private') return;
@@ -53,15 +64,23 @@ async function start() {
 
       console.log(`[TG] ${msg.from.first_name}: ${msg.text.substring(0, 60)}`);
 
+      await bot.sendChatAction(msg.chat.id, 'typing').catch(() => {});
+      typing = setInterval(() => {
+        bot.sendChatAction(msg.chat.id, 'typing').catch(() => {});
+      }, 4000);
       const reply = await brain.processMessage({ text: msg.text, telegramId });
+      clearInterval(typing);
+      typing = null;
       if (reply) {
-        await bot.sendMessage(msg.chat.id, reply, { parse_mode: 'Markdown' });
+        await sendReply(msg.chat.id, reply);
       }
     } catch (err) {
       console.error('[TG] Message error:', err.message);
       try {
         await bot.sendMessage(msg.chat.id, 'Something went wrong. Try again.');
       } catch (_) {}
+    } finally {
+      if (typing) clearInterval(typing);
     }
   });
 

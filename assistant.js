@@ -149,11 +149,37 @@ async function collectDueReminders() {
 
 // ─── Memory ─────────────────────────────────────────────────────────────────────
 
-async function remember(userKey, fact) {
+const MEMORY_CATEGORIES = new Set(['personal', 'work', 'business', 'preference', 'decision', 'relationship', 'reference']);
+const MEMORY_STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'about', 'have', 'your', 'you', 'are', 'was', 'will', 'can', 'but', 'not', 'all', 'our', 'its', 'yang', 'dan', 'untuk', 'dengan', 'dari', 'atau', 'ini', 'itu', 'saya', 'kami', 'kamu']);
+
+function memoryWords(value) {
+  return [...new Set(String(value || '').toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) || [])]
+    .filter(word => !MEMORY_STOP_WORDS.has(word));
+}
+
+function normalizeMemoryEntry(entry) {
+  const fact = String(entry?.fact || '').slice(0, 400);
+  return {
+    id: String(entry?.id || `MEM-${crypto.randomUUID()}`), fact,
+    category: MEMORY_CATEGORIES.has(entry?.category) ? entry.category : 'reference',
+    tags: Array.isArray(entry?.tags) ? entry.tags.map(tag => String(tag).trim().toLowerCase().slice(0, 40)).filter(Boolean).slice(0, 8) : [],
+    source: String(entry?.source || 'explicit').slice(0, 40),
+    confirmed: entry?.confirmed !== false,
+    at: String(entry?.at || new Date().toISOString()),
+  };
+}
+
+async function remember(userKey, fact, options = {}) {
   if (!fact) throw new Error('Nothing to remember');
   return mutate(store => {
     store.memory[userKey] = store.memory[userKey] || [];
-    const entry = { fact: String(fact).slice(0, 400), at: new Date().toISOString() };
+    const normalizedFact = String(fact).trim().slice(0, 400);
+    const duplicate = store.memory[userKey].find(entry => String(entry.fact || '').toLowerCase() === normalizedFact.toLowerCase());
+    if (duplicate) return normalizeMemoryEntry(duplicate);
+    const entry = normalizeMemoryEntry({
+      id: `MEM-${crypto.randomUUID()}`, fact: normalizedFact,
+      category: options.category, tags: options.tags, source: options.source || 'explicit', confirmed: true,
+    });
     store.memory[userKey].unshift(entry);
     store.memory[userKey] = store.memory[userKey].slice(0, 100);
     return entry;
@@ -163,16 +189,39 @@ async function remember(userKey, fact) {
 async function forget(userKey, search) {
   return mutate(store => {
     const list = store.memory[userKey] || [];
-    const target = list.find(e => e.fact.toLowerCase().includes(String(search).toLowerCase()));
-    if (!target) return null;
-    store.memory[userKey] = list.filter(e => e !== target);
-    return target;
+    const index = list.findIndex(entry => {
+      const normalized = normalizeMemoryEntry(entry);
+      return `${normalized.fact} ${normalized.tags.join(' ')}`.toLowerCase().includes(String(search).toLowerCase());
+    });
+    if (index < 0) return null;
+    const [target] = list.splice(index, 1);
+    store.memory[userKey] = list;
+    return normalizeMemoryEntry(target);
   });
 }
 
 async function getMemory(userKey) {
   const store = await read();
-  return store.memory[userKey] || [];
+  return (store.memory[userKey] || []).map(normalizeMemoryEntry);
+}
+
+/** Lightweight local recall inspired by progressive memory retrieval. */
+async function searchMemory(userKey, query, limit = 12, options = {}) {
+  const words = memoryWords(query);
+  const category = String(options.category || '').toLowerCase();
+  const memories = await getMemory(userKey);
+  const scored = memories
+    .filter(entry => !category || entry.category === category)
+    .map(entry => {
+      const haystack = `${entry.fact} ${entry.tags.join(' ')}`.toLowerCase();
+      const hits = words.reduce((count, word) => count + (haystack.includes(word) ? 1 : 0), 0);
+      const exact = query && haystack.includes(String(query).toLowerCase()) ? 4 : 0;
+      const recency = Math.max(0, 1 - (Date.now() - Date.parse(entry.at || 0)) / (365 * 86400000));
+      return { entry, score: hits * 10 + exact + recency };
+    })
+    .filter(item => words.length === 0 || item.score > 0)
+    .sort((a, b) => b.score - a.score || Date.parse(b.entry.at) - Date.parse(a.entry.at));
+  return scored.slice(0, Math.min(Math.max(Number(limit) || 12, 1), 30)).map(item => item.entry);
 }
 
 // ─── Villa ops schedules (cleaning, pool, maintenance…) ─────────────────────────
@@ -311,7 +360,7 @@ const HELP = `*TVMbot commands* (work even without AI):
 /remind weekly mon 09:00 team check-in
 /remind monthly 25 10:00 chase rent
 /reminders — list · /cancel [text] — remove
-/remember [fact] · /memory · /forget [text]
+/remember [fact] · /memory · /decisions · /forget [text]
 /ops add [villa] | [task] | daily|weekly:mon|monthly:15 | [assignee]
 /ops list · /ops remove [text]
 /help — this message`;
@@ -360,7 +409,13 @@ async function tryCommand(text, userKey) {
     if (lower === '/memory') {
       const list = await getMemory(userKey);
       if (!list.length) return 'Nothing remembered yet. /remember [fact]';
-      return list.slice(0, 20).map((e, i) => `${i + 1}. ${e.fact}`).join('\n');
+      return list.slice(0, 20).map((e, i) => `${i + 1}. ${e.fact}${e.category !== 'reference' ? ` [${e.category}]` : ''}`).join('\n');
+    }
+
+    if (lower === '/decisions') {
+      const list = await searchMemory(userKey, '', 20, { category: 'decision' });
+      if (!list.length) return 'No decisions remembered yet. Say: remember this decision: …';
+      return list.map((e, i) => `${i + 1}. ${e.fact}`).join('\n');
     }
 
     if (lower === '/forget' || lower === '/lupakan') {
@@ -409,7 +464,7 @@ module.exports = {
   init, tryCommand, buildMorningExtras,
   addReminder, listReminders, cancelReminder, collectDueReminders,
   peekDueReminders, confirmReminderDelivered,
-  remember, forget, getMemory,
+  remember, forget, getMemory, searchMemory,
   addOpsSchedule, removeOpsSchedule, listOpsSchedules, todaysOps,
   epochToWitaString, witaToEpoch, parseWhen,
 };
