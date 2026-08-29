@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TVMbot Architecture",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/canggulovestory/TVMbot.git",
+      "revision": "0164466b6d980f4665a186c9e5a0c2a2d817be43"
+    },
+    "viewBox": [1120, 500],
+    "views": [
+      { "id": "public-to-admin", "label": "Public to admin", "focus": ["visitors", "edge", "public_site", "admin"], "note": "Visitors see the public TVM site; staff sign in to the separate private HQ." },
+      { "id": "zuzu", "label": "Zuzu assistant", "focus": ["admin", "tvmbot", "hermes", "private_data"], "note": "Zuzu runs through TVMbot, with Hermes kept on VPS loopback and private records stored locally." },
+      { "id": "channels", "label": "Messaging channels", "focus": ["tvmbot", "telegram", "whatsapp"], "note": "Telegram and WhatsApp deliver authorised team conversations and reminders." },
+      { "id": "google", "label": "Google Workspace", "focus": ["tvmbot", "google"], "note": "OAuth connects Drive copies, Gmail drafts, Sheets reporting, and Calendar holds after confirmation." }
+    ]
+  },
+  "components": [
+    { "id": "visitors", "type": "external", "label": "Visitors & TVM team", "sublabel": "Guests, owners & Afni", "pos": [20, 195], "size": [120, 66] },
+    { "id": "edge", "type": "security", "label": "TVM HTTPS edge", "sublabel": "Nginx · public gateway", "tag": "TLS + admin route protection", "pos": [170, 195], "size": [140, 66], "sources": [{ "path": "ops/nginx-tvmbot.conf", "line": 1, "label": "Nginx routes" }] },
+    { "id": "public_site", "type": "frontend", "label": "TVM public site", "sublabel": "Villa agency + The Bali Furniture", "tag": "Static website", "pos": [340, 40], "size": [160, 70], "sources": [{ "path": "website/index.html", "line": 1, "label": "Public site" }] },
+    { "id": "admin", "type": "frontend", "label": "TVM Admin HQ", "sublabel": "Protected ops + Zuzu", "tag": "Session login", "pos": [340, 195], "size": [160, 70], "sources": [{ "path": "admin/index.html", "line": 419, "label": "Zuzu workspace" }] },
+    { "id": "tvmbot", "type": "backend", "label": "TVMbot Node service", "sublabel": "API · ops · automations", "tag": "127.0.0.1:3000", "pos": [530, 195], "size": [170, 70], "sources": [{ "path": "index.js", "line": 721, "label": "HTTP server" }, { "path": "index.js", "line": 892, "label": "Boot services" }] },
+    { "id": "private_data", "type": "database", "label": "Private TVM data", "sublabel": "Villas · finance · docs", "tag": "VPS data volume", "pos": [530, 40], "size": [170, 70], "sources": [{ "path": "villa-data.js", "line": 1, "label": "Operations records" }, { "path": "zuzu-intake.js", "line": 1, "label": "Private inbox" }] },
+    { "id": "hermes", "type": "backend", "label": "Zuzu via Hermes", "sublabel": "Agent · memory · tools", "tag": "Loopback :8642", "pos": [730, 195], "size": [170, 70], "sources": [{ "path": "hermes-client.js", "line": 9, "label": "Local API client" }, { "path": "ops/hermes/tvm-hermes.service", "line": 1, "label": "Hermes service" }] },
+    { "id": "telegram", "type": "external", "label": "Telegram Bot API", "sublabel": "@zuzumipanbot · polling", "tag": "Photos + files", "pos": [940, 50], "size": [160, 66], "sources": [{ "path": "channels/telegram.js", "line": 1, "label": "Telegram channel" }] },
+    { "id": "whatsapp", "type": "external", "label": "WhatsApp", "sublabel": "Dedicated bot number", "tag": "Pairing required", "pos": [940, 300], "size": [160, 66], "sources": [{ "path": "channels/whatsapp.js", "line": 1, "label": "WhatsApp channel" }] },
+    { "id": "google", "type": "external", "label": "Google Workspace", "sublabel": "Gmail · Drive · Sheets · Calendar", "tag": "OAuth · confirmation first", "pos": [940, 400], "size": [160, 66], "sources": [{ "path": "google-workspace.js", "line": 1, "label": "Google integration" }] },
+    { "id": "github", "type": "cloud", "label": "GitHub", "sublabel": "canggulovestory/TVMbot", "tag": "main branch", "pos": [340, 405], "size": [160, 66], "sources": [{ "path": "ops/sync-and-deploy.sh", "line": 1, "label": "VPS sync" }] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "TVM VPS · Jakarta", "wraps": ["edge", "public_site", "admin", "tvmbot", "private_data", "hermes"], "pad": 38 },
+    { "kind": "security-group", "label": "Private service boundary", "wraps": ["tvmbot", "private_data", "hermes"], "pad": 24 }
+  ],
+  "connections": [
+    { "id": "visitor-edge", "from": "visitors", "to": "edge", "variant": "emphasis" },
+    { "id": "edge-public", "from": "edge", "to": "public_site", "label": "public pages", "fromSide": "right", "toSide": "left", "route": "orthogonal-h" },
+    { "id": "edge-admin", "from": "edge", "to": "admin", "variant": "security" },
+    { "id": "public-leads", "from": "public_site", "to": "tvmbot", "fromSide": "bottom", "toSide": "top", "route": "orthogonal-v" },
+    { "id": "admin-api", "from": "admin", "to": "tvmbot", "variant": "emphasis" },
+    { "id": "records", "from": "tvmbot", "to": "private_data", "fromSide": "top", "toSide": "bottom" },
+    { "id": "zuzu-agent", "from": "tvmbot", "to": "hermes", "variant": "emphasis" },
+    { "id": "telegram-channel", "from": "tvmbot", "to": "telegram", "label": "polling + replies", "fromSide": "top", "toSide": "left", "via": [[615, 145], [900, 145], [900, 83]] },
+    { "id": "whatsapp-channel", "from": "tvmbot", "to": "whatsapp", "fromSide": "bottom", "toSide": "left", "via": [[615, 360], [900, 360], [900, 333]] },
+    { "id": "workspace", "from": "tvmbot", "to": "google", "label": "OAuth actions", "fromSide": "bottom", "toSide": "left", "via": [[615, 480], [900, 480], [900, 433]] },
+    { "id": "deployment", "from": "github", "to": "tvmbot", "label": "VPS sync + PM2 restart", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "via": [[420, 360], [615, 360]] }
+  ],
+  "cards": []
+}
