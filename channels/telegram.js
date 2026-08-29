@@ -14,6 +14,18 @@ let bot = null;
 let running = false;
 let botName = '';
 let lastError = '';
+let reconnectTimer = null;
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(async () => {
+    reconnectTimer = null;
+    const staleBot = bot;
+    try { await staleBot?.stopPolling(); } catch (_) {}
+    if (bot === staleBot) bot = null;
+    await start();
+  }, 5000);
+}
 
 async function sendReply(chatId, text) {
   try {
@@ -68,6 +80,7 @@ async function start() {
     console.error('[TG] Start failed:', error.message);
     try { await bot.stopPolling(); } catch (_) {}
     bot = null;
+    scheduleReconnect();
     return false;
   }
 
@@ -122,6 +135,7 @@ async function start() {
     running = false;
     lastError = err.message;
     console.error('[TG] Polling error:', err.code || err.message);
+    scheduleReconnect();
   });
 
   return true;
