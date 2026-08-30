@@ -25,8 +25,9 @@
     .head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin:28px 0 8px;flex-wrap:wrap}
     h1{margin:0;font:400 clamp(2rem,5vw,3.2rem) "Bodoni Moda",serif;line-height:1.05}
     .loc{color:var(--muted);margin:6px 0 0}
-    .specs{display:flex;gap:26px;flex-wrap:wrap;padding:20px 0;border-block:1px solid var(--line);margin:22px 0;color:var(--muted);font-size:.9rem}
-    .specs b{display:block;color:var(--ink);font-size:1.15rem;font-weight:500}
+    .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:22px;padding:20px 0;border-block:1px solid var(--line);margin:22px 0;color:var(--muted);font-size:.9rem}
+    .specs span{min-width:0}
+    .specs b{display:block;color:var(--ink);font-size:1.15rem;font-weight:500;line-height:1.35}
     .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(26px,4vw,54px);align-items:start}
     h2{font:400 1.5rem "Bodoni Moda",serif;margin:0 0 16px}
     .fac{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:34px}
@@ -122,12 +123,12 @@
     $('#hero').insertAdjacentHTML('afterbegin',villa.photoUrl?`<img src="${esc(villa.photoUrl)}" alt="${esc(villa.name)}">`:`<img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=85" alt="${esc(villa.name)}">`);
     if(photos.length){$('#gallery').hidden=false;$('#gallery-grid').innerHTML=photos.map((photo,index)=>`<button type="button" data-photo="${esc(photo)}" aria-label="View photo ${index+1} of ${photos.length}"><img src="${esc(photo)}" alt="${esc(villa.name)} — photo ${index+1}" loading="lazy"></button>`).join('')}
     $('#specs').innerHTML=[
-      villa.bedrooms?`<span><b>${villa.bedrooms}</b>Bedrooms</span>`:'',
-      villa.bathrooms?`<span><b>${villa.bathrooms}</b>Bathrooms</span>`:'',
-      villa.maxGuests?`<span><b>${villa.maxGuests}</b>Guests</span>`:'',
-      `<span><b>${villa.pool?'Yes':'—'}</b>Private pool</span>`,
-      villa.yearlyRate?`<span><b>${esc(money(villa.yearlyRate,villa.currency))}</b>Per year</span>`:'',
-      villa.paymentTerms?`<span><b>${esc(villa.paymentTerms)}</b>Payment terms</span>`:'',
+      villa.bedrooms?`<span><b>${villa.bedrooms}</b>🛏️ Bedrooms</span>`:'',
+      villa.bathrooms?`<span><b>${villa.bathrooms}</b>🛁 Bathrooms</span>`:'',
+      villa.maxGuests?`<span><b>${villa.maxGuests}</b>👥 Guests</span>`:'',
+      `<span><b>${villa.pool?'Yes':'—'}</b>🏊 Private pool</span>`,
+      villa.yearlyRate?`<span><b>${esc(money(villa.yearlyRate,villa.currency))}</b>📅 Per year</span>`:'',
+      villa.paymentTerms?`<span><b>${esc(villa.paymentTerms)}</b>💳 Payment terms</span>`:'',
     ].filter(Boolean).join('');
     if(villa.facilities){$('#fac-wrap').style.display='';
       $('#fac').innerHTML=villa.facilities.split(',').map(f=>`<span>${esc(f.trim())}</span>`).join('')}
