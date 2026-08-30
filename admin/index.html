@@ -7,7 +7,7 @@
   <title>TVM Admin</title>
   <style>
     :root{
-      --bg:#edebe7;--card:#ffffff;--ink:#191713;--muted:#8b8478;--line:#e7e3db;
+      --bg:#edebe7;--card:#ffffff;--cream:#faf8f4;--ink:#191713;--muted:#8b8478;--line:#e7e3db;
       --gold:#b49164;--gold-soft:#f3ecdf;--espresso:#1c1915;
       --green:#3e7d54;--green-bg:#e3f2e7;--red:#b0483c;--red-bg:#f9ecea;--amber:#a9702c;--amber-bg:#f8f0e2;--blue:#4c6b94;--blue-bg:#eaf0f7;
       --radius:18px;--shadow:0 1px 2px rgba(27,24,19,.03),0 10px 30px rgba(27,24,19,.06);
@@ -124,24 +124,28 @@
     .vc-specs{display:flex;gap:12px;padding-top:11px;border-top:1px solid var(--line);color:var(--muted);font-size:.76rem;flex-wrap:wrap}
     .vc-specs b{color:var(--ink);font-weight:600}
     /* ── Villa detail ── */
-    .vd-head{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:0;margin-bottom:14px;overflow:hidden}
-    .vd-banner{height:140px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center;position:relative}
+    .vd-head{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(460px,1.2fr);background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:0;margin-bottom:16px;overflow:hidden}
+    .vd-banner{min-height:390px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center;position:relative}
+    .vd-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(25,23,19,.18))}
     .vd-banner .vb-initial{font-size:3rem;font-weight:700;color:rgba(255,255,255,.85)}
-    .vd-content{padding:20px 22px 22px}
+    .vd-content{padding:28px 30px;display:flex;flex-direction:column;justify-content:center}
     .vd-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
     .vd-id{display:flex;align-items:center;gap:15px}
     .vd-ava{width:58px;height:58px;border-radius:15px;background:var(--gold-soft);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.35rem}
-    .vd-id h2{margin:0;font-size:1.35rem}
-    .vd-id p{margin:3px 0 0;color:var(--muted);font-size:.83rem}
-    .vd-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-    .fact{min-width:0;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--cream)}
-    .fact-wide{grid-column:1/-1}
-    .fact span{display:block;color:var(--muted);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-    .fact strong,.fact a{font-size:.85rem;overflow-wrap:anywhere}
+    .vd-id h2{margin:2px 0 0;font-size:1.65rem;letter-spacing:-.02em}
+    .vd-id p{margin:4px 0 0;color:var(--muted);font-size:.85rem}
+    .vd-kicker{color:var(--gold);font-size:.67rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+    .vd-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+    .overview-item{min-width:0;padding:11px 12px;border-radius:11px;background:var(--cream)}
+    .overview-item span{display:block;color:var(--muted);font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .overview-item strong{display:block;margin-top:3px;font-size:.85rem;overflow-wrap:anywhere}
+    .vd-facilities{margin-top:16px}.vd-facilities>span{display:block;color:var(--muted);font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
     .facility-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
-    .facility-list i{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:.76rem;font-style:normal;font-weight:500}
-    .villa-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:0 18px 18px}
-    .villa-gallery figure{position:relative;margin:0;aspect-ratio:4/3;overflow:hidden;border:2px solid transparent;border-radius:8px;background:var(--cream);cursor:grab}
+    .facility-list i{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--cream);font-size:.73rem;font-style:normal;font-weight:500}
+    .vd-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.vd-links a{display:inline-flex;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:.74rem;font-weight:650}.vd-note{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:.78rem;white-space:pre-wrap}
+    .operations-card{overflow:hidden}.operations-head{align-items:flex-start}.private-pill{display:inline-flex;align-items:center;gap:5px;margin-top:5px;color:var(--green);font-size:.7rem;font-weight:700}.ops-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:16px 18px 18px}.ops-group{min-width:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--cream)}.ops-group h4{margin:0 0 11px;font-size:.82rem}.ops-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ops-item{min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fff}.ops-item span{display:block;color:var(--muted);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.ops-item strong{display:block;margin-top:4px;font-size:.78rem;line-height:1.35;overflow-wrap:anywhere;white-space:pre-wrap}.ops-item .missing{color:#aaa39a;font-weight:500}.ops-notes{grid-column:1/-1;padding:14px 15px;border:1px solid #dfd2be;border-radius:12px;background:var(--gold-soft)}.ops-notes span{display:block;color:#8a7353;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.ops-notes p{margin:5px 0 0;white-space:pre-wrap;font-size:.8rem}.form-section{grid-column:1/-1;margin:8px 0 0;padding:12px 0 3px;border-top:1px solid var(--line)}.form-section:first-of-type{margin-top:0;padding-top:0;border-top:0}.form-section strong{display:block;font-size:.85rem}.form-section small{display:block;margin-top:2px;color:var(--muted);font-size:.7rem}
+    .villa-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;padding:0 18px 18px}
+    .villa-gallery figure{position:relative;margin:0;aspect-ratio:4/3;overflow:hidden;border:2px solid transparent;border-radius:10px;background:var(--cream);cursor:grab}
     .villa-gallery figure:active{cursor:grabbing}
     .villa-gallery figure.drag-over{border-color:var(--gold)}
     .villa-gallery img{width:100%;height:100%;display:block;object-fit:cover}
@@ -149,6 +153,8 @@
     .back{display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;color:var(--muted);background:none;border:none;font:inherit;font-size:.83rem;cursor:pointer}
     .back:hover{color:var(--ink)}
     .section-gap{margin-bottom:14px}
+    @media(max-width:1180px){.vd-head{grid-template-columns:1fr}.vd-banner{min-height:300px}.ops-sections{grid-template-columns:1fr}}
+    @media(max-width:680px){.vd-content{padding:20px}.vd-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-grid{grid-template-columns:1fr}.villa-gallery{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 12px 12px}}
     /* ── Donut ── */
     .donut-wrap{display:flex;align-items:center;gap:20px;padding:18px}
     .donut{width:130px;height:130px;border-radius:50%;position:relative;flex-shrink:0}
@@ -166,7 +172,7 @@
     .list-row strong{font-size:.85rem;font-weight:600;display:block}
     .list-row small{display:block;color:var(--muted)}
     /* ── Modal ── */
-    dialog{border:0;border-radius:16px;box-shadow:0 24px 70px rgba(27,24,19,.3);padding:0;width:min(740px,94vw);max-height:92vh}
+    dialog{border:0;border-radius:16px;box-shadow:0 24px 70px rgba(27,24,19,.3);padding:0;width:min(860px,94vw);max-height:92vh}
     dialog::backdrop{background:rgba(27,24,19,.45)}
     .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line)}
     .modal-head h3{margin:0;font-size:1.02rem}
@@ -365,13 +371,14 @@
         <section class="view" id="view-villa-detail">
           <button class="back" id="villa-back">← All villas</button>
           <div class="vd-head" id="vd-head"></div>
-          <div class="card section-gap" id="vd-gallery"></div>
+          <div class="card operations-card section-gap" id="vd-operations"></div>
           <div class="card section-gap" id="vd-ops-memory" hidden></div>
           <div class="stats" id="vd-stats"></div>
           <div class="grid-2 section-gap">
             <div class="card"><div class="card-head"><h3>Availability — next 6 months</h3></div><div class="cal-wrap" id="vd-calendar"></div><div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span><span><span class="dot" style="background:#fff;outline:2px solid var(--gold)"></span>Today</span></div></div>
             <div class="card"><div class="card-head"><h3>Owner statement</h3><div class="stmt-controls"><input type="month" id="vd-month"><button class="btn secondary sm" id="vd-copy-stmt">Copy for WhatsApp</button><button class="btn sm" id="vd-print-stmt">Print / PDF</button></div></div><div class="stmt" id="vd-statement"></div></div>
           </div>
+          <div class="card section-gap" id="vd-gallery"></div>
           <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
           <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
           <div class="grid-2 section-gap">
@@ -514,6 +521,7 @@
   <dialog id="dlg-villas"><div class="modal-head"><h3 id="ttl-villas">Add villa</h3><button class="modal-close" data-close="villas">✕</button></div>
     <form id="form-villas"><div class="modal-body"><div class="form-grid">
       <input type="hidden" name="id">
+      <div class="form-section"><strong>Property overview</strong><small>The core villa facts shown across Admin and the public listing.</small></div>
       <div class="f"><label>Villa name *</label><input name="name" required></div>
       <div class="f"><label>Villa code</label><input name="code" placeholder="VA-01"></div>
       <div class="f"><label>Status</label><select name="status"><option>Available</option><option>Booked</option><option>Off-market</option><option>Maintenance</option></select></div>
@@ -524,6 +532,7 @@
       <div class="f"><label>Max guests</label><input name="maxGuests" type="number" min="0"></div>
       <div class="f-check"><input name="pool" type="checkbox" id="ck-pool"><label for="ck-pool">Private pool</label></div>
       <div class="f full"><label>Facilities</label><input name="facilities" placeholder="Pool, AC, WiFi, kitchen, parking…"></div>
+      <div class="form-section"><strong>Ownership &amp; pricing</strong><small>Private owner contacts and the public rental terms.</small></div>
       <div class="f"><label>Owner name</label><input name="ownerName"></div>
       <div class="f"><label>Owner WhatsApp</label><input name="ownerPhone" type="tel"></div>
       <div class="f full"><label>Owner email</label><input name="ownerEmail" type="email"></div>
@@ -532,6 +541,7 @@
       <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
       <div class="f"><label>Payment terms (public)</label><input name="paymentTerms" placeholder="e.g. 1 year upfront"></div>
       <div class="f"><label>Public enquiry WhatsApp</label><input name="publicWhatsApp" type="tel" placeholder="628…"></div>
+      <div class="form-section"><strong>Public website</strong><small>Only these listing fields and photos can appear on the TVM website.</small></div>
       <div class="f"><label>Google Maps link</label><input name="mapUrl" type="url"></div>
       <div class="f"><label>Photos folder (Drive)</label><input name="photosFolderUrl" type="url"></div>
       <div class="f"><label>Public listing link</label><input name="listingUrl" type="url"></div>
@@ -542,7 +552,26 @@
       <div class="f full"><label>Public gallery photo URLs</label><textarea name="gallery" placeholder="One public image URL per line. Drag photos in the villa page to reorder."></textarea></div>
       <div class="f full"><label>Public villa summary</label><textarea name="summary" placeholder="A short, client-facing description for the villa page."></textarea></div>
       <div class="f full"><label>Marketing notes</label><textarea name="marketingNotes"></textarea></div>
-      <div class="f full"><label>Private operations &amp; access notes</label><textarea name="operationsNotes" placeholder="Key-box code, access instructions, supplier notes… Never published."></textarea></div>
+      <div class="form-section"><strong>Private access &amp; security</strong><small>Admin-only. Never included in the public or owner-facing APIs.</small></div>
+      <div class="f"><label>Key-box / door code</label><input name="keyBoxCode" autocomplete="off" placeholder="e.g. 1992"></div>
+      <div class="f"><label>Backup key location</label><input name="backupKeyLocation" placeholder="e.g. Office safe, labelled hook"></div>
+      <div class="f full"><label>Check-in &amp; access instructions</label><textarea name="checkInInstructions" placeholder="Gate access, parking, alarm, key handover, check-in steps…"></textarea></div>
+      <div class="form-section"><strong>Recurring service schedules</strong><small>Record the day, time, frequency, provider and contact where useful.</small></div>
+      <div class="f"><label>Pool service</label><input name="poolServiceSchedule" placeholder="e.g. Tue & Fri, 09:00 — Pak Made"></div>
+      <div class="f"><label>Housekeeping</label><input name="cleaningSchedule" placeholder="e.g. Mon–Sat, 10:00–14:00"></div>
+      <div class="f"><label>Gardening</label><input name="gardeningSchedule" placeholder="e.g. Wednesday, weekly"></div>
+      <div class="f"><label>Waste collection</label><input name="wasteSchedule" placeholder="e.g. Mon / Wed / Fri before 08:00"></div>
+      <div class="f"><label>Pest control</label><input name="pestControlSchedule" placeholder="e.g. First Monday monthly"></div>
+      <div class="f"><label>Linen &amp; laundry</label><input name="linenSchedule" placeholder="e.g. Change every 3 nights"></div>
+      <div class="form-section"><strong>Private utilities &amp; contacts</strong><small>Operational information the villa team needs day to day.</small></div>
+      <div class="f"><label>Wi-Fi network</label><input name="wifiName" autocomplete="off"></div>
+      <div class="f"><label>Wi-Fi password</label><input name="wifiPassword" autocomplete="off"></div>
+      <div class="f"><label>Electricity / meter</label><input name="electricityDetails" placeholder="Meter ID, capacity, token process…"></div>
+      <div class="f"><label>Water / pump</label><input name="waterDetails" placeholder="Source, pump location, shut-off…"></div>
+      <div class="f"><label>Gas</label><input name="gasDetails" placeholder="Cylinder location and replacement contact"></div>
+      <div class="f"><label>Maintenance contact</label><input name="maintenanceContact" placeholder="Name and WhatsApp"></div>
+      <div class="f full"><label>Emergency contact</label><input name="emergencyContact" placeholder="Primary emergency contact and escalation"></div>
+      <div class="f full"><label>Other private operations notes</label><textarea name="operationsNotes" placeholder="Supplier notes, special instructions, recurring issues, appliance details…"></textarea></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villas">Cancel</button><button class="btn" type="submit">Save villa</button></div></form>
   </dialog>
 
@@ -1033,7 +1062,7 @@
     function loadVillaOperationsMemory(v){
       const box=$('#vd-ops-memory');if(!box)return;
       if(state.session?.role!=='admin'){box.hidden=true;return}box.hidden=false;
-      const load=async()=>{box.innerHTML='<div class="card-head"><h3>Private operations & access</h3><span class="sub">Loading…</span></div>';try{const result=await api(`/api/admin/villas/${encodeURIComponent(v.id)}/operations-memory`);if(currentVillaId!==v.id)return;const facts=result.facts||[];box.innerHTML=`<div class="card-head"><div><h3>Private operations & access</h3><p class="sub">The villa record is Zuzu’s source of truth. Never shown on the public site.</p></div><div style="display:flex;gap:8px"><button class="btn secondary sm" id="vd-ops-refresh">Refresh</button>${facts.length?'<button class="btn secondary sm" id="vd-ops-import">Import old Zuzu notes</button>':''}</div></div>${v.operationsNotes?`<div style="padding:0 18px 18px"><div class="intake-item">${esc(v.operationsNotes)}<div class="intake-meta">Saved in the private villa record</div></div></div>`:''}${facts.length?`<div style="padding:0 18px 18px">${facts.map(item=>`<div class="intake-item">${esc(item.fact)}<div class="intake-meta">Older Zuzu memory · saved ${esc(fdate(String(item.at||'').slice(0,10)))}</div></div>`).join('')}</div>`:v.operationsNotes?'':'<p class="empty" style="padding:0 18px 18px">No private operations notes saved for this villa yet.</p>'}`;$('#vd-ops-refresh')?.addEventListener('click',load);$('#vd-ops-import')?.addEventListener('click',async()=>{try{const saved=await api(`/api/admin/villas/${encodeURIComponent(v.id)}/operations-memory/import`,{method:'POST',body:'{}'});v.operationsNotes=saved.operationsNotes||v.operationsNotes;await load();toast('Older Zuzu notes added to the private villa record.')}catch(error){toast(error.message)}})}catch(error){box.innerHTML=`<div class="card-head"><h3>Private operations & access</h3></div><p class="empty" style="padding:0 18px 18px">${esc(error.message)}</p>`}};load();
+      const load=async()=>{box.innerHTML='<div class="card-head"><h3>Older Zuzu operations memory</h3><span class="sub">Loading…</span></div>';try{const result=await api(`/api/admin/villas/${encodeURIComponent(v.id)}/operations-memory`);if(currentVillaId!==v.id)return;const facts=result.facts||[];if(!facts.length){box.hidden=true;return}box.hidden=false;box.innerHTML=`<div class="card-head"><div><h3>Older Zuzu operations memory</h3><p class="sub">Review older facts, then copy anything still current into the structured operations fields above.</p></div><div style="display:flex;gap:8px"><button class="btn secondary sm" id="vd-ops-refresh">Refresh</button><button class="btn secondary sm" id="vd-ops-import">Copy to private notes</button></div></div><div style="padding:0 18px 18px">${facts.map(item=>`<div class="intake-item">${esc(item.fact)}<div class="intake-meta">Older Zuzu memory · saved ${esc(fdate(String(item.at||'').slice(0,10)))}</div></div>`).join('')}</div>`;$('#vd-ops-refresh')?.addEventListener('click',load);$('#vd-ops-import')?.addEventListener('click',async()=>{try{const saved=await api(`/api/admin/villas/${encodeURIComponent(v.id)}/operations-memory/import`,{method:'POST',body:'{}'});v.operationsNotes=saved.operationsNotes||v.operationsNotes;renderVilla();toast('Older Zuzu notes copied into the private villa record.')}catch(error){toast(error.message)}})}catch(error){box.hidden=false;box.innerHTML=`<div class="card-head"><h3>Older Zuzu operations memory</h3></div><p class="empty" style="padding:0 18px 18px">${esc(error.message)}</p>`}};load();
     }
     function renderVilla(){const v=vMap()[currentVillaId];if(!v)return;const d=state.villaData,S=sMap();
       $('#page-title').textContent=v.name;
@@ -1043,22 +1072,32 @@
       const docs=d.documents.filter(x=>x.villaId===v.id);
       const activeStay=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
       const nextPay=pays.find(p=>p.status!=='Paid');
-      $('#vd-head').innerHTML=`<div class="vd-banner">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="">`:`<span class="vb-initial">${esc(initials(v.name))}</span>`}</div><div class="vd-content"><div class="vd-row">
-        <div class="vd-id"><div><h2>${esc(v.name)}</h2><p>${esc(v.code||'No code')} · ${esc(v.location||'Location not set')}</p></div></div>
-        <div style="display:flex;gap:8px;align-items:center">${badge(v.status)}<button class="btn secondary sm" data-edit="villas:${esc(v.id)}">Edit villa</button><button class="btn danger sm" data-del="villas:${esc(v.id)}">Delete</button></div></div>
-        <div class="vd-facts">
-          <div class="fact"><span>🛏 Rooms</span><strong>${v.bedrooms||0} bedrooms · ${v.bathrooms||0} bathrooms${v.pool?' · Private pool':''}</strong></div>
-          ${v.maxGuests?`<div class="fact"><span>👥 Max guests</span><strong>${v.maxGuests}</strong></div>`:''}
-          ${v.monthlyRate?`<div class="fact"><span>📅 Monthly rate</span><strong>${money(v.monthlyRate,v.currency)}</strong></div>`:''}
-          ${v.yearlyRate?`<div class="fact"><span>📅 Yearly rate</span><strong>${money(v.yearlyRate,v.currency)}</strong></div>`:''}
-          ${v.ownerName?`<div class="fact"><span>👤 Owner</span><strong>${esc(v.ownerName)}</strong></div>`:''}
-          ${v.ownerPhone?`<div class="fact"><span>💬 Owner WhatsApp</span><strong><a href="https://wa.me/${esc(String(v.ownerPhone).replace(/\D/g,''))}" target="_blank" rel="noopener">${esc(v.ownerPhone)}</a></strong></div>`:''}
-          ${v.facilities?`<div class="fact fact-wide"><span>✨ Facilities</span><div class="facility-list">${v.facilities.split(/,\s+/).map(item=>`<i>${esc(item)}</i>`).join('')}</div></div>`:''}
-          ${v.mapUrl?`<div class="fact"><span>📍 Location</span><strong>${flink(v.mapUrl,'Open Google Maps')}</strong></div>`:''}
-          ${v.photosFolderUrl?`<div class="fact"><span>📷 Photos</span><strong>${flink(v.photosFolderUrl,'Open Drive folder')}</strong></div>`:''}
-          ${v.listingUrl?`<div class="fact"><span>🌐 Public page</span><strong>${flink(v.listingUrl,'View listing')}</strong></div>`:''}
-          ${v.ownerAgreementUrl?`<div class="fact"><span>📄 Owner agreement</span><strong>${flink(v.ownerAgreementUrl,'Open PDF')}</strong></div>`:''}
-        </div>${v.marketingNotes?`<p style="margin:14px 0 0;color:var(--muted);font-size:.83rem;border-top:1px solid var(--line);padding-top:12px">${esc(v.marketingNotes)}</p>`:''}</div>`;
+      const rate=v.yearlyRate?`${money(v.yearlyRate,v.currency)} / year`:v.monthlyRate?`${money(v.monthlyRate,v.currency)} / month`:'Not set';
+      const links=[v.mapUrl?flink(v.mapUrl,'📍 Google Maps'):'',v.photosFolderUrl?flink(v.photosFolderUrl,'📷 Drive photos'):'',v.listingUrl?flink(v.listingUrl,'🌐 Public page'):'',v.ownerAgreementUrl?flink(v.ownerAgreementUrl,'📄 Owner agreement'):''].filter(Boolean).join('');
+      $('#vd-head').innerHTML=`<div class="vd-banner">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="${esc(v.name)}">`:`<span class="vb-initial">${esc(initials(v.name))}</span>`}</div><div class="vd-content"><div class="vd-row">
+        <div class="vd-id"><div><span class="vd-kicker">${esc(v.code||'Villa')}</span><h2>${esc(v.name)}</h2><p>📍 ${esc(v.location||'Location not set')}</p></div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${badge(v.status)}<button class="btn secondary sm" data-edit="villas:${esc(v.id)}">Edit all details</button><button class="btn danger sm" data-del="villas:${esc(v.id)}">Delete</button></div></div>
+        <div class="vd-overview">
+          <div class="overview-item"><span>🛏 Bedrooms</span><strong>${v.bedrooms||0}</strong></div>
+          <div class="overview-item"><span>🚿 Bathrooms</span><strong>${v.bathrooms||0}</strong></div>
+          <div class="overview-item"><span>🏊 Pool</span><strong>${v.pool?'Private pool':'No pool recorded'}</strong></div>
+          <div class="overview-item"><span>💰 Rental rate</span><strong>${rate}</strong></div>
+          <div class="overview-item"><span>👥 Max guests</span><strong>${v.maxGuests||'Not set'}</strong></div>
+          <div class="overview-item"><span>💳 Payment terms</span><strong>${esc(v.paymentTerms||'Not set')}</strong></div>
+        </div>
+        ${v.facilities?`<div class="vd-facilities"><span>✨ Public facilities</span><div class="facility-list">${v.facilities.split(/,\s+/).map(item=>`<i>${esc(item)}</i>`).join('')}</div></div>`:''}
+        ${links?`<div class="vd-links">${links}</div>`:''}
+        ${v.marketingNotes?`<p class="vd-note">${esc(v.marketingNotes)}</p>`:''}</div>`;
+      const opItem=(icon,label,value)=>`<div class="ops-item"><span>${icon} ${esc(label)}</span><strong>${value?esc(value):'<span class="missing">Not set</span>'}</strong></div>`;
+      const opGroup=(title,items)=>`<section class="ops-group"><h4>${title}</h4><div class="ops-grid">${items.join('')}</div></section>`;
+      const operations=$('#vd-operations');operations.hidden=state.session?.role!=='admin';
+      if(!operations.hidden)operations.innerHTML=`<div class="card-head operations-head"><div><h3>Villa operations</h3><span class="private-pill">🔒 Private admin information · never public</span></div><button class="btn sm" data-edit="villas:${esc(v.id)}">Edit operations</button></div><div class="ops-sections">
+        ${opGroup('🔑 Access & security',[opItem('🔢','Key-box / door code',v.keyBoxCode),opItem('🗝️','Backup key',v.backupKeyLocation),opItem('🚪','Check-in instructions',v.checkInInstructions),opItem('📍','Villa location',v.location)])}
+        ${opGroup('🧹 Recurring services',[opItem('🏊','Pool service',v.poolServiceSchedule),opItem('🧹','Housekeeping',v.cleaningSchedule),opItem('🌿','Gardening',v.gardeningSchedule),opItem('🗑️','Waste collection',v.wasteSchedule),opItem('🐜','Pest control',v.pestControlSchedule),opItem('🛏️','Linen & laundry',v.linenSchedule)])}
+        ${opGroup('⚡ Utilities',[opItem('📶','Wi-Fi network',v.wifiName),opItem('🔐','Wi-Fi password',v.wifiPassword),opItem('⚡','Electricity / meter',v.electricityDetails),opItem('💧','Water / pump',v.waterDetails),opItem('🔥','Gas',v.gasDetails)])}
+        ${opGroup('☎️ Contacts',[opItem('👤','Owner',v.ownerName),opItem('💬','Owner WhatsApp',v.ownerPhone),opItem('🛠️','Maintenance',v.maintenanceContact),opItem('🚨','Emergency',v.emergencyContact)])}
+        <div class="ops-notes"><span>Private operations notes</span><p>${v.operationsNotes?esc(v.operationsNotes):'<span class="missing">No additional notes recorded.</span>'}</p></div>
+      </div>`;
       const gallery=Array.isArray(v.gallery)?v.gallery:[];
       $('#vd-gallery').innerHTML=`<div class="card-head"><div><h3>Public photo gallery</h3><p class="sub">Drag a photo onto another photo to change the website order.</p></div><span class="sub">${gallery.length} photo${gallery.length===1?'':'s'}</span></div>${gallery.length?`<div class="villa-gallery" id="vd-gallery-list">${gallery.map((photo,index)=>`<figure draggable="true" data-gallery-index="${index}"><img src="${esc(photo)}" alt="${esc(v.name)} photo ${index+1}"><figcaption>↕ Drag to reorder · ${index+1}</figcaption></figure>`).join('')}</div>`:'<p class="empty" style="padding:0 18px 18px">No gallery photos yet.</p>'}`;
       bindVillaGallery(v);
