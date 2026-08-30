@@ -747,7 +747,9 @@ const server = http.createServer(async (req, res) => {
         .map(v => ({
           name: v.name, slug: v.slug || '', summary: v.summary || '', location: v.location || '', bedrooms: v.bedrooms || 0,
           bathrooms: v.bathrooms || 0, pool: !!v.pool, maxGuests: v.maxGuests || 0,
-          status: v.status, photoUrl: v.photoUrl || '', facilities: v.facilities || '',
+          status: v.status, photoUrl: v.photoUrl || (Array.isArray(v.gallery) ? v.gallery[0] || '' : ''),
+          gallery: Array.isArray(v.gallery) ? v.gallery.filter(photo => /^https?:\/\//.test(photo)).slice(0, 80) : [],
+          facilities: v.facilities || '',
           // Sanitized availability: date ranges only, never guest details.
           bookedRanges: data.tenancies
             .filter(t => t.villaId === v.id && !['Cancelled', 'Enquiry'].includes(t.bookingStatus) && t.checkIn && t.checkOut)
