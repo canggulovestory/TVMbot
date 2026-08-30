@@ -1,0 +1,10 @@
+[Unit]
+Description=TVM Hermes model watchdog
+After=network-online.target tvm-hermes.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/tvmbot-v4
+ExecStart=/root/tvmbot-v4/ops/hermes/model-watchdog.sh

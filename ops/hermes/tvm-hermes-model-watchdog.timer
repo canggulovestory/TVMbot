@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the TVM Hermes model watchdog hourly
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Persistent=true
+Unit=tvm-hermes-model-watchdog.service
+
+[Install]
+WantedBy=timers.target

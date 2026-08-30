@@ -14,6 +14,8 @@ BACKUP_DIR="/root/tvm-backups"
 NGINX_FILE="/etc/nginx/sites-available/tvmbot"
 ZUZU_NGINX_FILE="/etc/nginx/sites-available/zuzu-life"
 HERMES_SERVICE="/etc/systemd/system/tvm-hermes.service"
+HERMES_MODEL_WATCHDOG_SERVICE="/etc/systemd/system/tvm-hermes-model-watchdog.service"
+HERMES_MODEL_WATCHDOG_TIMER="/etc/systemd/system/tvm-hermes-model-watchdog.timer"
 
 git -C "$REPO_DIR" fetch origin main
 CURRENT_COMMIT="$(git -C "$REPO_DIR" rev-parse HEAD)"
@@ -33,6 +35,8 @@ rsync -a --delete "$REPO_DIR/website/" "$PUBLIC_DIR/"
 command -v hermes >/dev/null || { echo "Hermes Agent is not installed" >&2; exit 1; }
 hermes -p tvm skills trust "$REPO_DIR"
 install -m 644 "$REPO_DIR/ops/hermes/tvm-hermes.service" "$HERMES_SERVICE"
+install -m 644 "$REPO_DIR/ops/hermes/tvm-hermes-model-watchdog.service" "$HERMES_MODEL_WATCHDOG_SERVICE"
+install -m 644 "$REPO_DIR/ops/hermes/tvm-hermes-model-watchdog.timer" "$HERMES_MODEL_WATCHDOG_TIMER"
 systemctl daemon-reload
 systemctl enable tvm-hermes.service
 systemctl restart tvm-hermes.service
@@ -43,6 +47,7 @@ for _ in $(seq 1 20); do
   sleep 1
 done
 curl -fsS --max-time 5 http://127.0.0.1:8642/health >/dev/null
+systemctl enable --now tvm-hermes-model-watchdog.timer
 
 cp "$NGINX_FILE" "$NGINX_FILE.previous"
 install -m 644 "$REPO_DIR/ops/nginx-tvmbot.conf" "$NGINX_FILE"
