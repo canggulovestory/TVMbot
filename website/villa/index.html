@@ -131,7 +131,7 @@
       villa.paymentTerms?`<span><b>${esc(villa.paymentTerms)}</b>💳 Payment terms</span>`:'',
     ].filter(Boolean).join('');
     if(villa.facilities){$('#fac-wrap').style.display='';
-      $('#fac').innerHTML=villa.facilities.split(',').map(f=>`<span>${esc(f.trim())}</span>`).join('')}
+      $('#fac').innerHTML=villa.facilities.split(/,\s+/).map(f=>`<span>${esc(f.trim())}</span>`).join('')}
     renderCalendar(villa.bookedRanges||[]);
     const whatsapp=String(villa.publicWhatsApp||'6282122922252').replace(/\D/g,'');
     $('#wa-link').href=`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in ${villa.name}.`)}`;
