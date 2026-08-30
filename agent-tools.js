@@ -123,7 +123,7 @@ async function searchOperations(input) {
 
   return {
     asOf: new Date().toISOString().slice(0, 10),
-    villas: data.villas.filter(item => match(item)).slice(0, limit).map(item => compactRecord(item, ['id', 'name', 'code', 'status', 'location', 'ownerName', 'monthlyRate', 'yearlyRate', 'currency', 'listingUrl', 'ownerAgreementUrl'])),
+    villas: data.villas.filter(item => match(item)).slice(0, limit).map(item => compactRecord(item, ['id', 'name', 'code', 'status', 'location', 'ownerName', 'monthlyRate', 'yearlyRate', 'currency', 'listingUrl', 'ownerAgreementUrl', 'operationsNotes'])),
     stays: data.tenancies.filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'rentAmount', 'currency', 'paymentFrequency', 'contractUrl']), villaName: villaName(item.villaId) })),
     installments: data.installments.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'status', 'paidDate', 'proofUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
     deposits: data.deposits.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'refundDate', 'refundProofUrl', 'inventoryUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),

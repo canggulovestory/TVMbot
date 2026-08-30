@@ -436,6 +436,20 @@ async function handleAdminApi(req, res, url) {
       .filter(item => ['work', 'business', 'reference'].includes(item.category));
     return sendJson(res, 200, { facts });
   }
+  const importOperationsMemoryMatch = url.pathname.match(/^\/api\/admin\/villas\/([^/]+)\/operations-memory\/import$/);
+  if (importOperationsMemoryMatch && req.method === 'POST') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    const data = await villaData.getAll();
+    const villa = data.villas.find(item => item.id === decodeURIComponent(importOperationsMemoryMatch[1]));
+    if (!villa) return sendJson(res, 404, { error: 'Villa not found.' });
+    const facts = (await assistant.searchMemory(session.user, villa.name, 20))
+      .filter(item => ['work', 'business', 'reference'].includes(item.category))
+      .map(item => item.fact);
+    const operationsNotes = [...new Set([villa.operationsNotes, ...facts].filter(Boolean))].join('\n');
+    const record = await villaData.upsert('villas', { id: villa.id, operationsNotes });
+    audit.add(session.user, 'imported Zuzu villa notes', villa.name);
+    return sendJson(res, 200, { ok: true, operationsNotes: record.operationsNotes });
+  }
   if (url.pathname === '/api/admin/integrations/google/status' && req.method === 'GET') {
     return sendJson(res, 200, await googleWorkspace.status());
   }
@@ -775,7 +789,7 @@ const server = http.createServer(async (req, res) => {
       const data = await villaData.getAll();
       const villas = data.villas
         .filter(v => !ids || ids.includes(v.id))
-        .map(({ marketingNotes, ownerAgreementUrl, photosFolderUrl, ...v }) => v);
+        .map(({ marketingNotes, operationsNotes, ownerAgreementUrl, photosFolderUrl, ...v }) => v);
       const allowed = new Set(villas.map(v => v.id));
       return sendJson(res, 200, {
         generatedAt: new Date().toISOString(),

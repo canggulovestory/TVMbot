@@ -57,6 +57,8 @@ Available actions and inputs:
 - `create_calendar_hold`: `{"title":"...","start":"YYYY-MM-DDTHH:MM","end":"YYYY-MM-DDTHH:MM","description":"..."}` — creates a WITA calendar hold
 - `save_record`: `{"collection":"villas|tenancies|installments|deposits|documents|transactions|invoices|payables|villaTasks","record":{...}}` — creates a record when `record.id` is absent or updates that exact record when an existing `id` is supplied.
 
+For every villa-specific fact, call `search_operations` first to find the exact villa. After confirmation, use `save_record` with that villa's `id`. Put key-box codes, access instructions, and other non-public handling details in the villa's `operationsNotes` field; do not use `remember_fact` as a substitute for a Villa Admin record. Only say a detail was saved when `save_record` returns `ok: true`.
+
 For business briefings, lead questions, finance questions, and invoice questions,
 use the matching read-only action first. Summarize the real result; do not invent
 numbers, clients, or payment status.

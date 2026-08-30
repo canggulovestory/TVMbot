@@ -11,7 +11,7 @@ const path = require('path');
 const COLLECTIONS = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'payables', 'villaTasks'];
 const PREFIX = { villas: 'VIL', tenancies: 'TEN', installments: 'PAY', deposits: 'DEP', documents: 'DOC', transactions: 'TRX', invoices: 'INV', payables: 'BILL', villaTasks: 'VTK' };
 const FIELDS = {
-  villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'paymentTerms', 'publicWhatsApp', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes', 'photoUrl', 'gallery', 'published', 'slug', 'summary'],
+  villas: ['name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities', 'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'paymentTerms', 'publicWhatsApp', 'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes', 'operationsNotes', 'photoUrl', 'gallery', 'published', 'slug', 'summary'],
   tenancies: ['code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'nationality', 'idDocumentUrl', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'guestCount', 'rentAmount', 'currency', 'paymentFrequency', 'source', 'agencyCommissionPercent', 'contractUrl', 'notes'],
   installments: ['code', 'tenancyId', 'villaId', 'installmentNumber', 'installmentTotal', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'gracePeriodDays', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'lateFee', 'ownerPayoutStatus'],
   deposits: ['code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'deductionNotes', 'refundDate', 'refundProofUrl', 'inventoryUrl'],
@@ -67,7 +67,7 @@ function normalize(collection, input, existing = {}) {
     } else if (BOOLEAN_FIELDS.has(field)) next[field] = input[field] === true || input[field] === 'true' || input[field] === 'on';
     else if (NUMBER_FIELDS.has(field)) next[field] = Number.isFinite(Number(input[field])) ? Number(input[field]) : 0;
     else if (/Url$/.test(field)) next[field] = normalizeUrl(input[field]);
-    else next[field] = clean(input[field], field === 'notes' || field === 'marketingNotes' || field === 'deductionNotes' ? 4000 : 500);
+    else next[field] = clean(input[field], field === 'notes' || field === 'marketingNotes' || field === 'operationsNotes' || field === 'deductionNotes' ? 4000 : 500);
   }
   if (collection === 'villas') {
     if (!existing.id && !('published' in input)) next.published = true;
