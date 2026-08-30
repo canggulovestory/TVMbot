@@ -133,9 +133,13 @@
     .vd-ava{width:58px;height:58px;border-radius:15px;background:var(--gold-soft);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.35rem}
     .vd-id h2{margin:0;font-size:1.35rem}
     .vd-id p{margin:3px 0 0;color:var(--muted);font-size:.83rem}
-    .vd-facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+    .vd-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+    .fact{min-width:0;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--cream)}
+    .fact-wide{grid-column:1/-1}
     .fact span{display:block;color:var(--muted);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
     .fact strong,.fact a{font-size:.85rem;overflow-wrap:anywhere}
+    .facility-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+    .facility-list i{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:.76rem;font-style:normal;font-weight:500}
     .villa-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:0 18px 18px}
     .villa-gallery figure{position:relative;margin:0;aspect-ratio:4/3;overflow:hidden;border:2px solid transparent;border-radius:8px;background:var(--cream);cursor:grab}
     .villa-gallery figure:active{cursor:grabbing}
@@ -1043,17 +1047,17 @@
         <div class="vd-id"><div><h2>${esc(v.name)}</h2><p>${esc(v.code||'No code')} · ${esc(v.location||'Location not set')}</p></div></div>
         <div style="display:flex;gap:8px;align-items:center">${badge(v.status)}<button class="btn secondary sm" data-edit="villas:${esc(v.id)}">Edit villa</button><button class="btn danger sm" data-del="villas:${esc(v.id)}">Delete</button></div></div>
         <div class="vd-facts">
-          <div class="fact"><span>Rooms</span><strong>${v.bedrooms||0} BR · ${v.bathrooms||0} BA${v.pool?' · Pool':''}</strong></div>
-          <div class="fact"><span>Max guests</span><strong>${v.maxGuests||'—'}</strong></div>
-          <div class="fact"><span>Monthly rate</span><strong>${money(v.monthlyRate,v.currency)}</strong></div>
-          <div class="fact"><span>Yearly rate</span><strong>${money(v.yearlyRate,v.currency)}</strong></div>
-          <div class="fact"><span>Owner</span><strong>${esc(v.ownerName||'—')}</strong></div>
-          <div class="fact"><span>Owner WhatsApp</span><strong>${v.ownerPhone?`<a href="https://wa.me/${esc(String(v.ownerPhone).replace(/\D/g,''))}" target="_blank" rel="noopener">${esc(v.ownerPhone)}</a>`:'—'}</strong></div>
-          <div class="fact"><span>Facilities</span><strong>${esc(v.facilities||'—')}</strong></div>
-          <div class="fact"><span>Map</span><strong>${flink(v.mapUrl,'Open map')}</strong></div>
-          <div class="fact"><span>Photos</span><strong>${flink(v.photosFolderUrl,'Drive folder')}</strong></div>
-          <div class="fact"><span>Listing</span><strong>${flink(v.listingUrl,'Public listing')}</strong></div>
-          <div class="fact"><span>Owner agreement</span><strong>${flink(v.ownerAgreementUrl,'Open PDF')}</strong></div>
+          <div class="fact"><span>🛏 Rooms</span><strong>${v.bedrooms||0} bedrooms · ${v.bathrooms||0} bathrooms${v.pool?' · Private pool':''}</strong></div>
+          ${v.maxGuests?`<div class="fact"><span>👥 Max guests</span><strong>${v.maxGuests}</strong></div>`:''}
+          ${v.monthlyRate?`<div class="fact"><span>📅 Monthly rate</span><strong>${money(v.monthlyRate,v.currency)}</strong></div>`:''}
+          ${v.yearlyRate?`<div class="fact"><span>📅 Yearly rate</span><strong>${money(v.yearlyRate,v.currency)}</strong></div>`:''}
+          ${v.ownerName?`<div class="fact"><span>👤 Owner</span><strong>${esc(v.ownerName)}</strong></div>`:''}
+          ${v.ownerPhone?`<div class="fact"><span>💬 Owner WhatsApp</span><strong><a href="https://wa.me/${esc(String(v.ownerPhone).replace(/\D/g,''))}" target="_blank" rel="noopener">${esc(v.ownerPhone)}</a></strong></div>`:''}
+          ${v.facilities?`<div class="fact fact-wide"><span>✨ Facilities</span><div class="facility-list">${v.facilities.split(/,\s+/).map(item=>`<i>${esc(item)}</i>`).join('')}</div></div>`:''}
+          ${v.mapUrl?`<div class="fact"><span>📍 Location</span><strong>${flink(v.mapUrl,'Open Google Maps')}</strong></div>`:''}
+          ${v.photosFolderUrl?`<div class="fact"><span>📷 Photos</span><strong>${flink(v.photosFolderUrl,'Open Drive folder')}</strong></div>`:''}
+          ${v.listingUrl?`<div class="fact"><span>🌐 Public page</span><strong>${flink(v.listingUrl,'View listing')}</strong></div>`:''}
+          ${v.ownerAgreementUrl?`<div class="fact"><span>📄 Owner agreement</span><strong>${flink(v.ownerAgreementUrl,'Open PDF')}</strong></div>`:''}
         </div>${v.marketingNotes?`<p style="margin:14px 0 0;color:var(--muted);font-size:.83rem;border-top:1px solid var(--line);padding-top:12px">${esc(v.marketingNotes)}</p>`:''}</div>`;
       const gallery=Array.isArray(v.gallery)?v.gallery:[];
       $('#vd-gallery').innerHTML=`<div class="card-head"><div><h3>Public photo gallery</h3><p class="sub">Drag a photo onto another photo to change the website order.</p></div><span class="sub">${gallery.length} photo${gallery.length===1?'':'s'}</span></div>${gallery.length?`<div class="villa-gallery" id="vd-gallery-list">${gallery.map((photo,index)=>`<figure draggable="true" data-gallery-index="${index}"><img src="${esc(photo)}" alt="${esc(v.name)} photo ${index+1}"><figcaption>↕ Drag to reorder · ${index+1}</figcaption></figure>`).join('')}</div>`:'<p class="empty" style="padding:0 18px 18px">No gallery photos yet.</p>'}`;
