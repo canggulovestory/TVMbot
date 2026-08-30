@@ -91,7 +91,7 @@
         <div class="f"><label>Email or WhatsApp</label><input name="contact" required placeholder="you@email.com or +62…"></div>
         <div class="f"><label>When & how long?</label><textarea name="message" required placeholder="e.g. From October, 6 months, 2 people"></textarea></div>
         <button class="btn" type="submit">Send enquiry</button>
-        <a class="wa" id="wa-link" href="https://wa.me/6282122922252" target="_blank" rel="noopener">or WhatsApp us directly →</a>
+        <a class="wa" id="wa-link" href="https://wa.me/6282115111211" target="_blank" rel="noopener">or WhatsApp us directly →</a>
         <p class="msg" id="msg"></p>
       </form>
     </div>
@@ -133,7 +133,7 @@
     if(villa.facilities){$('#fac-wrap').style.display='';
       $('#fac').innerHTML=villa.facilities.split(/,\s+/).map(f=>`<span>${esc(f.trim())}</span>`).join('')}
     renderCalendar(villa.bookedRanges||[]);
-    const whatsapp=String(villa.publicWhatsApp||'6282122922252').replace(/\D/g,'');
+    const whatsapp=String(villa.publicWhatsApp||'6282115111211').replace(/\D/g,'');
     $('#wa-link').href=`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in ${villa.name}.`)}`;
     renderOthers(villas.filter(v=>v.name!==villa.name));
   }).catch(()=>{$('#name').textContent='Could not load villa'});
