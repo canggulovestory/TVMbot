@@ -432,8 +432,10 @@ async function handleAdminApi(req, res, url) {
     const data = await villaData.getAll();
     const villa = data.villas.find(item => item.id === decodeURIComponent(operationsMemoryMatch[1]));
     if (!villa) return sendJson(res, 404, { error: 'Villa not found.' });
+    const villaLabel = villa.name.toLowerCase();
     const facts = (await assistant.searchMemory(session.user, villa.name, 20))
-      .filter(item => ['work', 'business', 'reference'].includes(item.category));
+      .filter(item => ['work', 'business', 'reference'].includes(item.category))
+      .filter(item => String(item.fact || '').toLowerCase().includes(villaLabel));
     return sendJson(res, 200, { facts });
   }
   const importOperationsMemoryMatch = url.pathname.match(/^\/api\/admin\/villas\/([^/]+)\/operations-memory\/import$/);
@@ -442,8 +444,10 @@ async function handleAdminApi(req, res, url) {
     const data = await villaData.getAll();
     const villa = data.villas.find(item => item.id === decodeURIComponent(importOperationsMemoryMatch[1]));
     if (!villa) return sendJson(res, 404, { error: 'Villa not found.' });
+    const villaLabel = villa.name.toLowerCase();
     const facts = (await assistant.searchMemory(session.user, villa.name, 20))
       .filter(item => ['work', 'business', 'reference'].includes(item.category))
+      .filter(item => String(item.fact || '').toLowerCase().includes(villaLabel))
       .map(item => item.fact);
     const operationsNotes = [...new Set([villa.operationsNotes, ...facts].filter(Boolean))].join('\n');
     const record = await villaData.upsert('villas', { id: villa.id, operationsNotes });
