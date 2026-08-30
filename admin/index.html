@@ -531,6 +531,7 @@
       <div class="f"><label>Public URL slug</label><input name="slug" placeholder="auto-from-villa-name"></div>
       <div class="f full"><label>Owner agency agreement (Drive PDF)</label><input name="ownerAgreementUrl" type="url"></div>
       <div class="f full"><label>Villa photo (JPG/PNG — shown on the card and villa page)</label><input type="file" name="photoFile" accept="image/jpeg,image/png,image/webp"></div>
+      <div class="f full"><label>Public gallery photo URLs</label><textarea name="gallery" placeholder="One public image URL per line. Drag photos in the villa page to reorder."></textarea></div>
       <div class="f full"><label>Public villa summary</label><textarea name="summary" placeholder="A short, client-facing description for the villa page."></textarea></div>
       <div class="f full"><label>Marketing notes</label><textarea name="marketingNotes"></textarea></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="villas">Cancel</button><button class="btn" type="submit">Save villa</button></div></form>
@@ -850,7 +851,7 @@
       if(name==='tenancies'){form.generateSchedule.checked=!record;wizGo(1);
         if(!record){const yr=new Date().getFullYear();const n=state.villaData.tenancies.length+1;form.code.placeholder=`TEN-${yr}-${String(n).padStart(3,'0')}`}}
       fillSelects();
-      if(record)Object.entries(record).forEach(([k,v])=>{const i=form.elements[k];if(!i)return;if(i.type==='checkbox')i.checked=Boolean(v);else i.value=v??''});
+      if(record)Object.entries(record).forEach(([k,v])=>{const i=form.elements[k];if(!i)return;if(i.type==='checkbox')i.checked=Boolean(v);else i.value=Array.isArray(v)?v.join('\n'):v??''});
       if(prefill)Object.entries(prefill).forEach(([k,v])=>{const i=form.elements[k];if(i)i.value=v});
       if(name==='transactions'&&!record&&!form.elements.date.value)form.elements.date.value=new Date().toISOString().slice(0,10);
       if(name==='invoices'&&!record){const today=new Date().toISOString().slice(0,10);form.elements.issueDate.value=today;const due=new Date();due.setDate(due.getDate()+7);form.elements.dueDate.value=due.toISOString().slice(0,10);form.elements.code.value=`TVM-INV-${new Date().getFullYear()}-${String(state.villaData.invoices.length+1).padStart(3,'0')}`}
@@ -975,7 +976,8 @@
     ['villas','tenancies','installments','deposits','documents','transactions','invoices','payables','villaTasks'].forEach(coll=>{
       $(`#form-${coll}`).addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
         try{
-          const res=await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:formData(e.target)})});
+          const record=formData(e.target);if(coll==='villas')record.gallery=String(record.gallery||'').split(/\r?\n/).map(url=>url.trim()).filter(Boolean);
+          const res=await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record})});
           if(coll==='villas'){const fi=e.target.querySelector('input[type=file]');const file=fi&&fi.files[0];
             if(file){toast('Uploading photo…');const image=await resizeImage(file);
               await api('/api/admin/villas/photo',{method:'POST',body:JSON.stringify({id:res.record.id,image})})}}
