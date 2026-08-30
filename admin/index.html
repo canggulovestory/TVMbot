@@ -362,6 +362,7 @@
           <button class="back" id="villa-back">← All villas</button>
           <div class="vd-head" id="vd-head"></div>
           <div class="card section-gap" id="vd-gallery"></div>
+          <div class="card section-gap" id="vd-ops-memory" hidden></div>
           <div class="stats" id="vd-stats"></div>
           <div class="grid-2 section-gap">
             <div class="card"><div class="card-head"><h3>Availability — next 6 months</h3></div><div class="cal-wrap" id="vd-calendar"></div><div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span><span><span class="dot" style="background:#fff;outline:2px solid var(--gold)"></span>Today</span></div></div>
@@ -525,6 +526,8 @@
       <div class="f"><label>Monthly rate</label><input name="monthlyRate" type="number" min="0"></div>
       <div class="f"><label>Yearly rate</label><input name="yearlyRate" type="number" min="0"></div>
       <div class="f"><label>Currency</label><select name="currency"><option>IDR</option><option>USD</option></select></div>
+      <div class="f"><label>Payment terms (public)</label><input name="paymentTerms" placeholder="e.g. 1 year upfront"></div>
+      <div class="f"><label>Public enquiry WhatsApp</label><input name="publicWhatsApp" type="tel" placeholder="628…"></div>
       <div class="f"><label>Google Maps link</label><input name="mapUrl" type="url"></div>
       <div class="f"><label>Photos folder (Drive)</label><input name="photosFolderUrl" type="url"></div>
       <div class="f"><label>Public listing link</label><input name="listingUrl" type="url"></div>
@@ -1022,6 +1025,11 @@
       gallery.addEventListener('dragleave',e=>e.target.closest('[data-gallery-index]')?.classList.remove('drag-over'));
       gallery.addEventListener('drop',async e=>{const card=e.target.closest('[data-gallery-index]');if(!card||from===null)return;e.preventDefault();gallery.querySelectorAll('.drag-over').forEach(item=>item.classList.remove('drag-over'));const to=Number(card.dataset.galleryIndex);if(from===to)return;const next=[...(v.gallery||[])];next.splice(to,0,next.splice(from,1)[0]);try{await saveVillaGallery(v,next)}catch(err){toast(err.message)}});
     }
+    function loadVillaOperationsMemory(v){
+      const box=$('#vd-ops-memory');if(!box)return;
+      if(state.session?.role!=='admin'){box.hidden=true;return}box.hidden=false;
+      const load=async()=>{box.innerHTML='<div class="card-head"><h3>Private operations memory</h3><span class="sub">Loading Zuzu notes…</span></div>';try{const result=await api(`/api/admin/villas/${encodeURIComponent(v.id)}/operations-memory`);if(currentVillaId!==v.id)return;const facts=result.facts||[];box.innerHTML=`<div class="card-head"><div><h3>Private operations memory</h3><p class="sub">Sensitive details saved through Zuzu. Never shown on the public site.</p></div><button class="btn secondary sm" id="vd-ops-refresh">Refresh</button></div>${facts.length?`<div style="padding:0 18px 18px">${facts.map(item=>`<div class="intake-item">${esc(item.fact)}<div class="intake-meta">Saved ${esc(fdate(String(item.at||'').slice(0,10)))}</div></div>`).join('')}</div>`:'<p class="empty" style="padding:0 18px 18px">No Zuzu operations notes found for this villa yet.</p>'}`;$('#vd-ops-refresh')?.addEventListener('click',load)}catch(error){box.innerHTML=`<div class="card-head"><h3>Private operations memory</h3></div><p class="empty" style="padding:0 18px 18px">${esc(error.message)}</p>`}};load();
+    }
     function renderVilla(){const v=vMap()[currentVillaId];if(!v)return;const d=state.villaData,S=sMap();
       $('#page-title').textContent=v.name;
       const stays=d.tenancies.filter(t=>t.villaId===v.id);
@@ -1049,6 +1057,7 @@
       const gallery=Array.isArray(v.gallery)?v.gallery:[];
       $('#vd-gallery').innerHTML=`<div class="card-head"><div><h3>Public photo gallery</h3><p class="sub">Drag a photo onto another photo to change the website order.</p></div><span class="sub">${gallery.length} photo${gallery.length===1?'':'s'}</span></div>${gallery.length?`<div class="villa-gallery" id="vd-gallery-list">${gallery.map((photo,index)=>`<figure draggable="true" data-gallery-index="${index}"><img src="${esc(photo)}" alt="${esc(v.name)} photo ${index+1}"><figcaption>↕ Drag to reorder · ${index+1}</figcaption></figure>`).join('')}</div>`:'<p class="empty" style="padding:0 18px 18px">No gallery photos yet.</p>'}`;
       bindVillaGallery(v);
+      loadVillaOperationsMemory(v);
       $('#vd-stats').innerHTML=`
         <div class="stat"><div class="label">Current guest</div><div class="value" style="font-size:1.1rem">${esc(activeStay?.guestName||'None')}</div><div class="sub">${activeStay?`until ${fdate(activeStay.checkOut)}`:'villa is free'}</div></div>
         <div class="stat"><div class="label">Next payment</div><div class="value" style="font-size:1.1rem">${nextPay?money(nextPay.amount,nextPay.currency):'—'}</div><div class="sub">${nextPay?`due ${fdate(nextPay.dueDate)}`:'nothing scheduled'}</div></div>

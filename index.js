@@ -426,6 +426,16 @@ async function handleAdminApi(req, res, url) {
     overview.session = { user: session.user, role: session.role, name: session.name };
     return sendJson(res, 200, overview);
   }
+  const operationsMemoryMatch = url.pathname.match(/^\/api\/admin\/villas\/([^/]+)\/operations-memory$/);
+  if (operationsMemoryMatch && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    const data = await villaData.getAll();
+    const villa = data.villas.find(item => item.id === decodeURIComponent(operationsMemoryMatch[1]));
+    if (!villa) return sendJson(res, 404, { error: 'Villa not found.' });
+    const facts = (await assistant.searchMemory(session.user, villa.name, 20))
+      .filter(item => ['work', 'business', 'reference'].includes(item.category));
+    return sendJson(res, 200, { facts });
+  }
   if (url.pathname === '/api/admin/integrations/google/status' && req.method === 'GET') {
     return sendJson(res, 200, await googleWorkspace.status());
   }
@@ -749,7 +759,8 @@ const server = http.createServer(async (req, res) => {
           bathrooms: v.bathrooms || 0, pool: !!v.pool, maxGuests: v.maxGuests || 0,
           status: v.status, photoUrl: v.photoUrl || (Array.isArray(v.gallery) ? v.gallery[0] || '' : ''),
           gallery: Array.isArray(v.gallery) ? v.gallery.filter(photo => /^https?:\/\//.test(photo)).slice(0, 80) : [],
-          facilities: v.facilities || '',
+          facilities: v.facilities || '', yearlyRate: Number(v.yearlyRate || 0), currency: v.currency || 'IDR',
+          paymentTerms: v.paymentTerms || '', publicWhatsApp: clean(v.publicWhatsApp, 40),
           // Sanitized availability: date ranges only, never guest details.
           bookedRanges: data.tenancies
             .filter(t => t.villaId === v.id && !['Cancelled', 'Enquiry'].includes(t.bookingStatus) && t.checkIn && t.checkOut)

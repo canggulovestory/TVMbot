@@ -104,6 +104,7 @@
   const pageParams=new URLSearchParams(location.search);
   const qName=(pageParams.get('v')||'').toLowerCase();
   let villa=null;
+  const money=(value,currency)=>`${currency||'IDR'} ${Number(value||0).toLocaleString('en-US')}`;
 
   fetch('/api/public/villas').then(r=>r.json()).then(villas=>{
     villa=villas.find(v=>(v.slug||'').toLowerCase()===qName)||villas.find(v=>v.name.toLowerCase()===qName)||villas.find(v=>v.name.toLowerCase().includes(qName))||null;
@@ -122,12 +123,14 @@
       villa.bathrooms?`<span><b>${villa.bathrooms}</b>Bathrooms</span>`:'',
       villa.maxGuests?`<span><b>${villa.maxGuests}</b>Guests</span>`:'',
       `<span><b>${villa.pool?'Yes':'—'}</b>Private pool</span>`,
-      `<span><b>Monthly+</b>Rental terms</span>`,
+      villa.yearlyRate?`<span><b>${esc(money(villa.yearlyRate,villa.currency))}</b>Per year</span>`:'',
+      villa.paymentTerms?`<span><b>${esc(villa.paymentTerms)}</b>Payment terms</span>`:'',
     ].filter(Boolean).join('');
     if(villa.facilities){$('#fac-wrap').style.display='';
       $('#fac').innerHTML=villa.facilities.split(',').map(f=>`<span>${esc(f.trim())}</span>`).join('')}
     renderCalendar(villa.bookedRanges||[]);
-    $('#wa-link').href=`https://wa.me/6282122922252?text=${encodeURIComponent(`Hi TVM, I'm interested in ${villa.name}.`)}`;
+    const whatsapp=String(villa.publicWhatsApp||'6282122922252').replace(/\D/g,'');
+    $('#wa-link').href=`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in ${villa.name}.`)}`;
     renderOthers(villas.filter(v=>v.name!==villa.name));
   }).catch(()=>{$('#name').textContent='Could not load villa'});
 
