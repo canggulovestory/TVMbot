@@ -1127,7 +1127,7 @@ fetch('/api/public/villas').then(response => {
   publicVillaGrid.innerHTML = villas.map((villa, index) => {
     const name = publicEsc(villa.name);
     const location = publicEsc(villa.location || 'Bali');
-    const href = `/villa/?v=${encodeURIComponent(villa.slug || villa.name)}`;
+    const href = `/villa/${encodeURIComponent(villa.slug || villa.name)}`;
     const image = villa.photoUrl
       ? `<img src="${publicEsc(villa.photoUrl)}" alt="${name}" loading="lazy">`
       : `<span class="villa-placeholder" aria-label="${name}">${publicEsc(publicInitials(villa.name))}</span>`;

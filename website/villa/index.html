@@ -102,7 +102,8 @@
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const pageParams=new URLSearchParams(location.search);
-  const qName=(pageParams.get('v')||'').toLowerCase();
+  const pathSlug=location.pathname.match(/^\/villa\/([^/]+)\/?$/)?.[1]||'';
+  const qName=(pageParams.get('v')||decodeURIComponent(pathSlug)).toLowerCase();
   let villa=null;
   const money=(value,currency)=>`${currency||'IDR'} ${Number(value||0).toLocaleString('en-US')}`;
 
@@ -110,6 +111,7 @@
     villa=villas.find(v=>(v.slug||'').toLowerCase()===qName)||villas.find(v=>v.name.toLowerCase()===qName)||villas.find(v=>v.name.toLowerCase().includes(qName))||null;
     if(!villa){$('#name').textContent='Villa not found';$('#status').textContent='—';
       $('#loc').innerHTML='This villa may no longer be listed. <a href="/#villas">See all villas</a>.';renderOthers(villas);return}
+    if(pageParams.has('v')&&villa.slug)history.replaceState(null,'',`/villa/${encodeURIComponent(villa.slug)}`);
     document.title=`${villa.name} — The Villa Managers`;
     $('#name').textContent=villa.name;
     $('#loc').textContent=villa.location||'Bali, Indonesia';
@@ -149,7 +151,7 @@
   }
 
   function renderOthers(list){
-    $('#others').innerHTML=list.slice(0,4).map(v=>`<a class="oc" href="/villa/?v=${encodeURIComponent(v.slug||v.name)}">
+    $('#others').innerHTML=list.slice(0,4).map(v=>`<a class="oc" href="/villa/${encodeURIComponent(v.slug||v.name)}">
       ${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="">`:`<span class="ph">${esc(v.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase())}</span>`}
       <div class="i"><strong>${esc(v.name)}</strong><small>${esc(v.location||'Bali')}</small></div></a>`).join('');
   }
