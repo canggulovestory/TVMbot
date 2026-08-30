@@ -7,6 +7,9 @@
  */
 'use strict';
 
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
+
 const DEFAULT_URL = 'http://127.0.0.1:8642';
 const DEFAULT_MODEL = 'tvm';
 // Keep this below nginx's proxy timeout so the admin receives a clear Zuzu
@@ -14,6 +17,7 @@ const DEFAULT_MODEL = 'tvm';
 const DEFAULT_TIMEOUT_MS = 45000;
 
 let config = null;
+const execFileAsync = promisify(execFile);
 
 class HermesError extends Error {
   constructor(message, { code = 'HERMES_ERROR', status = 0 } = {}) {
@@ -72,6 +76,17 @@ function extractResponseText(body) {
   return parts.join('\n').trim();
 }
 
+function isProviderFailure(text) {
+  const value = String(text || '').trim();
+  return /^API call failed after \d+ retries: HTTP (?:401|429|5\d{2}):/i.test(value)
+    || /^HTTP 401: Model .+ is not supported\.?$/i.test(value);
+}
+
+async function recoverModel() {
+  // This service only changes Hermes' model after its own private probe fails.
+  await execFileAsync('systemctl', ['start', 'tvm-hermes-model-watchdog.service'], { timeout: 120000 });
+}
+
 async function request(path, body, { userKey } = {}) {
   const current = getConfig();
   const controller = new AbortController();
@@ -117,17 +132,30 @@ async function request(path, body, { userKey } = {}) {
 async function respond({ input, instructions, userKey }) {
   const current = getConfig();
   const identity = safeId(userKey);
-  const body = await request('/v1/responses', {
+  const body = {
     model: current.model,
     input: Array.isArray(input) ? input : String(input || ''),
     instructions: String(instructions || ''),
     conversation: `tvmbot-${identity}`,
     store: true,
-  }, { userKey });
+  };
 
-  const text = extractResponseText(body);
+  let response = await request('/v1/responses', body, { userKey });
+
+  let text = extractResponseText(response);
+  if (isProviderFailure(text)) {
+    await recoverModel();
+    response = await request('/v1/responses', body, { userKey });
+    text = extractResponseText(response);
+    if (isProviderFailure(text)) {
+      throw new HermesError('Hermes provider is unavailable after recovery', {
+        code: 'HERMES_RESPONSE', status: 503,
+      });
+    }
+  }
+
   if (!text) throw new HermesError('Hermes returned no assistant text', { code: 'HERMES_EMPTY' });
   return text;
 }
 
-module.exports = { init, respond, extractResponseText, HermesError };
+module.exports = { init, respond, extractResponseText, isProviderFailure, HermesError };

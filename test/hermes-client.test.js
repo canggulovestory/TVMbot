@@ -19,6 +19,13 @@ test('extractResponseText reads Responses API message output', () => {
   }), 'TVM Hermes ready');
 });
 
+test('provider failure detector catches model and endpoint failures only', () => {
+  assert.equal(hermes.isProviderFailure('HTTP 401: Model hy3-free is not supported'), true);
+  assert.equal(hermes.isProviderFailure('API call failed after 3 retries: HTTP 503: Endpoint is unavailable.'), true);
+  assert.equal(hermes.isProviderFailure('HTTP 503 is an upstream error.'), false);
+  assert.equal(hermes.isProviderFailure('Zuzu is ready.'), false);
+});
+
 test('respond sends an authenticated, user-scoped Hermes request', async () => {
   const originalFetch = global.fetch;
   let captured;
