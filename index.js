@@ -24,6 +24,7 @@ const villaData = require('./villa-data');
 const googleWorkspace = require('./google-workspace');
 const zuzuIntake = require('./zuzu-intake');
 const personalLife = require('./personal-life');
+const { financeCockpit, leadFollowUps, inboxTriage } = require('./agent-tools');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
 
@@ -220,7 +221,7 @@ function saveEnquiry(input, req) {
       utmMedium: clean(input.utmMedium, 100),
       utmCampaign: clean(input.utmCampaign, 160),
       landingPage: clean(input.landingPage, 500),
-      assignee: '',
+      assignee: clean(input.assignee, 100) || 'Afni',
       nextFollowUp: clean(input.nextFollowUp, 20) || isoDateInDays(1),
       internalNotes: '',
       lastContactedAt: '',
@@ -449,6 +450,12 @@ async function handleAdminApi(req, res, url) {
   }
   if (url.pathname === '/api/admin/zuzu/intake' && req.method === 'GET') {
     return sendJson(res, 200, { items: await zuzuIntake.list() });
+  }
+  if (url.pathname === '/api/admin/zuzu/cockpit' && req.method === 'GET') {
+    const [finance, leads, google] = await Promise.all([
+      financeCockpit(), leadFollowUps(), inboxTriage().catch(error => ({ error: error.message, messages: [] })),
+    ]);
+    return sendJson(res, 200, { finance, leads, inbox: google });
   }
   if (url.pathname === '/api/admin/zuzu/intake' && req.method === 'POST') {
     const body = await readBody(req, 9 * 1024 * 1024);

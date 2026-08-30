@@ -148,11 +148,18 @@ async function gmailInbox() {
     googleFetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?labelIds=INBOX&maxResults=10', { headers }),
   ]);
   const messages = await Promise.all((list.messages || []).slice(0, 10).map(async item => {
-    const message = await googleFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(item.id)}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`, { headers });
+    const message = await googleFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(item.id)}?format=full`, { headers });
     const values = Object.fromEntries((message.payload?.headers || []).map(header => [String(header.name || '').toLowerCase(), header.value || '']));
-    return { id: item.id, from: values.from || '', subject: values.subject || '(no subject)', date: values.date || '' };
+    return { id: item.id, threadId: message.threadId || '', from: values.from || '', subject: values.subject || '(no subject)', date: values.date || '', snippet: String(message.snippet || '').slice(0, 600), attachments: attachmentParts(message.payload) };
   }));
   return { mailbox: auth.email, unread: Number(inbox.messagesUnread || 0), messages };
+}
+
+function attachmentParts(part, found = []) {
+  if (!part) return found;
+  if (part.body?.attachmentId) found.push({ attachmentId: part.body.attachmentId, name: String(part.filename || 'attachment').slice(0, 180), mimeType: part.mimeType || 'application/octet-stream', size: Number(part.body.size || 0) });
+  (part.parts || []).forEach(child => attachmentParts(child, found));
+  return found;
 }
 
 function emailAddress(value) {
@@ -226,4 +233,18 @@ async function uploadPrivateFile({ name, mimeType, buffer }) {
   return { id: result.id || '', name: result.name || name, url: result.webViewLink || (result.id ? `https://drive.google.com/open?id=${encodeURIComponent(result.id)}` : '') };
 }
 
-module.exports = { init, status, buildAuthorizationUrl, completeAuthorization, gmailInbox, createEmailDraft, calendarUpcoming, createCalendarHold, uploadPrivateFile, SCOPES, requiredScopes };
+/** Explicit-only action: copies one selected Gmail attachment into the private Drive. */
+async function saveGmailAttachmentToDrive({ messageId, attachmentId }) {
+  const auth = await accessToken();
+  const headers = { Authorization: `Bearer ${auth.token}` };
+  const message = await googleFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?format=full`, { headers });
+  const attachment = attachmentParts(message.payload).find(item => item.attachmentId === String(attachmentId));
+  if (!attachment) throw new Error('The selected Gmail attachment was not found.');
+  if (attachment.size > 6 * 1024 * 1024) throw new Error('That attachment is over the 6 MB private-upload limit.');
+  const content = await googleFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`, { headers });
+  const buffer = Buffer.from(String(content.data || ''), 'base64url');
+  if (!buffer.length) throw new Error('Google returned an empty attachment.');
+  return uploadPrivateFile({ name: attachment.name, mimeType: attachment.mimeType, buffer });
+}
+
+module.exports = { init, status, buildAuthorizationUrl, completeAuthorization, gmailInbox, createEmailDraft, calendarUpcoming, createCalendarHold, uploadPrivateFile, saveGmailAttachmentToDrive, SCOPES, requiredScopes };

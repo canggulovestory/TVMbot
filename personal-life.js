@@ -6,7 +6,7 @@ const path = require('path');
 
 let filePath = '';
 let writeQueue = Promise.resolve();
-const KINDS = new Set(['task', 'goal', 'habit', 'note']);
+const KINDS = new Set(['task', 'goal', 'habit', 'note', 'journal', 'routine', 'travel', 'shopping']);
 
 function init(dataDir) { filePath = path.join(dataDir, 'zuzu-life.json'); }
 function empty() { return { version: 1, items: [] }; }
@@ -28,7 +28,7 @@ async function overview(user) {
   const data = await read(); const today = new Date().toISOString().slice(0, 10);
   const own = data.items.filter(item => item.user === user);
   return { today, items: own.slice().sort((a, b) => Number(a.done) - Number(b.done) || (a.dueDate || '9999').localeCompare(b.dueDate || '9999')).slice(0, 120),
-    counts: { tasks: own.filter(x => x.kind === 'task' && !x.done).length, goals: own.filter(x => x.kind === 'goal' && !x.done).length, habits: own.filter(x => x.kind === 'habit' && !x.done).length } };
+    counts: { tasks: own.filter(x => x.kind === 'task' && !x.done).length, goals: own.filter(x => x.kind === 'goal' && !x.done).length, habits: own.filter(x => x.kind === 'habit' && !x.done).length, routines: own.filter(x => x.kind === 'routine' && !x.done).length, travel: own.filter(x => x.kind === 'travel' && !x.done).length, shopping: own.filter(x => x.kind === 'shopping' && !x.done).length } };
 }
 async function add(user, input) {
   const kind = KINDS.has(String(input.kind)) ? String(input.kind) : 'task'; const title = clean(input.title, 300);
@@ -38,4 +38,12 @@ async function add(user, input) {
 async function complete(user, id, done) {
   return mutate(data => { const item = data.items.find(x => x.id === String(id) && x.user === user); if (!item) return null; item.done = done !== false; item.updatedAt = new Date().toISOString(); return item; });
 }
-module.exports = { init, overview, add, complete };
+
+/** Explicit chat shortcuts keep life storage separate and avoid guessing which private thoughts to save. */
+async function tryCommand(user, message) {
+  const match = String(message || '').trim().match(/^(task|goal|habit|note|journal|routine|travel|shopping)\s*:\s*(.+)$/i);
+  if (!match) return null;
+  const item = await add(user, { kind: match[1].toLowerCase(), title: match[2] });
+  return `Saved to your private ${item.kind} list: ${item.title}`;
+}
+module.exports = { init, overview, add, complete, tryCommand };

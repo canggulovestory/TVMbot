@@ -90,10 +90,62 @@ function deriveDraft(fileName, text) {
   else if (/receipt|kwitansi|payment proof|bukti transfer/.test(lower)) type = 'Payment proof';
   else if (/contract|agreement|perjanjian|lease/.test(lower)) type = 'Contract';
   else if (/passport|ktp|identity/.test(lower)) type = 'Identity document';
-  return {
+  const draft = {
     suggestedTitle: clean(path.basename(fileName, path.extname(fileName)).replace(/[_-]+/g, ' '), 180),
     suggestedType: type, dateCandidates: dates, amountCandidates: amounts, emailCandidates: emails,
     extractedPreview: value.slice(0, 2800),
+  };
+  if (type === 'Contract') draft.contract = deriveContractDraft(value, dates);
+  return draft;
+}
+
+function normalizedDate(value) {
+  const iso = String(value || '').match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
+  const named = String(value || '').match(/\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+(20\d{2})\b/i);
+  if (!named) return '';
+  const month = ['january','february','march','april','may','june','july','august','september','october','november','december'].indexOf(named[2].toLowerCase()) + 1;
+  return `${named[3]}-${String(month).padStart(2, '0')}-${named[1].padStart(2, '0')}`;
+}
+
+function labelledDate(text, pattern) {
+  const match = String(text || '').match(new RegExp(`${pattern}.{0,50}?((?:20\\d{2}[-/.]\\d{1,2}[-/.]\\d{1,2})|(?:\\d{1,2}\\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)\\s+20\\d{2}))`, 'i'));
+  return normalizedDate(match?.[1]);
+}
+
+function labelledAmount(text, pattern) {
+  const match = String(text || '').match(new RegExp(`${pattern}.{0,70}?((?:rp\\.?|idr|usd|\\$)\\s*[\\d,.\\s]+)`, 'i'));
+  return match ? clean(match[1].replace(/\s+/g, ' '), 80) : '';
+}
+
+function addDays(value, days) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
+  const date = new Date(`${value}T00:00:00Z`); date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Conservative contract extraction: all fields are candidates for approval, never facts. */
+function deriveContractDraft(text, dateCandidates = []) {
+  const startDate = labelledDate(text, '(?:start|commencement|check[ -]?in|term begins|effective date)');
+  const endDate = labelledDate(text, '(?:end|expiry|expiration|check[ -]?out|term ends|valid until)');
+  const renewalDate = labelledDate(text, '(?:renewal|extend|extension)');
+  const rent = labelledAmount(text, '(?:monthly rent|rent amount|rental fee|rent)');
+  const deposit = labelledAmount(text, '(?:security deposit|deposit)');
+  const frequency = /quarterly/i.test(text) ? 'Quarterly' : /upfront|in advance|annual|yearly/i.test(text) ? 'Upfront' : /monthly|per month/i.test(text) ? 'Monthly' : '';
+  const firstDueDate = labelledDate(text, '(?:first payment|payment due|due date|rent due)') || startDate;
+  const client = String(text || '').match(/(?:tenant|guest|lessee)\s*(?:name)?\s*[:\-]\s*([A-Za-z][A-Za-z .'-]{2,80}?)(?=\s+(?:commencement|start|end|expiry|expiration|monthly|rent|security|deposit|first payment)\b|$)/i)?.[1] || '';
+  const notes = [];
+  if (!text) notes.push('No machine-readable text found. Open the file and enter the contract details manually.');
+  if (!startDate || !endDate) notes.push('Confirm the start and end dates before creating a stay or reminders.');
+  if (!rent) notes.push('Confirm rent and currency before creating a payment schedule.');
+  return {
+    confidence: text ? 'Review required' : 'Manual review required', guestNameCandidate: clean(client, 100),
+    startDate, endDate, renewalDate, paymentFrequency: frequency, rentCandidate: rent, depositCandidate: deposit,
+    firstPaymentDueDate: firstDueDate, suggestedFollowUpDate: addDays(firstDueDate, -7),
+    dateCandidates, reminders: [
+      endDate && { kind: 'Contract expiry', date: addDays(endDate, -30), note: 'Review renewal 30 days before contract end.' },
+      firstDueDate && { kind: 'Payment follow-up', date: addDays(firstDueDate, -7), note: 'Follow up seven days before the first payment is due.' },
+    ].filter(Boolean), notes,
   };
 }
 
@@ -107,6 +159,12 @@ async function extractText(filePath, mimeType, buffer) {
     } catch (_) { return ''; }
   }
   if (mimeType !== 'application/pdf' && mimeType !== 'application/vnd.ms-excel' && mimeType !== 'application/msword') return '';
+  if (mimeType === 'application/pdf') {
+    try {
+      const { stdout } = await execFileAsync('pdftotext', ['-layout', filePath, '-'], { maxBuffer: 512 * 1024, timeout: 12000 });
+      if (stdout.trim()) return stdout.replace(/\s+/g, ' ').slice(0, 12000);
+    } catch (_) { /* Fall back for minimal VPS installations. */ }
+  }
   // `strings` is deliberately bounded. It is a best-effort preview; Zuzu must
   // never treat it as a verified contract interpretation without user review.
   try {
@@ -192,4 +250,4 @@ async function markApproved(id, documentId) {
   });
 }
 
-module.exports = { init, ingest, list, get, fileFor, markApproved, normalizeMimeType, MAX_BYTES };
+module.exports = { init, ingest, list, get, fileFor, markApproved, normalizeMimeType, deriveDraft, deriveContractDraft, MAX_BYTES };

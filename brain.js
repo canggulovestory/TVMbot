@@ -8,7 +8,8 @@
 const notion = require('./notion');
 const assistant = require('./assistant');
 const hermes = require('./hermes-client');
-const { businessBrief, financeSummary, marketingPipeline } = require('./agent-tools');
+const personalLife = require('./personal-life');
+const { businessBrief, financeSummary, financeCockpit, marketingPipeline } = require('./agent-tools');
 
 function init() {
   hermes.init();
@@ -74,12 +75,16 @@ You are running inside the Hermes Agent harness and can help with:
   rent schedules, deposits/refunds, Drive document links, villa tasks and payables
 - Reply drafting: prepare, but never send, a client WhatsApp/email draft
 - Google Workspace: inspect Gmail, uploaded document intake and calendar. You may create an email draft or calendar hold only after explicit confirmation; never send email
+- Contract intelligence: review contract candidates for dates, rent, deposit, payment frequency and reminders; never treat extraction as verified until approved
+- Financial cockpit: who must pay us and who we must pay, grouped by category with overdue and upcoming dates
+- Lead follow-up queue: owner, stage, next action and an unsent draft response
+- Inbox triage: classify the approved mailbox; save one Gmail attachment to private Drive only after an explicit confirmation
 
 For task, payment, lead, finance, reminder, memory, or operations requests, load and follow the
 project skill named tvm-operations. For questions such as "briefing", "what needs
 attention", "show leads", "lead [name]", "finance", "invoices due", "when does a contract expire?",
 "when is a check-in?", "how much is a guest deposit?", "email inbox", "calendar", "marketing pipeline",
-or "uploaded documents", use its
+"uploaded documents", "contract review", "financial cockpit", "who must be paid", "lead follow-ups", or "inbox triage", use its
 read-only business actions before answering. Never claim an action succeeded until its
 tool returns a successful result. For a requested TVM record create/update, first show the
 important fields as a draft and ask for an explicit confirmation in the same chat. Only after
@@ -127,13 +132,15 @@ async function processPersonalMessage({ text, userKey }) {
   const user = USERS[userKey];
   const message = String(text || '').trim().slice(0, 2000);
   if (!user || !message) return 'Write a message for Zuzu first.';
+  const saved = await personalLife.tryCommand(userKey, message);
+  if (saved) return saved;
   const personalCategories = new Set(['personal', 'preference', 'decision', 'relationship']);
   const memories = (await assistant.searchMemory(userKey, message, 12).catch(() => [])).filter(item => personalCategories.has(item.category));
   const prompt = `You are Zuzu, Afni's private personal-life assistant. Be warm, practical and brief.
 Help with reflection, routines, goals, planning, wellbeing, relationships, personal notes and life decisions.
 Never access, mention, search, infer, or use TVM business data, clients, finance, villa records, Google Workspace, or TVM operational tools in this conversation.
 Do not give medical, legal, financial, or mental-health diagnosis. Encourage professional help for urgent or high-stakes issues.
-Only ask to store a memory when Afni explicitly asks you to remember it. Current time: ${assistant.epochToWitaString(Date.now())} WITA.` +
+Only ask to store a memory when Afni explicitly asks you to remember it. To save a private list item, ask Afni to use one explicit prefix: task:, goal:, habit:, journal:, routine:, travel:, shopping:, or note:. Current time: ${assistant.epochToWitaString(Date.now())} WITA.` +
     (memories.length ? `\n\nAfni's relevant private memories:\n${memories.map(item => `- ${item.fact}`).join('\n')}` : '');
   try { return await hermes.respond({ input: message, instructions: prompt, userKey: `${userKey}-life` }); }
   catch (error) { console.error(`[Hermes personal] ${error.code || 'ERROR'}:`, error.message); return 'Zuzu is temporarily unavailable. Your personal lists are still saved here.'; }
@@ -152,9 +159,9 @@ async function quickWorkspaceReply(message) {
     return `Today’s TVM brief\n• Leads: ${brief.leads.open} open; ${brief.leads.followUpsDue} follow-up${brief.leads.followUpsDue === 1 ? '' : 's'} due\n• Finance: ${formatMoneyTotals(brief.finance.receivables)} receivable; ${brief.finance.invoicesOverdue} overdue invoice${brief.finance.invoicesOverdue === 1 ? '' : 's'}\n• Operations: ${brief.operations.villasAvailable} villa${brief.operations.villasAvailable === 1 ? '' : 's'} available; ${brief.operations.unpaidInstallments} unpaid installment${brief.operations.unpaidInstallments === 1 ? '' : 's'}; ${brief.operations.depositsAwaitingAction} deposit${brief.operations.depositsAwaitingAction === 1 ? '' : 's'} awaiting action.`;
   }
   if (/^(finance|finance summary)$/.test(text)) {
-    const finance = await financeSummary();
-    const next = finance.payables[0] || finance.invoices[0];
-    return `Finance snapshot\n• Income this month: ${formatMoneyTotals(finance.incomeThisMonth)}\n• Expenses this month: ${formatMoneyTotals(finance.expensesThisMonth)}\n• Open receivables: ${formatMoneyTotals(finance.receivables)}\n${next ? `• Next due: ${next.code || next.vendorName || next.clientName || 'Record'} — ${next.dueDate || 'no date'}` : '• No dated invoices or payables yet.'}`;
+    const [finance, cockpit] = await Promise.all([financeSummary(), financeCockpit()]);
+    const next = cockpit.outgoing.items[0] || cockpit.incoming.items[0];
+    return `Finance snapshot\n• Income this month: ${formatMoneyTotals(finance.incomeThisMonth)}\n• Expenses this month: ${formatMoneyTotals(finance.expensesThisMonth)}\n• Open receivables: ${formatMoneyTotals(finance.receivables)}\n• To collect: ${cockpit.incoming.summary.overdue} overdue · ${cockpit.incoming.summary.next7Days} due in 7 days\n• To pay: ${cockpit.outgoing.summary.overdue} overdue · ${cockpit.outgoing.summary.next7Days} due in 7 days\n${next ? `• Next action: ${next.party} — ${next.dueDate || 'no date'}` : '• No dated payments yet.'}`;
   }
   if (/^(marketing pipeline|pipeline)$/.test(text)) {
     const pipeline = await marketingPipeline();

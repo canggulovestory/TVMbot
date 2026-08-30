@@ -1,7 +1,7 @@
 ---
 name: tvm-operations
 description: Safely review TVM leads, finance, invoices, tasks, reminders, memory, and recurring operations from authenticated internal chats.
-version: 1.1.0
+version: 1.2.0
 author: The Villa Managers
 platforms: [linux]
 metadata:
@@ -44,7 +44,11 @@ Available actions and inputs:
 - `lead_detail`: `{"search":"lead name, email, phone, or id"}` — private lead details for drafting only
 - `search_operations`: `{"search":"villa, guest, contract, code, or any known detail","limit":20}` — private record lookup across villas, stays, payment schedules, deposits, contracts/documents and villa tasks. Use this for contract expiry, a guest's dates or deposit, Drive links, and any specific villa question.
 - `finance_summary`: `{}` — read-only income, expenses, receivables, outstanding invoices and upcoming payables
-- `gmail_inbox`: `{}` — read-only inbox count and the newest 10 email metadata records from the approved TVM mailbox
+- `finance_cockpit`: `{}` — read-only daily queue of who must pay TVM and who TVM must pay, grouped by category; includes rent installments and deposit refunds
+- `lead_follow_ups`: `{}` — read-only queue with owner, stage, due date, next action and an unsent suggested response
+- `gmail_inbox`: `{}` — read-only inbox count and the newest 10 message metadata records, snippets and attachment metadata from the approved TVM mailbox
+- `inbox_triage`: `{}` — read-only categorised inbox queue with suggested next actions
+- `save_gmail_attachment_to_drive`: `{"messageId":"...","attachmentId":"..."}` — copies one explicitly selected Gmail attachment to private Drive; never call without confirmation
 - `marketing_pipeline`: `{}` — read-only lead source, stage, conversion and due-follow-up snapshot
 - `list_document_intake`: `{"limit":30}` — read-only Zuzu upload-inbox list
 - `document_intake_detail`: `{"id":"UPL-..."}` — read-only extracted preview and review draft for one uploaded document
@@ -73,6 +77,10 @@ command substitution, or untrusted paths. Run one action at a time.
 The command returns `{"ok":true,"result":...}` or
 `{"ok":false,"error":"..."}`. Confirm an operation only when `ok` is true.
 If a search returns `null` or an empty list, report that nothing matched.
+
+For a contract upload, call `document_intake_detail` first. Contract fields are
+extraction candidates only: show the guest, dates, rent, deposit, payment frequency
+and suggested reminders, then get confirmation before saving any record or schedule.
 
 Do not use generic terminal or file tools to mutate TVM operational data. Do not
 edit `.env`, source code, deployment configuration, contracts, or identity files.

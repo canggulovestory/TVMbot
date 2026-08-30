@@ -69,6 +69,29 @@ function currencyTotals(records) {
   }, {});
 }
 
+function daysUntil(date, today = new Date().toISOString().slice(0, 10)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) return null;
+  return Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000);
+}
+
+function financeItem(record, direction, fields = {}) {
+  return {
+    id: record.id || '', direction, category: fields.category || record.category || (direction === 'incoming' ? 'Rent' : 'General'),
+    party: fields.party || record.clientName || record.vendorName || record.code || 'Unassigned', villaId: record.villaId || '',
+    amount: Number(record.amount || 0), currency: record.currency || 'IDR', dueDate: fields.dueDate || record.dueDate || '', followUpDate: fields.followUpDate || record.followUpDate || '',
+    status: record.status || '', source: fields.source || 'record',
+  };
+}
+
+function byCategory(items) {
+  return items.reduce((groups, item) => {
+    const key = `${item.category || 'General'} · ${item.currency || 'IDR'}`;
+    if (!groups[key]) groups[key] = { category: item.category || 'General', currency: item.currency || 'IDR', total: 0, count: 0 };
+    groups[key].total += Number(item.amount || 0); groups[key].count += 1;
+    return groups;
+  }, {});
+}
+
 function safeRecordInput(value) {
   if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error('record must be an object');
   return Object.fromEntries(Object.entries(value).slice(0, 40));
@@ -209,8 +232,75 @@ async function financeSummary() {
   };
 }
 
+/** Daily payable/receivable queue. It is read-only and intentionally includes
+ * rent installments and refundable deposits, not only invoices and bills. */
+async function financeCockpit() {
+  const data = await villaData.getAll();
+  const today = new Date().toISOString().slice(0, 10);
+  const open = status => !['Paid', 'Void', 'Refunded', 'Forfeited'].includes(status);
+  const incoming = [
+    ...(data.installments || []).filter(item => open(item.status)).map(item => financeItem(item, 'incoming', { category: 'Rent installment', party: item.code || 'Rent', followUpDate: item.followUpDate, source: 'installment' })),
+    ...(data.invoices || []).filter(item => open(item.status)).map(item => financeItem(item, 'incoming', { party: item.clientName || item.code, source: 'invoice' })),
+  ];
+  const outgoing = [
+    ...(data.payables || []).filter(item => open(item.status)).map(item => financeItem(item, 'outgoing', { party: item.vendorName || item.code, source: 'payable' })),
+    ...(data.deposits || []).filter(item => open(item.status) && item.refundDueDate).map(item => financeItem(item, 'outgoing', { category: 'Deposit refund', party: item.code || 'Deposit', dueDate: item.refundDueDate, source: 'deposit' })),
+  ];
+  const queue = items => items.filter(item => item.dueDate).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).map(item => ({ ...item, daysUntil: daysUntil(item.dueDate, today) }));
+  const classify = item => item.daysUntil === null ? 'undated' : item.daysUntil < 0 ? 'overdue' : item.daysUntil <= 7 ? 'next7Days' : item.daysUntil <= 30 ? 'next30Days' : 'later';
+  const summary = items => items.reduce((out, item) => { out[classify(item)] += 1; return out; }, { overdue: 0, next7Days: 0, next30Days: 0, later: 0, undated: 0 });
+  const incomingQueue = queue(incoming); const outgoingQueue = queue(outgoing);
+  return {
+    asOf: today,
+    incoming: { totalsByCategory: Object.values(byCategory(incoming)), summary: summary(incomingQueue), items: incomingQueue.slice(0, 30) },
+    outgoing: { totalsByCategory: Object.values(byCategory(outgoing)), summary: summary(outgoingQueue), items: outgoingQueue.slice(0, 30) },
+  };
+}
+
+function nextLeadAction(lead) {
+  const stage = leadStage(lead.status);
+  if (stage === 'New') return 'Qualify the requirement and confirm a call or viewing.';
+  if (stage === 'Contacted') return 'Follow up with relevant villa options and the next step.';
+  if (stage === 'Qualified') return 'Arrange viewing or send selected listing details.';
+  if (stage === 'Viewing') return 'Ask for viewing feedback and decision timeline.';
+  if (stage === 'Negotiation') return 'Confirm offer, owner approval, and contract timeline.';
+  return 'No follow-up needed.';
+}
+
+async function leadFollowUps() {
+  const today = new Date().toISOString().slice(0, 10);
+  const leads = (await readLeads()).filter(lead => !['Won', 'Lost'].includes(leadStage(lead.status)));
+  return leads.filter(lead => lead.nextFollowUp).sort((a, b) => a.nextFollowUp.localeCompare(b.nextFollowUp)).slice(0, 50).map(lead => {
+    const preview = leadPreview(lead, { includePrivate: true });
+    const due = daysUntil(lead.nextFollowUp, today);
+    return {
+      ...preview, daysUntil: due, nextAction: nextLeadAction(lead),
+      draftResponse: `Hi ${lead.name || 'there'}, just checking in about your ${lead.leadType || 'villa'} enquiry. ${nextLeadAction(lead)} Let me know what works best for you.`,
+    };
+  });
+}
+
 async function gmailInbox() {
   return googleWorkspace.gmailInbox();
+}
+
+function inboxCategory(message) {
+  const text = `${message.subject} ${message.snippet} ${message.from}`.toLowerCase();
+  if (/invoice|payment|transfer|deposit|receipt|tagihan/.test(text)) return 'Finance';
+  if (/contract|agreement|lease|renewal/.test(text)) return 'Contract';
+  if (/villa|viewing|rental|monthly|yearly|availability/.test(text)) return 'Lead';
+  return 'General';
+}
+
+async function inboxTriage() {
+  const inbox = await gmailInbox();
+  return {
+    ...inbox,
+    messages: inbox.messages.map(message => ({
+      ...message, category: inboxCategory(message), priority: /urgent|overdue|today|asap/.test(`${message.subject} ${message.snippet}`.toLowerCase()) ? 'High' : 'Normal',
+      suggestedAction: message.attachments?.length ? 'Review attachment privately before filing or replying.' : 'Review and prepare a draft reply if needed.',
+    })),
+  };
 }
 
 async function marketingPipeline() {
@@ -301,10 +391,18 @@ async function run(action, userKey, input) {
       return searchOperations(input);
     case 'finance_summary':
       return financeSummary();
+    case 'finance_cockpit':
+      return financeCockpit();
+    case 'lead_follow_ups':
+      return leadFollowUps();
     case 'save_record':
       return saveRecord(input);
     case 'gmail_inbox':
       return gmailInbox();
+    case 'inbox_triage':
+      return inboxTriage();
+    case 'save_gmail_attachment_to_drive':
+      return googleWorkspace.saveGmailAttachmentToDrive({ messageId: requireText(input.messageId, 'messageId', 160), attachmentId: requireText(input.attachmentId, 'attachmentId', 160) });
     case 'create_email_draft':
       return googleWorkspace.createEmailDraft({ to: requireText(input.to, 'to', 180), subject: requireText(input.subject, 'subject', 180), body: requireText(input.body, 'body', 12000) });
     case 'calendar_upcoming':
@@ -345,4 +443,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { businessBrief, financeSummary, marketingPipeline };
+module.exports = { businessBrief, financeSummary, financeCockpit, leadFollowUps, inboxTriage, marketingPipeline };
