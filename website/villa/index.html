@@ -74,7 +74,7 @@
   <nav class="nav"><a class="brand" href="/">TVM</a><a class="back" href="/#villas">← All villas</a></nav>
   <div class="wrap">
     <div class="hero" id="hero"><div class="status" id="status">Loading…</div></div>
-    <div class="head"><div><h1 id="name">Loading villa…</h1><p class="loc" id="loc"></p><p class="loc" id="summary"></p></div></div>
+    <div class="head"><div><h1 id="name">Loading villa…</h1><p class="loc" id="loc"></p><p class="loc" id="summary"></p><p class="loc"><a id="map-link" target="_blank" rel="noopener" hidden>Open in Google Maps →</a></p></div></div>
     <div class="specs" id="specs"></div>
     <div class="grid">
       <div>
@@ -114,6 +114,7 @@
     $('#name').textContent=villa.name;
     $('#loc').textContent=villa.location||'Bali, Indonesia';
     $('#summary').textContent=villa.summary||'';
+    if(villa.mapUrl){$('#map-link').href=villa.mapUrl;$('#map-link').hidden=false}
     $('#status').textContent=villa.status==='Booked'?'Currently booked · enquire for next dates':'Available';
     const photos=Array.isArray(villa.gallery)?villa.gallery:[];
     $('#hero').insertAdjacentHTML('afterbegin',villa.photoUrl?`<img src="${esc(villa.photoUrl)}" alt="${esc(villa.name)}">`:`<img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=85" alt="${esc(villa.name)}">`);

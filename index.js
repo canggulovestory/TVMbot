@@ -768,7 +768,7 @@ const server = http.createServer(async (req, res) => {
       return await handlePublicEnquiry(req, res);
     }
     if (url.pathname === '/api/public/villas' && req.method === 'GET') {
-      // Sanitized public list — no owner data, no rates, no internal notes.
+      // Sanitized public list — no owner data or internal notes.
       const data = await villaData.getAll();
       const publicVillas = data.villas
         .filter(v => v.published !== false && ['Available', 'Booked'].includes(v.status))
@@ -778,7 +778,7 @@ const server = http.createServer(async (req, res) => {
           status: v.status, photoUrl: v.photoUrl || (Array.isArray(v.gallery) ? v.gallery[0] || '' : ''),
           gallery: Array.isArray(v.gallery) ? v.gallery.filter(photo => /^https?:\/\//.test(photo)).slice(0, 80) : [],
           facilities: v.facilities || '', yearlyRate: Number(v.yearlyRate || 0), currency: v.currency || 'IDR',
-          paymentTerms: v.paymentTerms || '', publicWhatsApp: clean(v.publicWhatsApp, 40),
+          paymentTerms: v.paymentTerms || '', publicWhatsApp: clean(v.publicWhatsApp, 40), mapUrl: v.mapUrl || '',
           // Sanitized availability: date ranges only, never guest details.
           bookedRanges: data.tenancies
             .filter(t => t.villaId === v.id && !['Cancelled', 'Enquiry'].includes(t.bookingStatus) && t.checkIn && t.checkOut)
