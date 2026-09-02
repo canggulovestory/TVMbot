@@ -16,11 +16,15 @@ test('private villa operations details persist with the villa record', async () 
     name: 'Villa LYSA',
     keyBoxCode: '1992',
     poolServiceSchedule: 'Tuesday and Friday at 09:00',
+    internetProvider: 'GlobalXtreme',
+    internetLocationId: 'afnihenG74D',
     wifiPassword: 'private-password',
     operationsNotes: 'Private key-box and access instructions.',
   });
   assert.equal(villa.keyBoxCode, '1992');
   assert.equal(villa.poolServiceSchedule, 'Tuesday and Friday at 09:00');
+  assert.equal(villa.internetProvider, 'GlobalXtreme');
+  assert.equal(villa.internetLocationId, 'afnihenG74D');
   assert.equal(villa.wifiPassword, 'private-password');
   assert.equal(villa.operationsNotes, 'Private key-box and access instructions.');
   const stored = await villaData.getAll();
@@ -39,5 +43,7 @@ test('admin exposes structured operations fields without publishing them', () =>
   assert.match(admin, /name="poolServiceSchedule"/);
   assert.match(admin, /name="cleaningSchedule"/);
   assert.match(admin, /name="wifiPassword"/);
-  assert.doesNotMatch(publicApi, /keyBoxCode|wifiPassword|poolServiceSchedule|operationsNotes/);
+  assert.match(admin, /name="internetLocationId"/);
+  assert.match(admin, /Internet service &amp; billing/);
+  assert.doesNotMatch(publicApi, /keyBoxCode|wifiPassword|internetLocationId|internetPaymentDetails|poolServiceSchedule|operationsNotes/);
 });

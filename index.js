@@ -802,7 +802,7 @@ const server = http.createServer(async (req, res) => {
       const data = await villaData.getAll();
       const villas = data.villas
         .filter(v => !ids || ids.includes(v.id))
-        .map(({ marketingNotes, keyBoxCode, backupKeyLocation, checkInInstructions, wifiName, wifiPassword, electricityDetails, waterDetails, gasDetails, poolServiceSchedule, cleaningSchedule, gardeningSchedule, wasteSchedule, pestControlSchedule, linenSchedule, maintenanceContact, emergencyContact, operationsNotes, ownerAgreementUrl, photosFolderUrl, ...v }) => v);
+        .map(({ marketingNotes, keyBoxCode, backupKeyLocation, checkInInstructions, internetProvider, internetPlan, internetLocationId, internetCircuitId, internetBillingDetails, internetPaymentDetails, internetPortalUrl, wifiName, wifiPassword, electricityDetails, waterDetails, gasDetails, poolServiceSchedule, cleaningSchedule, gardeningSchedule, wasteSchedule, pestControlSchedule, linenSchedule, maintenanceContact, emergencyContact, operationsNotes, ownerAgreementUrl, photosFolderUrl, ...v }) => v);
       const allowed = new Set(villas.map(v => v.id));
       return sendJson(res, 200, {
         generatedAt: new Date().toISOString(),
