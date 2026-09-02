@@ -460,7 +460,7 @@
 
         <!-- TASKS -->
         <section class="view" id="view-tasks">
-          <div class="page-head"><div><h2>Tasks</h2><p>Stored in Notion. Also manageable from WhatsApp/Telegram.</p></div><button class="btn" data-open="task">+ Add task</button></div>
+          <div class="page-head"><div><h2>Tasks</h2><p>Stored in Notion. Also manageable from WhatsApp/Telegram.</p></div><div class="row-actions"><button class="btn danger" data-archive-all-tasks>Archive all</button><button class="btn" data-open="task">+ Add task</button></div></div>
           <div class="card table-wrap"><table><thead><tr><th>Task</th><th>Priority</th><th>Due</th><th></th></tr></thead><tbody id="t-tasks"></tbody></table></div>
         </section>
 
@@ -1039,6 +1039,7 @@
         if(t.dataset.invoicePaid){const r=await api('/api/admin/invoices/paid',{method:'POST',body:JSON.stringify({id:t.dataset.invoicePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdIncome?'Invoice paid — income recorded.':'Invoice was already paid; no duplicate income created.');return}
         if(t.dataset.payablePaid){const r=await api('/api/admin/payables/paid',{method:'POST',body:JSON.stringify({id:t.dataset.payablePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdExpense?'Payable paid — expense recorded.':'Payable was already paid; no duplicate expense created.');return}
         if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
+        if(t.hasAttribute('data-archive-all-tasks')){if(state.tasks.length&&confirm(`Archive all ${state.tasks.length} open tasks?`)){await api('/api/admin/tasks/archive',{method:'POST',body:JSON.stringify({ids:state.tasks.map(x=>x.id)})});await load();toast('All tasks archived.')}return}
         if(t.dataset.completeTask){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:t.dataset.completeTask})});await load();toast('Task completed.');return}
         if(t.dataset.doneVtask){const r=state.villaData.villaTasks.find(x=>x.id===t.dataset.doneVtask);await save('villaTasks',{...r,status:'Done'});toast('Task done.');return}
         const vc=t.closest('[data-villa-open]');if(vc&&!t.closest('button')){openVilla(vc.dataset.villaOpen)}
