@@ -159,22 +159,22 @@ function formatMoneyTotals(totals) {
 }
 
 const VILLA_FACT_LOOKUPS = [
-  [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails', 'PLN electricity token'],
-  [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword', 'Wi-Fi password'],
-  [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName', 'Wi-Fi network'],
-  [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode', 'Key-box code'],
-  [/\b(pool|kolam|zwembad).*(schedule|clean|jadwal|schema)|(?:schedule|clean|jadwal|schema).*(pool|kolam|zwembad)/i, 'poolServiceSchedule', 'Pool service'],
-  [/\b(cleaning|housekeeping|bersih|schoonmaak)\b/i, 'cleaningSchedule', 'Housekeeping'],
-  [/\b(garden|gardening|kebun|tuin)\b/i, 'gardeningSchedule', 'Gardening'],
-  [/\b(waste|garbage|trash|sampah|afval)\b/i, 'wasteSchedule', 'Waste collection'],
-  [/\b(pest|hama|ongedierte)\b/i, 'pestControlSchedule', 'Pest control'],
-  [/\b(linen|laundry|sprei|wasgoed)\b/i, 'linenSchedule', 'Linen and laundry'],
-  [/\b(water|pump|air|pompa|waterpomp)\b/i, 'waterDetails', 'Water and pump'],
-  [/\b(maintenance|perawatan|onderhoud)\b/i, 'maintenanceContact', 'Maintenance contact'],
-  [/\b(emergency|darurat|noodgeval)\b/i, 'emergencyContact', 'Emergency contact'],
-  [/\b(check.?in|arrival|kedatangan|aankomst)\b/i, 'checkInInstructions', 'Check-in instructions'],
-  [/\b(yearly|annual|tahun|tahunan|jaarlijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(yearly|annual|tahun|tahunan|jaarlijks)\b/i, 'yearlyRate', 'Yearly rent'],
-  [/\b(monthly|month|bulan|maandelijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(monthly|month|bulan|maandelijks)\b/i, 'monthlyRate', 'Monthly rent'],
+  [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails'],
+  [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword'],
+  [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName'],
+  [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode'],
+  [/\b(pool|kolam|zwembad).*(schedule|clean|jadwal|schema)|(?:schedule|clean|jadwal|schema).*(pool|kolam|zwembad)/i, 'poolServiceSchedule'],
+  [/\b(cleaning|housekeeping|bersih|schoonmaak)\b/i, 'cleaningSchedule'],
+  [/\b(garden|gardening|kebun|tuin)\b/i, 'gardeningSchedule'],
+  [/\b(waste|garbage|trash|sampah|afval)\b/i, 'wasteSchedule'],
+  [/\b(pest|hama|ongedierte)\b/i, 'pestControlSchedule'],
+  [/\b(linen|laundry|sprei|wasgoed)\b/i, 'linenSchedule'],
+  [/\b(water|pump|air|pompa|waterpomp)\b/i, 'waterDetails'],
+  [/\b(maintenance|perawatan|onderhoud)\b/i, 'maintenanceContact'],
+  [/\b(emergency|darurat|noodgeval)\b/i, 'emergencyContact'],
+  [/\b(check.?in|arrival|kedatangan|aankomst)\b/i, 'checkInInstructions'],
+  [/\b(yearly|annual|tahun|tahunan|jaarlijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(yearly|annual|tahun|tahunan|jaarlijks)\b/i, 'yearlyRate'],
+  [/\b(monthly|month|bulan|maandelijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(monthly|month|bulan|maandelijks)\b/i, 'monthlyRate'],
 ];
 
 async function quickVillaFactReply(message) {
@@ -182,9 +182,9 @@ async function quickVillaFactReply(message) {
   if (!lookup) return null;
   const result = await searchOperations({ search: message, limit: 2 }).catch(() => null);
   if (result?.villas?.length !== 1) return null;
-  const [, field, label] = lookup;
+  const [, field] = lookup;
   const value = result.villas[0][field];
-  return value || value === 0 ? `${result.villas[0].name} — ${label}: ${value}` : null;
+  return value || value === 0 ? `${result.villas[0].name}: ${value}` : null;
 }
 
 /** Fast, read-only answers for the workspace shortcuts. They do not depend on a model call. */
