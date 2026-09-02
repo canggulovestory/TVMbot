@@ -86,9 +86,9 @@ function deriveDraft(fileName, text) {
   const amounts = [...new Set(value.match(/(?:rp\.?\s*|idr\s*|usd\s*|\$)\d[\d,\.\s]*/gi) || [])].slice(0, 8);
   const emails = [...new Set(value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [])].slice(0, 6);
   let type = 'Document';
-  if (/invoice|tagihan/.test(lower)) type = 'Invoice';
+  if (/contract|agreement|perjanjian|lease/.test(lower)) type = 'Contract';
+  else if (/invoice|tagihan/.test(lower)) type = 'Invoice';
   else if (/receipt|kwitansi|payment proof|bukti transfer/.test(lower)) type = 'Payment proof';
-  else if (/contract|agreement|perjanjian|lease/.test(lower)) type = 'Contract';
   else if (/passport|ktp|identity/.test(lower)) type = 'Identity document';
   const draft = {
     suggestedTitle: clean(path.basename(fileName, path.extname(fileName)).replace(/[_-]+/g, ' '), 180),
@@ -160,6 +160,13 @@ async function extractText(filePath, mimeType, buffer) {
   }
   if (mimeType !== 'application/pdf' && mimeType !== 'application/vnd.ms-excel' && mimeType !== 'application/msword') return '';
   if (mimeType === 'application/pdf') {
+    try {
+      const { processPdfAsync } = require('@firecrawl/pdf-inspector');
+      const result = await processPdfAsync(buffer);
+      if (result.markdown?.trim()) return result.markdown.slice(0, 12000);
+    } catch (error) {
+      console.warn('[Zuzu intake] PDF Inspector unavailable:', error.message);
+    }
     try {
       const { stdout } = await execFileAsync('pdftotext', ['-layout', filePath, '-'], { maxBuffer: 512 * 1024, timeout: 12000 });
       if (stdout.trim()) return stdout.replace(/\s+/g, ' ').slice(0, 12000);

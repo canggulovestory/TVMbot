@@ -4,6 +4,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { deriveDraft } = require('../zuzu-intake');
 
+test('PDF Inspector native parser is installed', () => {
+  assert.equal(typeof require('@firecrawl/pdf-inspector').processPdfAsync, 'function');
+});
+
+test('an agreement with invoice terms remains a contract', () => {
+  assert.equal(deriveDraft('deposit-agreement.pdf', 'Agreement. Final invoice due before check-in.').suggestedType, 'Contract');
+});
+
 test('contract draft keeps extracted contract values as review candidates', () => {
   const draft = deriveDraft('villa-lease-agreement.pdf', `
     TENANCY AGREEMENT
