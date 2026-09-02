@@ -83,6 +83,14 @@ async function completeTaskById(pageId) {
   return { id: pageId, done: true };
 }
 
+async function archiveTasksByIds(pageIds) {
+  const ids = [...new Set((pageIds || []).filter(Boolean))];
+  for (const pageId of ids) {
+    await notion.pages.update({ page_id: pageId, archived: true });
+  }
+  return { archived: ids.length };
+}
+
 // ─── PROJECTS ───────────────────────────────────────────────────────────────────
 
 async function getProjects() {
@@ -197,7 +205,7 @@ async function getPaymentsDueSoon(daysAhead = 3) {
 
 module.exports = {
   init,
-  createTask, getTasks, completeTask, completeTaskById,
+  createTask, getTasks, completeTask, completeTaskById, archiveTasksByIds,
   getProjects, findProject,
   createPayment, getPayments, markPaid, markPaymentPaidById, getPaymentsDueSoon,
 };

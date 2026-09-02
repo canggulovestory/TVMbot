@@ -583,6 +583,15 @@ async function handleAdminApi(req, res, url) {
     audit.add(session.user, 'completed task', clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
+  if (url.pathname === '/api/admin/tasks/archive' && req.method === 'POST') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    const body = await readBody(req);
+    const ids = Array.isArray(body.ids) ? body.ids.slice(0, 100).map(id => clean(id, 80)).filter(Boolean) : [];
+    if (!ids.length) return sendJson(res, 422, { error: 'At least one task ID is required.' });
+    const result = await notion.archiveTasksByIds(ids);
+    audit.add(session.user, 'archived tasks', `${result.archived} task records`);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
   if (url.pathname === '/api/admin/payments/paid' && req.method === 'POST') {
     const body = await readBody(req);
     await notion.markPaymentPaidById(clean(body.id, 80));
