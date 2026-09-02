@@ -52,3 +52,25 @@ test('Zuzu receives matching live operations data before answering', () => {
   assert.match(prompt, /source of truth/i);
   assert.match(prompt, /Dutch \(Nederlands\)/);
 });
+
+test('Zuzu can retrieve complete records by collection name', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'tvm-agent-collections-'));
+  villaData.init(dir);
+  const villa = await villaData.upsert('villas', { name: 'Villa Alysaa' });
+  const stay = await villaData.upsert('tenancies', {
+    villaId: villa.id, guestName: 'Minjung Lee', nationality: 'Korean', guestCount: 3,
+    agencyCommissionPercent: 5, notes: 'Yearly lease',
+  });
+  await villaData.upsert('deposits', {
+    villaId: villa.id, tenancyId: stay.id, amount: 42000000, currency: 'IDR',
+    status: 'Held', deductionNotes: 'Refund after damage inspection',
+  });
+
+  const stays = await searchOperations({ search: 'show all guest stays' });
+  assert.equal(stays.stays[0].nationality, 'Korean');
+  assert.equal(stays.stays[0].guestCount, 3);
+  assert.equal(stays.stays[0].agencyCommissionPercent, 5);
+  const deposits = await searchOperations({ search: 'how many deposits are in the system' });
+  assert.equal(deposits.deposits[0].amount, 42000000);
+  assert.match(deposits.deposits[0].deductionNotes, /damage inspection/);
+});
