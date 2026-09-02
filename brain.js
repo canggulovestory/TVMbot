@@ -158,6 +158,35 @@ function formatMoneyTotals(totals) {
   return entries.length ? entries.map(([currency, amount]) => `${currency} ${Number(amount || 0).toLocaleString('en-US')}`).join(' · ') : '—';
 }
 
+const VILLA_FACT_LOOKUPS = [
+  [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails', 'PLN electricity token'],
+  [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword', 'Wi-Fi password'],
+  [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName', 'Wi-Fi network'],
+  [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode', 'Key-box code'],
+  [/\b(pool|kolam|zwembad).*(schedule|clean|jadwal|schema)|(?:schedule|clean|jadwal|schema).*(pool|kolam|zwembad)/i, 'poolServiceSchedule', 'Pool service'],
+  [/\b(cleaning|housekeeping|bersih|schoonmaak)\b/i, 'cleaningSchedule', 'Housekeeping'],
+  [/\b(garden|gardening|kebun|tuin)\b/i, 'gardeningSchedule', 'Gardening'],
+  [/\b(waste|garbage|trash|sampah|afval)\b/i, 'wasteSchedule', 'Waste collection'],
+  [/\b(pest|hama|ongedierte)\b/i, 'pestControlSchedule', 'Pest control'],
+  [/\b(linen|laundry|sprei|wasgoed)\b/i, 'linenSchedule', 'Linen and laundry'],
+  [/\b(water|pump|air|pompa|waterpomp)\b/i, 'waterDetails', 'Water and pump'],
+  [/\b(maintenance|perawatan|onderhoud)\b/i, 'maintenanceContact', 'Maintenance contact'],
+  [/\b(emergency|darurat|noodgeval)\b/i, 'emergencyContact', 'Emergency contact'],
+  [/\b(check.?in|arrival|kedatangan|aankomst)\b/i, 'checkInInstructions', 'Check-in instructions'],
+  [/\b(yearly|annual|tahun|tahunan|jaarlijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(yearly|annual|tahun|tahunan|jaarlijks)\b/i, 'yearlyRate', 'Yearly rent'],
+  [/\b(monthly|month|bulan|maandelijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(monthly|month|bulan|maandelijks)\b/i, 'monthlyRate', 'Monthly rent'],
+];
+
+async function quickVillaFactReply(message) {
+  const lookup = VILLA_FACT_LOOKUPS.find(([pattern]) => pattern.test(message));
+  if (!lookup) return null;
+  const result = await searchOperations({ search: message, limit: 2 }).catch(() => null);
+  if (result?.villas?.length !== 1) return null;
+  const [, field, label] = lookup;
+  const value = result.villas[0][field];
+  return value || value === 0 ? `${result.villas[0].name} — ${label}: ${value}` : null;
+}
+
 /** Fast, read-only answers for the workspace shortcuts. They do not depend on a model call. */
 async function quickWorkspaceReply(message) {
   const text = String(message || '').trim().toLowerCase();
@@ -174,7 +203,7 @@ async function quickWorkspaceReply(message) {
     const pipeline = await marketingPipeline();
     return `Marketing pipeline\n• ${pipeline.totalLeads} total lead${pipeline.totalLeads === 1 ? '' : 's'} · ${pipeline.openLeads} open · ${pipeline.won} won\n• Conversion: ${pipeline.conversionRate}%\n• Follow-ups due: ${pipeline.followUpsDue.length}${pipeline.followUpsDue.length ? ` (${pipeline.followUpsDue.slice(0, 3).map(item => item.name || 'Unnamed lead').join(', ')})` : ''}`;
   }
-  return null;
+  return quickVillaFactReply(message);
 }
 
 function messageWithAttachment(message, attachment) {
@@ -325,6 +354,6 @@ async function buildMorningDM(userKey) {
 }
 
 module.exports = {
-  init, processMessage, processInternalMessage, processPersonalMessage, buildMorningDM, buildPrompt,
+  init, processMessage, processInternalMessage, processPersonalMessage, buildMorningDM, buildPrompt, quickVillaFactReply,
   identifyUser, isAllowed, USERS,
 };

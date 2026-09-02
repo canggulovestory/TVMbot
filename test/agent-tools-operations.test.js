@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const villaData = require('../villa-data');
 const { searchOperations } = require('../agent-tools');
-const { buildPrompt } = require('../brain');
+const { buildPrompt, quickVillaFactReply } = require('../brain');
 
 test('Zuzu villa lookup returns structured electricity and utility details', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'tvm-agent-ops-'));
@@ -25,6 +25,7 @@ test('Zuzu villa lookup returns structured electricity and utility details', asy
     assert.equal(result.villas[0].electricityDetails, '86279021751 · 5,500 kWh');
     assert.equal(result.villas[0].wifiName, 'Lourinka');
     assert.match(result.villas[0].internetBillingDetails, /333,000/);
+    assert.match(await quickVillaFactReply(search), /86279021751/);
   }
 });
 
