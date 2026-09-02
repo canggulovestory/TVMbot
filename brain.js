@@ -9,7 +9,7 @@ const notion = require('./notion');
 const assistant = require('./assistant');
 const hermes = require('./hermes-client');
 const personalLife = require('./personal-life');
-const { businessBrief, financeSummary, financeCockpit, marketingPipeline } = require('./agent-tools');
+const { businessBrief, financeSummary, financeCockpit, marketingPipeline, searchOperations } = require('./agent-tools');
 
 function init() {
   hermes.init();
@@ -51,7 +51,7 @@ function isAllowed({ phone, telegramId }) {
 
 // ─── System prompt ──────────────────────────────────────────────────────────────
 
-function buildPrompt(user, memoryFacts = []) {
+function buildPrompt(user, memoryFacts = [], operations = null) {
   const nowWita = assistant.epochToWitaString(Date.now());
   let prompt = `You are Zuzu, the AI operating assistant for The Villa Managers team.
 You are talking to ${user.name}. Be brief — max 3-4 lines per response.
@@ -99,6 +99,10 @@ Respond in the same language the user writes in: English, Bahasa Indonesia, or D
   if (memoryFacts.length) {
     prompt += `\n\nKnown facts about ${user.name} (from memory):\n` +
       memoryFacts.slice(0, 12).map(e => `- ${e.fact}${e.category && e.category !== 'reference' ? ` [${e.category}]` : ''}`).join('\n');
+  }
+
+  if (operations && Object.values(operations).some(value => Array.isArray(value) && value.length)) {
+    prompt += `\n\nCurrent private TVM system records matching this message:\n${JSON.stringify(operations)}\nUse these structured records as the source of truth. If the requested value is present here, answer it directly and never claim it is missing from memory.`;
   }
 
   if (user.key === 'afni') {
@@ -195,8 +199,11 @@ async function processForUser({ text, user, attachment }) {
   try {
     // Recall only memories relevant to this message. This keeps Zuzu useful
     // across long conversations without injecting every private fact at once.
-    const memoryFacts = await assistant.searchMemory(user.key, message, 12).catch(() => []);
-    const systemPrompt = buildPrompt(user, memoryFacts);
+    const [memoryFacts, operations] = await Promise.all([
+      assistant.searchMemory(user.key, message, 12).catch(() => []),
+      searchOperations({ search: message, limit: 8 }).catch(() => null),
+    ]);
+    const systemPrompt = buildPrompt(user, memoryFacts, operations);
     return await hermes.respond({
       input: messageWithAttachment(message, attachment),
       instructions: systemPrompt,
@@ -318,6 +325,6 @@ async function buildMorningDM(userKey) {
 }
 
 module.exports = {
-  init, processMessage, processInternalMessage, processPersonalMessage, buildMorningDM,
+  init, processMessage, processInternalMessage, processPersonalMessage, buildMorningDM, buildPrompt,
   identifyUser, isAllowed, USERS,
 };
