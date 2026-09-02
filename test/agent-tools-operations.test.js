@@ -17,6 +17,8 @@ test('Zuzu villa lookup returns structured electricity and utility details', asy
     electricityDetails: '86279021751 · 5,500 kWh',
     wifiName: 'Lourinka',
     wifiPassword: 'thevillamanagers.com',
+    keyBoxCode: '3861',
+    poolServiceSchedule: 'Tuesday and Friday around 12:00',
     internetBillingDetails: 'IDR 333,000 / month · Due around the 1st',
   });
 
@@ -37,6 +39,8 @@ test('Zuzu villa lookup returns structured electricity and utility details', asy
   }
 
   assert.match(await quickVillaFactReply('wfi pasword lourinca'), /thevillamanagers\.com/);
+  assert.match(await quickVillaFactReply('wen pol clean lourinca'), /Tuesday and Friday/);
+  assert.match(await quickVillaFactReply('keycod lourinca'), /3861/);
 });
 
 test('Zuzu receives matching live operations data before answering', () => {

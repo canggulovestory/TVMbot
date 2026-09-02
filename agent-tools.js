@@ -106,7 +106,7 @@ function searchWords(value, minimumLength = 3) {
 
 function closeWord(left, right) {
   if (left === right) return true;
-  if (Math.min(left.length, right.length) < 4 || Math.abs(left.length - right.length) > 2) return false;
+  if (Math.min(left.length, right.length) < 3 || Math.abs(left.length - right.length) > 2) return false;
   const allowed = Math.max(left.length, right.length) >= 8 ? 2 : 1;
   let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
   for (let row = 1; row <= left.length; row += 1) {
