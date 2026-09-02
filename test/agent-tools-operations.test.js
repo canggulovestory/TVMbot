@@ -1,0 +1,28 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
+const villaData = require('../villa-data');
+const { searchOperations } = require('../agent-tools');
+
+test('Zuzu villa lookup returns structured electricity and utility details', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'tvm-agent-ops-'));
+  villaData.init(dir);
+  await villaData.upsert('villas', {
+    name: 'Villa Lourinka',
+    electricityDetails: '86279021751 · 5,500 kWh',
+    wifiName: 'Lourinka',
+    internetBillingDetails: 'IDR 333,000 / month · Due around the 1st',
+  });
+
+  for (const search of ['what’s token electric Lourinka', 'berapa nomor token listrik Lourinka', 'wat is het elektriciteit token Lourinka']) {
+    const result = await searchOperations({ search });
+    assert.equal(result.villas.length, 1);
+    assert.equal(result.villas[0].electricityDetails, '86279021751 · 5,500 kWh');
+    assert.equal(result.villas[0].wifiName, 'Lourinka');
+    assert.match(result.villas[0].internetBillingDetails, /333,000/);
+  }
+});

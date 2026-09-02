@@ -97,9 +97,17 @@ function safeRecordInput(value) {
   return Object.fromEntries(Object.entries(value).slice(0, 40));
 }
 
+const SEARCH_STOP_WORDS = new Set(['what', 'whats', 'where', 'when', 'which', 'does', 'have', 'the', 'for', 'villa', 'apa', 'berapa', 'nomor', 'tolong', 'wat', 'waar', 'welke', 'voor', 'heeft', 'het']);
+
 function includesQuery(record, query, extra = '') {
   if (!query) return true;
-  return `${Object.values(record).join(' ')} ${extra}`.toLowerCase().includes(query);
+  const identityWords = `${record.name || ''} ${record.code || ''} ${record.guestName || ''} ${record.title || ''} ${record.clientName || ''} ${record.vendorName || ''} ${extra}`
+    .toLowerCase().match(/[\p{L}\p{N}]{4,}/gu)?.filter(word => !SEARCH_STOP_WORDS.has(word)) || [];
+  if (identityWords.some(word => String(query).toLowerCase().includes(word))) return true;
+  const aliases = 'electricityDetails' in record ? 'electricity electric token pln listrik elektriciteit stroom' : '';
+  const haystack = `${Object.keys(record).join(' ')} ${Object.values(record).join(' ')} ${aliases} ${extra}`.toLowerCase();
+  const words = String(query).toLowerCase().match(/[\p{L}\p{N}]{3,}/gu)?.filter(word => !SEARCH_STOP_WORDS.has(word)) || [];
+  return words.every(word => haystack.includes(word));
 }
 
 function compactRecord(record, fields) {
@@ -123,7 +131,15 @@ async function searchOperations(input) {
 
   return {
     asOf: new Date().toISOString().slice(0, 10),
-    villas: data.villas.filter(item => match(item)).slice(0, limit).map(item => compactRecord(item, ['id', 'name', 'code', 'status', 'location', 'ownerName', 'monthlyRate', 'yearlyRate', 'currency', 'listingUrl', 'ownerAgreementUrl', 'operationsNotes'])),
+    villas: data.villas.filter(item => match(item)).slice(0, limit).map(item => compactRecord(item, [
+      'id', 'name', 'code', 'status', 'location', 'mapUrl', 'bedrooms', 'bathrooms', 'maxGuests', 'pool', 'facilities',
+      'ownerName', 'ownerPhone', 'ownerEmail', 'monthlyRate', 'yearlyRate', 'currency', 'paymentTerms', 'publicWhatsApp',
+      'photosFolderUrl', 'listingUrl', 'ownerAgreementUrl', 'marketingNotes',
+      'keyBoxCode', 'backupKeyLocation', 'checkInInstructions',
+      'internetProvider', 'internetPlan', 'internetLocationId', 'internetCircuitId', 'internetBillingDetails', 'internetPaymentDetails', 'internetPortalUrl', 'wifiName', 'wifiPassword',
+      'electricityDetails', 'waterDetails', 'poolServiceSchedule', 'cleaningSchedule', 'gardeningSchedule', 'wasteSchedule', 'pestControlSchedule', 'linenSchedule',
+      'maintenanceContact', 'emergencyContact', 'operationsNotes', 'photoUrl', 'published', 'slug', 'summary',
+    ])),
     stays: data.tenancies.filter(item => match(item, villaName(item.villaId))).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'rentAmount', 'currency', 'paymentFrequency', 'contractUrl']), villaName: villaName(item.villaId) })),
     installments: data.installments.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'period', 'amount', 'currency', 'dueDate', 'followUpDate', 'status', 'paidDate', 'proofUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
     deposits: data.deposits.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)}`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'refundDate', 'refundProofUrl', 'inventoryUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
@@ -443,4 +459,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { businessBrief, financeSummary, financeCockpit, leadFollowUps, inboxTriage, marketingPipeline };
+module.exports = { businessBrief, financeSummary, financeCockpit, leadFollowUps, inboxTriage, marketingPipeline, searchOperations };

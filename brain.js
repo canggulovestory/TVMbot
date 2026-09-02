@@ -94,7 +94,7 @@ save_record with that villa's id; use operationsNotes for private access/operati
 Only after the user confirms may you use the save_record action. Do not edit source code, deploy, or change
 server configuration from this messaging conversation.
 Confirm completed actions with one line.
-Respond in the same language the user writes in (English or Indonesian).`;
+Respond in the same language the user writes in: English, Bahasa Indonesia, or Dutch (Nederlands). Understand common mixed-language villa terms such as "token electric", "token listrik", and "elektriciteit token" as the PLN electricity token number.`;
 
   if (memoryFacts.length) {
     prompt += `\n\nKnown facts about ${user.name} (from memory):\n` +
