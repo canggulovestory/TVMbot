@@ -18,6 +18,7 @@ test('private villa operations details persist with the villa record', async () 
     poolServiceSchedule: 'Tuesday and Friday at 09:00',
     internetProvider: 'GlobalXtreme',
     internetLocationId: 'afnihenG74D',
+    internetPaymentDetails: 'BCA VA: 123\nMandiri VA: 456',
     wifiPassword: 'private-password',
     operationsNotes: 'Private key-box and access instructions.',
   });
@@ -25,6 +26,7 @@ test('private villa operations details persist with the villa record', async () 
   assert.equal(villa.poolServiceSchedule, 'Tuesday and Friday at 09:00');
   assert.equal(villa.internetProvider, 'GlobalXtreme');
   assert.equal(villa.internetLocationId, 'afnihenG74D');
+  assert.equal(villa.internetPaymentDetails, 'BCA VA: 123\nMandiri VA: 456');
   assert.equal(villa.wifiPassword, 'private-password');
   assert.equal(villa.operationsNotes, 'Private key-box and access instructions.');
   const stored = await villaData.getAll();

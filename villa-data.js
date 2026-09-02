@@ -34,8 +34,9 @@ function init(dataDir) {
   filePath = path.join(dataDir, 'villa-operations.json');
 }
 
-function clean(value, max = 2000) {
-  return String(value ?? '').trim().replace(/[\u0000-\u001f]/g, ' ').slice(0, max);
+function clean(value, max = 2000, multiline = false) {
+  const text = String(value ?? '').trim().replace(/\r\n?/g, '\n');
+  return text.replace(multiline ? /[\u0000-\u0009\u000b-\u001f]/g : /[\u0000-\u001f]/g, ' ').slice(0, max);
 }
 
 function normalizeUrl(value) {
@@ -67,7 +68,10 @@ function normalize(collection, input, existing = {}) {
     } else if (BOOLEAN_FIELDS.has(field)) next[field] = input[field] === true || input[field] === 'true' || input[field] === 'on';
     else if (NUMBER_FIELDS.has(field)) next[field] = Number.isFinite(Number(input[field])) ? Number(input[field]) : 0;
     else if (/Url$/.test(field)) next[field] = normalizeUrl(input[field]);
-    else next[field] = clean(input[field], field === 'notes' || field === 'marketingNotes' || field === 'operationsNotes' || field === 'checkInInstructions' || field === 'deductionNotes' ? 4000 : 500);
+    else {
+      const multiline = ['notes', 'marketingNotes', 'operationsNotes', 'checkInInstructions', 'deductionNotes', 'internetBillingDetails', 'internetPaymentDetails'].includes(field);
+      next[field] = clean(input[field], multiline ? 4000 : 500, multiline);
+    }
   }
   if (collection === 'villas') {
     if (!existing.id && !('published' in input)) next.published = true;
