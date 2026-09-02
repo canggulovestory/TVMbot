@@ -9,7 +9,7 @@ const notion = require('./notion');
 const assistant = require('./assistant');
 const hermes = require('./hermes-client');
 const personalLife = require('./personal-life');
-const { businessBrief, financeSummary, financeCockpit, marketingPipeline, searchOperations } = require('./agent-tools');
+const { businessBrief, financeSummary, financeCockpit, marketingPipeline, searchOperations, closeWord } = require('./agent-tools');
 
 function init() {
   hermes.init();
@@ -159,26 +159,28 @@ function formatMoneyTotals(totals) {
 }
 
 const VILLA_FACT_LOOKUPS = [
-  [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails'],
-  [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword'],
-  [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName'],
-  [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode'],
-  [/\b(pool|kolam|zwembad).*(schedule|clean|jadwal|schema)|(?:schedule|clean|jadwal|schema).*(pool|kolam|zwembad)/i, 'poolServiceSchedule'],
-  [/\b(cleaning|housekeeping|bersih|schoonmaak)\b/i, 'cleaningSchedule'],
-  [/\b(garden|gardening|kebun|tuin)\b/i, 'gardeningSchedule'],
-  [/\b(waste|garbage|trash|sampah|afval)\b/i, 'wasteSchedule'],
-  [/\b(pest|hama|ongedierte)\b/i, 'pestControlSchedule'],
-  [/\b(linen|laundry|sprei|wasgoed)\b/i, 'linenSchedule'],
-  [/\b(water|pump|air|pompa|waterpomp)\b/i, 'waterDetails'],
-  [/\b(maintenance|perawatan|onderhoud)\b/i, 'maintenanceContact'],
-  [/\b(emergency|darurat|noodgeval)\b/i, 'emergencyContact'],
-  [/\b(check.?in|arrival|kedatangan|aankomst)\b/i, 'checkInInstructions'],
-  [/\b(yearly|annual|tahun|tahunan|jaarlijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(yearly|annual|tahun|tahunan|jaarlijks)\b/i, 'yearlyRate'],
-  [/\b(monthly|month|bulan|maandelijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(monthly|month|bulan|maandelijks)\b/i, 'monthlyRate'],
+  [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails', ['pln', 'electric', 'electricity', 'listrik', 'elektriciteit', 'stroom', 'token']],
+  [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword', ['password', 'wachtwoord', 'sandi']],
+  [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName', ['wifi', 'ssid', 'network', 'jaringan', 'netwerk']],
+  [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode', ['keybox', 'keycode', 'kunci', 'sleutelcode']],
+  [/\b(pool|kolam|zwembad).*(schedule|clean|jadwal|schema)|(?:schedule|clean|jadwal|schema).*(pool|kolam|zwembad)/i, 'poolServiceSchedule', ['pool', 'kolam', 'zwembad']],
+  [/\b(cleaning|housekeeping|bersih|schoonmaak)\b/i, 'cleaningSchedule', ['cleaning', 'housekeeping', 'bersih', 'schoonmaak']],
+  [/\b(garden|gardening|kebun|tuin)\b/i, 'gardeningSchedule', ['garden', 'gardening', 'kebun', 'tuin']],
+  [/\b(waste|garbage|trash|sampah|afval)\b/i, 'wasteSchedule', ['waste', 'garbage', 'trash', 'sampah', 'afval']],
+  [/\b(pest|hama|ongedierte)\b/i, 'pestControlSchedule', ['pest', 'hama', 'ongedierte']],
+  [/\b(linen|laundry|sprei|wasgoed)\b/i, 'linenSchedule', ['linen', 'laundry', 'sprei', 'wasgoed']],
+  [/\b(water|pump|air|pompa|waterpomp)\b/i, 'waterDetails', ['water', 'pump', 'air', 'pompa', 'waterpomp']],
+  [/\b(maintenance|perawatan|onderhoud)\b/i, 'maintenanceContact', ['maintenance', 'perawatan', 'onderhoud']],
+  [/\b(emergency|darurat|noodgeval)\b/i, 'emergencyContact', ['emergency', 'darurat', 'noodgeval']],
+  [/\b(check.?in|arrival|kedatangan|aankomst)\b/i, 'checkInInstructions', ['checkin', 'arrival', 'kedatangan', 'aankomst']],
+  [/\b(yearly|annual|tahun|tahunan|jaarlijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(yearly|annual|tahun|tahunan|jaarlijks)\b/i, 'yearlyRate', ['yearly', 'annual', 'tahunan', 'jaarlijks']],
+  [/\b(monthly|month|bulan|maandelijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(monthly|month|bulan|maandelijks)\b/i, 'monthlyRate', ['monthly', 'month', 'bulan', 'maandelijks']],
 ];
 
 async function quickVillaFactReply(message) {
-  const lookup = VILLA_FACT_LOOKUPS.find(([pattern]) => pattern.test(message));
+  const words = String(message || '').toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
+  const lookup = VILLA_FACT_LOOKUPS.find(([pattern, , aliases]) => pattern.test(message)
+    || words.some(word => aliases.some(alias => closeWord(word, alias))));
   if (!lookup) return null;
   const result = await searchOperations({ search: message, limit: 2 }).catch(() => null);
   if (result?.villas?.length !== 1) return null;

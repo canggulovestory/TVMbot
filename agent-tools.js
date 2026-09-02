@@ -99,15 +99,38 @@ function safeRecordInput(value) {
 
 const SEARCH_STOP_WORDS = new Set(['what', 'whats', 'where', 'when', 'which', 'does', 'have', 'the', 'for', 'villa', 'apa', 'berapa', 'nomor', 'tolong', 'wat', 'waar', 'welke', 'voor', 'heeft', 'het']);
 
+function searchWords(value, minimumLength = 3) {
+  return String(value || '').toLowerCase().match(/[\p{L}\p{N}]+/gu)
+    ?.filter(word => word.length >= minimumLength && !SEARCH_STOP_WORDS.has(word)) || [];
+}
+
+function closeWord(left, right) {
+  if (left === right) return true;
+  if (Math.min(left.length, right.length) < 4 || Math.abs(left.length - right.length) > 2) return false;
+  const allowed = Math.max(left.length, right.length) >= 8 ? 2 : 1;
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= left.length; row += 1) {
+    const current = [row];
+    for (let column = 1; column <= right.length; column += 1) {
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + (left[row - 1] === right[column - 1] ? 0 : 1),
+      );
+    }
+    previous = current;
+  }
+  return previous[right.length] <= allowed;
+}
+
 function includesQuery(record, query, extra = '') {
   if (!query) return true;
-  const identityWords = `${record.name || ''} ${record.code || ''} ${record.guestName || ''} ${record.title || ''} ${record.clientName || ''} ${record.vendorName || ''} ${extra}`
-    .toLowerCase().match(/[\p{L}\p{N}]{4,}/gu)?.filter(word => !SEARCH_STOP_WORDS.has(word)) || [];
-  if (identityWords.some(word => String(query).toLowerCase().includes(word))) return true;
+  const words = searchWords(query);
+  const identityWords = searchWords(`${record.name || ''} ${record.code || ''} ${record.guestName || ''} ${record.title || ''} ${record.clientName || ''} ${record.vendorName || ''} ${extra}`, 4);
+  if (words.some(word => identityWords.some(identity => closeWord(word, identity)))) return true;
   const aliases = 'electricityDetails' in record ? 'electricity electric token pln listrik elektriciteit stroom' : '';
-  const haystack = `${Object.keys(record).join(' ')} ${Object.values(record).join(' ')} ${aliases} ${extra}`.toLowerCase();
-  const words = String(query).toLowerCase().match(/[\p{L}\p{N}]{3,}/gu)?.filter(word => !SEARCH_STOP_WORDS.has(word)) || [];
-  return words.every(word => haystack.includes(word));
+  const haystackWords = searchWords(`${Object.keys(record).join(' ')} ${Object.values(record).join(' ')} ${aliases} ${extra}`);
+  return words.every(word => haystackWords.some(candidate => closeWord(word, candidate)));
 }
 
 function compactRecord(record, fields) {
@@ -459,4 +482,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { businessBrief, financeSummary, financeCockpit, leadFollowUps, inboxTriage, marketingPipeline, searchOperations };
+module.exports = { businessBrief, financeSummary, financeCockpit, leadFollowUps, inboxTriage, marketingPipeline, searchOperations, closeWord };
