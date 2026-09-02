@@ -566,7 +566,10 @@
       <div class="form-section"><strong>Internet &amp; utilities</strong><small>Only the practical details needed at the villa.</small></div>
       <div class="f"><label>Internet provider</label><input name="internetProvider" placeholder="e.g. GlobalXtreme"></div>
       <div class="f"><label>Internet speed</label><input name="internetPlan" placeholder="e.g. 300 Mbps"></div>
-      <div class="f full"><label>Total internet payment</label><input name="internetBillingDetails" placeholder="e.g. IDR 333,000 / month"></div>
+      <div class="f full"><label>Payment amount &amp; due date</label><input name="internetBillingDetails" placeholder="e.g. IDR 333,000 / month · due around the 1st"></div>
+      <div class="f"><label>Customer ID</label><input name="internetLocationId"></div>
+      <div class="f"><label>Circuit ID</label><input name="internetCircuitId"></div>
+      <div class="f full"><label>How to pay</label><textarea name="internetPaymentDetails" placeholder="Bank or virtual-account numbers and account name"></textarea></div>
       <div class="f"><label>Wi-Fi network (SSID)</label><input name="wifiName" autocomplete="off"></div>
       <div class="f"><label>Wi-Fi password</label><input name="wifiPassword" autocomplete="off"></div>
       <div class="f"><label>PLN token number</label><input name="electricityDetails" inputmode="numeric" placeholder="Electricity meter / token number"></div>
@@ -1097,7 +1100,7 @@
       if(!operations.hidden)operations.innerHTML=`<div class="card-head operations-head"><div><h3>Villa operations</h3><span class="private-pill">🔒 Private admin information · never public</span></div><button class="btn sm" data-edit="villas:${esc(v.id)}">Edit operations</button></div><div class="ops-sections">
         ${opGroup('🔑 Access & security',[opItem('🔢','Key-box / door code',v.keyBoxCode),opItem('🗝️','Backup key',v.backupKeyLocation),opItem('🚪','Check-in instructions',v.checkInInstructions),opItem('📍','Villa location',v.location)])}
         ${opGroup('🧹 Recurring services',[opItem('🏊','Pool service',v.poolServiceSchedule),opItem('🧹','Housekeeping',v.cleaningSchedule),opItem('🌿','Gardening',v.gardeningSchedule),opItem('🗑️','Waste collection',v.wasteSchedule),opItem('🐜','Pest control',v.pestControlSchedule),opItem('🛏️','Linen & laundry',v.linenSchedule)])}
-        <section class="ops-group utilities-group"><h4>⚡ Utilities</h4><div class="ops-grid">${[opItem('📡','Internet service',[v.internetProvider,v.internetPlan].filter(Boolean).join(' · ')),opItem('💳','Total internet payment',v.internetBillingDetails),opItem('📶','Wi-Fi network',v.wifiName),opItem('🔐','Wi-Fi password',v.wifiPassword),opItem('⚡','PLN token number',v.electricityDetails),opItem('💧','Water / pump',v.waterDetails)].join('')}</div></section>
+        <section class="ops-group utilities-group"><h4>⚡ Utilities</h4><div class="ops-grid">${[opItem('📡','Internet service',[v.internetProvider,v.internetPlan].filter(Boolean).join(' · ')),opItem('💳','Payment & due date',v.internetBillingDetails),opItem('🏦','How to pay',v.internetPaymentDetails),opItem('🧾','Internet account',[v.internetLocationId&&`Customer ID: ${v.internetLocationId}`,v.internetCircuitId&&`Circuit ID: ${v.internetCircuitId}`].filter(Boolean).join('\n')),opItem('📶','Wi-Fi network',v.wifiName),opItem('🔐','Wi-Fi password',v.wifiPassword),opItem('⚡','PLN token number',v.electricityDetails),opItem('💧','Water / pump',v.waterDetails)].join('')}</div></section>
         ${opGroup('☎️ Contacts',[opItem('👤','Owner',v.ownerName),opItem('💬','Owner WhatsApp',v.ownerPhone),opItem('🛠️','Maintenance',v.maintenanceContact),opItem('🚨','Emergency',v.emergencyContact)])}
         ${v.operationsNotes?`<div class="ops-notes"><span>Private operations notes</span><p>${esc(v.operationsNotes)}</p></div>`:''}
       </div>`;

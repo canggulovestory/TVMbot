@@ -46,7 +46,8 @@ test('admin exposes structured operations fields without publishing them', () =>
   assert.match(admin, /name="cleaningSchedule"/);
   assert.match(admin, /name="wifiPassword"/);
   assert.match(admin, /name="electricityDetails"[^>]+placeholder="Electricity meter \/ token number"/);
-  assert.match(admin, /Total internet payment/);
+  assert.match(admin, /name="internetPaymentDetails"/);
+  assert.match(admin, /Payment amount &amp; due date/);
   assert.doesNotMatch(admin, /<label>Gas<\/label>/);
   assert.doesNotMatch(publicApi, /keyBoxCode|wifiPassword|internetLocationId|internetPaymentDetails|poolServiceSchedule|operationsNotes/);
 });
