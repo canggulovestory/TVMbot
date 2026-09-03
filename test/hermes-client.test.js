@@ -74,6 +74,31 @@ test('respond exposes a bounded Hermes API error', async () => {
   }
 });
 
+test('respond uses the read-only fallback when Hermes fails', async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url, options) => {
+    calls.push({ url, body: JSON.parse(options.body) });
+    if (String(url).startsWith('http://127.0.0.1')) {
+      return new Response(JSON.stringify({ error: { message: 'model route down' } }), { status: 503 });
+    }
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: 'Fallback ready.' } }],
+    }), { status: 200 });
+  };
+
+  try {
+    hermes.init();
+    const result = await hermes.respond({ input: 'hello', instructions: 'Be brief.', userKey: 'afni' });
+    assert.equal(result, 'Fallback ready.');
+    assert.equal(calls.length, 2);
+    assert.equal(calls[1].url, 'https://opencode.ai/zen/v1/chat/completions');
+    assert.match(calls[1].body.messages[0].content, /no tools in fallback mode/i);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 test('respond preserves Responses image input', async () => {
   const originalFetch = global.fetch;
   let captured;
@@ -82,6 +107,7 @@ test('respond preserves Responses image input', async () => {
     return new Response(JSON.stringify({ output_text: 'Image read.' }), { status: 200 });
   };
   try {
+    hermes.init();
     const input = [{ role: 'user', content: [{ type: 'input_text', text: 'Read this' }, { type: 'input_image', image_url: 'data:image/jpeg;base64,AA==' }] }];
     await hermes.respond({ input, instructions: '', userKey: 'afni' });
     assert.deepEqual(captured.input, input);

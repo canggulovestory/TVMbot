@@ -14,9 +14,12 @@ The TVM profile is the model-provider boundary. TVMbot never imports a model SDK
 it calls Hermes through the authenticated Responses API on VPS loopback. Provider
 credentials, when used, stay in the profile secret file and never enter Git.
 
-The current transition provider is Hermes' keyless `OpenCode Free` route. For
-production business traffic, replace it with a chosen Hermes-supported provider
-or Nous Portal subscription after reviewing its privacy, limits, and billing.
+The current transition provider is Hermes' keyless `OpenCode Free` route. TVMbot
+also has a short, read-only OpenCode fallback so ordinary chat remains usable
+while Hermes recovers. The model watchdog probes current free model IDs every
+10 minutes. For production business traffic, replace the free route with a
+chosen Hermes-supported provider or Nous Portal subscription after reviewing
+its privacy, limits, and billing.
 
 ## Use
 

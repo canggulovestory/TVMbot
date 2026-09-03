@@ -7,7 +7,7 @@ REPO_DIR="/root/tvmbot-v4"
 ENV_FILE="$REPO_DIR/.env"
 HEALTH_URL="http://127.0.0.1:8642/health"
 RESPONSE_URL="http://127.0.0.1:8642/v1/responses"
-CANDIDATES=(laguna-s-2.1-free nemotron-3.5-lightning-free nemotron-3-ultra-free)
+CANDIDATES=(mimo-v2.5-free ling-3.0-flash-fin-free nemotron-3.5-lightning-free nemotron-3-ultra-free muse-spark-1.3-contributor-free)
 
 response_is_healthy() {
   python3 - "$1" <<'PY'
@@ -54,7 +54,7 @@ set +a
 probe() {
   local result status
   result="$(mktemp)"
-  status="$(curl -sS --max-time 40 -o "$result" -w '%{http_code}' "$RESPONSE_URL" \
+  status="$(curl -sS --max-time 25 -o "$result" -w '%{http_code}' "$RESPONSE_URL" \
     -H "Authorization: Bearer $HERMES_API_KEY" \
     -H 'Content-Type: application/json' \
     -H 'X-Hermes-Session-Id: tvmbot-model-watchdog' \

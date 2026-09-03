@@ -48,6 +48,7 @@ for _ in $(seq 1 20); do
 done
 curl -fsS --max-time 5 http://127.0.0.1:8642/health >/dev/null
 systemctl enable --now tvm-hermes-model-watchdog.timer
+systemctl start --no-block tvm-hermes-model-watchdog.service
 
 cp "$NGINX_FILE" "$NGINX_FILE.previous"
 install -m 644 "$REPO_DIR/ops/nginx-tvmbot.conf" "$NGINX_FILE"
