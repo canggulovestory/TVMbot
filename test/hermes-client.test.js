@@ -93,7 +93,7 @@ test('respond uses the read-only fallback when Hermes fails', async () => {
     assert.equal(result, 'Fallback ready.');
     assert.equal(calls.length, 2);
     assert.equal(calls[1].url, 'https://opencode.ai/zen/v1/chat/completions');
-    assert.match(calls[1].body.messages[0].content, /no tools in fallback mode/i);
+    assert.match(calls[1].body.messages[0].content, /general conversation only/i);
   } finally {
     global.fetch = originalFetch;
   }
@@ -111,5 +111,36 @@ test('respond preserves Responses image input', async () => {
     const input = [{ role: 'user', content: [{ type: 'input_text', text: 'Read this' }, { type: 'input_image', image_url: 'data:image/jpeg;base64,AA==' }] }];
     await hermes.respond({ input, instructions: '', userKey: 'afni' });
     assert.deepEqual(captured.input, input);
+  } finally { global.fetch = originalFetch; }
+});
+
+test('fallback never receives private instructions or attachments', async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url, options) => {
+    calls.push({ url, body: JSON.parse(options.body) });
+    if (String(url).startsWith('http://127.0.0.1')) return new Response(JSON.stringify({ error: { message: 'down' } }), { status: 503 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'Public fallback reply.' } }] }), { status: 200 });
+  };
+  try {
+    hermes.init();
+    await hermes.respond({
+      input: [{ role: 'user', content: [{ type: 'input_text', text: 'hello' }, { type: 'input_image', image_url: 'data:image/jpeg;base64,PRIVATEIMAGE' }] }],
+      instructions: 'Current private TVM records: Wi-Fi password is SECRET-PASSWORD.', userKey: 'afni',
+    });
+    const sent = JSON.stringify(calls[1].body);
+    assert.doesNotMatch(sent, /SECRET-PASSWORD|PRIVATEIMAGE|image_url/);
+    assert.match(calls[1].body.messages[0].content, /no access to TVM records/i);
+  } finally { global.fetch = originalFetch; }
+});
+
+test('secure requests do not use the external fallback', async () => {
+  const originalFetch = global.fetch;
+  let calls = 0;
+  global.fetch = async () => { calls += 1; return new Response(JSON.stringify({ error: { message: 'down' } }), { status: 503 }); };
+  try {
+    hermes.init();
+    await assert.rejects(() => hermes.respond({ input: 'private', instructions: 'secret', userKey: 'afni', allowFallback: false }), error => error.code === 'HERMES_RESPONSE');
+    assert.equal(calls, 1);
   } finally { global.fetch = originalFetch; }
 });

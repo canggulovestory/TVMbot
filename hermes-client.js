@@ -104,9 +104,6 @@ function fallbackContent(input) {
   for (const message of input) {
     for (const part of Array.isArray(message?.content) ? message.content : []) {
       if (part?.type === 'input_text' && part.text) content.push({ type: 'text', text: String(part.text) });
-      if (part?.type === 'input_image' && part.image_url) {
-        content.push({ type: 'image_url', image_url: { url: String(part.image_url) } });
-      }
     }
   }
   return content.length ? content : String(input || '');
@@ -120,13 +117,8 @@ function fallbackHistoryText(input) {
   return `${texts.join('\n')}${input.some(message => message?.content?.some?.(part => part?.type === 'input_image')) ? '\n[image attached]' : ''}`.trim();
 }
 
-function fallbackInstructions(instructions) {
-  const source = String(instructions || '');
-  const withoutToolGuide = source.replace(
-    /\nYou are running inside the Hermes Agent harness and can help with:[\s\S]*?\nConfirm completed actions with one line\./,
-    '',
-  );
-  return `${withoutToolGuide}\n\nYou have no tools in fallback mode. The matching TVM records are already included above. Answer directly from those records. Never output a tool call, XML, JSON, or claim that you changed data. If the records do not contain the answer, say what is missing.`;
+function fallbackInstructions() {
+  return `You are Zuzu's temporary public fallback for general conversation only. You have no access to TVM records, private memories, uploaded files, or tools. Never answer questions about villas, guests, payments, finance, keys, passwords, documents, contacts, or any other private information. For those requests, say that Zuzu's secure record service must be retried. Be concise and never claim that you changed data.`;
 }
 
 async function fallbackRespond({ input, instructions, userKey }) {
@@ -145,7 +137,7 @@ async function fallbackRespond({ input, instructions, userKey }) {
         body: JSON.stringify({
           model,
           messages: [
-            { role: 'system', content: fallbackInstructions(instructions) },
+            { role: 'system', content: fallbackInstructions() },
             ...history,
             { role: 'user', content: fallbackContent(input) },
           ],
@@ -219,7 +211,7 @@ async function request(path, body, { userKey } = {}) {
   }
 }
 
-async function respond({ input, instructions, userKey }) {
+async function respond({ input, instructions, userKey, allowFallback = true }) {
   const current = getConfig();
   const identity = safeId(userKey);
   const body = {
@@ -242,6 +234,11 @@ async function respond({ input, instructions, userKey }) {
       hermesError = error;
       scheduleModelRecovery();
     }
+  }
+
+  if (!allowFallback) {
+    if (hermesError) throw hermesError;
+    throw new HermesError('Zuzu secure service is unavailable', { code: 'HERMES_UNAVAILABLE', status: 503 });
   }
 
   try {

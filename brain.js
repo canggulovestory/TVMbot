@@ -149,7 +149,7 @@ Never access, mention, search, infer, or use TVM business data, clients, finance
 Do not give medical, legal, financial, or mental-health diagnosis. Encourage professional help for urgent or high-stakes issues.
 Only ask to store a memory when Afni explicitly asks you to remember it. To save a private list item, ask Afni to use one explicit prefix: task:, goal:, habit:, journal:, routine:, travel:, shopping:, or note:. Current time: ${assistant.epochToWitaString(Date.now())} WITA.` +
     (memories.length ? `\n\nAfni's relevant private memories:\n${memories.map(item => `- ${item.fact}`).join('\n')}` : '');
-  try { return await hermes.respond({ input: message, instructions: prompt, userKey: `${userKey}-life` }); }
+  try { return await hermes.respond({ input: message, instructions: prompt, userKey: `${userKey}-life`, allowFallback: false }); }
   catch (error) { console.error(`[Hermes personal] ${error.code || 'ERROR'}:`, error.message); return 'Zuzu is temporarily unavailable. Your personal lists are still saved here.'; }
 }
 
@@ -160,7 +160,7 @@ function formatMoneyTotals(totals) {
 
 const VILLA_FACT_LOOKUPS = [
   [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails', ['pln', 'electric', 'electricity', 'listrik', 'elektriciteit', 'stroom', 'token']],
-  [/\b(internet|broadband|provider)/i, 'internetSummary', ['internet', 'broadband', 'provider']],
+  [/\b(internet|broadband|provider)\b/i, 'internetSummary', ['internet', 'broadband', 'provider']],
   [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword', ['password', 'wachtwoord', 'sandi']],
   [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName', ['wifi', 'ssid', 'network', 'jaringan', 'netwerk']],
   [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode', ['keybox', 'keycode', 'kunci', 'sleutelcode']],
@@ -255,6 +255,7 @@ async function processForUser({ text, user, attachment }) {
   const quickReply = await quickWorkspaceReply(message, user.key);
   if (quickReply) return quickReply;
 
+  const secureTvmRequest = Boolean(attachment) || /\b(villa|lysa|lourinka|alysaa|louna|sempol|diane|ann|pln|electric|listrik|internet|wifi|password|key|code|guest|tenant|stay|booking|deposit|payment|invoice|finance|contract|document|owner|maintenance|emergency|check.?in|check.?out|calendar|email|drive|lead|reminder)\b/i.test(message);
   try {
     // Recall only memories relevant to this message. This keeps Zuzu useful
     // across long conversations without injecting every private fact at once.
@@ -267,9 +268,11 @@ async function processForUser({ text, user, attachment }) {
       input: messageWithAttachment(message, attachment),
       instructions: systemPrompt,
       userKey: user.key,
+      allowFallback: !secureTvmRequest,
     });
   } catch (err) {
     console.error(`[Hermes] ${err.code || 'ERROR'}:`, err.message);
+    if (secureTvmRequest) return 'Zuzu’s secure record service is temporarily unavailable. I won’t send private villa, guest, finance, document, key, or Wi-Fi information to a backup provider. Please retry shortly.';
     return 'Hermes is temporarily unavailable. Structured commands still work: /remind, /reminders, /remember, /memory, /ops (see /help).';
   }
 }
