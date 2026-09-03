@@ -160,6 +160,7 @@ function formatMoneyTotals(totals) {
 
 const VILLA_FACT_LOOKUPS = [
   [/\b(pln|electric|electricity|listrik|elektriciteit|stroom|token)\b/i, 'electricityDetails', ['pln', 'electric', 'electricity', 'listrik', 'elektriciteit', 'stroom', 'token']],
+  [/\b(internet|broadband|provider)/i, 'internetSummary', ['internet', 'broadband', 'provider']],
   [/(wifi|wi-fi).*(pass|password|wachtwoord|sandi)|(pass|password|wachtwoord|sandi).*(wifi|wi-fi)/i, 'wifiPassword', ['password', 'wachtwoord', 'sandi']],
   [/\b(wifi|wi-fi|ssid|network|jaringan|netwerk)\b/i, 'wifiName', ['wifi', 'ssid', 'network', 'jaringan', 'netwerk']],
   [/\b(key ?box|key code|kode kunci|sleutelcode)\b/i, 'keyBoxCode', ['keybox', 'keycode', 'kunci', 'sleutelcode']],
@@ -177,20 +178,47 @@ const VILLA_FACT_LOOKUPS = [
   [/\b(monthly|month|bulan|maandelijks)\b.*\b(rent|rate|sewa|huur)\b|\b(rent|rate|sewa|huur)\b.*\b(monthly|month|bulan|maandelijks)\b/i, 'monthlyRate', ['monthly', 'month', 'bulan', 'maandelijks']],
 ];
 
-async function quickVillaFactReply(message) {
+const lastVillaByUser = new Map();
+const pendingVillaFactByUser = new Map();
+const FACT_CONTEXT_WORDS = new Set(['what', 'whats', 'about', 'and', 'the', 'for', 'please', 'name', 'number', 'details', 'info', 'service', 'schedule', 'when']);
+
+function internetSummary(villa) {
+  const service = [villa.internetProvider, villa.internetPlan].filter(Boolean).join(' · ');
+  const wifi = [villa.wifiName && `Wi-Fi: ${villa.wifiName}`, villa.wifiPassword && `Password: ${villa.wifiPassword}`].filter(Boolean).join(' · ');
+  const billing = [villa.internetBillingDetails, villa.internetPaymentDetails].filter(Boolean).join('\n');
+  const details = [service && `Service: ${service}`, wifi, billing].filter(Boolean).join('\n');
+  return details ? `${villa.name} internet\n${details}` : `${villa.name}: internet details are not set in TVM yet.`;
+}
+
+async function quickVillaFactReply(message, userKey = '') {
   const words = String(message || '').toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
-  const lookup = VILLA_FACT_LOOKUPS.find(([pattern, , aliases]) => pattern.test(message)
+  let lookup = VILLA_FACT_LOOKUPS.find(([pattern, , aliases]) => pattern.test(message)
     || words.some(word => aliases.some(alias => closeWord(word, alias))));
+  if (!lookup && userKey) lookup = pendingVillaFactByUser.get(userKey);
   if (!lookup) return null;
-  const result = await searchOperations({ search: message, limit: 2 }).catch(() => null);
-  if (result?.villas?.length !== 1) return null;
+  let result = await searchOperations({ search: message, limit: 2 }).catch(() => null);
+  const onlyFactWords = words.every(word => FACT_CONTEXT_WORDS.has(word)
+    || lookup[2].some(alias => closeWord(word, alias)));
+  if (result?.villas?.length !== 1 && onlyFactWords && userKey && lastVillaByUser.has(userKey)) {
+    result = await searchOperations({ search: `${message} ${lastVillaByUser.get(userKey)}`, limit: 2 }).catch(() => null);
+  }
+  if (result?.villas?.length !== 1) {
+    if (userKey) pendingVillaFactByUser.set(userKey, lookup);
+    return 'Which villa do you mean?';
+  }
   const [, field] = lookup;
-  const value = result.villas[0][field];
-  return value || value === 0 ? `${result.villas[0].name}: ${value}` : null;
+  const villa = result.villas[0];
+  if (userKey) {
+    lastVillaByUser.set(userKey, villa.name);
+    pendingVillaFactByUser.delete(userKey);
+  }
+  if (field === 'internetSummary') return internetSummary(villa);
+  const value = villa[field];
+  return value || value === 0 ? `${villa.name}: ${value}` : `${villa.name}: this detail is not set in TVM yet.`;
 }
 
 /** Fast, read-only answers for the workspace shortcuts. They do not depend on a model call. */
-async function quickWorkspaceReply(message) {
+async function quickWorkspaceReply(message, userKey = '') {
   const text = String(message || '').trim().toLowerCase();
   if (/^(briefing|what needs attention( today)?)$/.test(text)) {
     const brief = await businessBrief();
@@ -205,7 +233,7 @@ async function quickWorkspaceReply(message) {
     const pipeline = await marketingPipeline();
     return `Marketing pipeline\n• ${pipeline.totalLeads} total lead${pipeline.totalLeads === 1 ? '' : 's'} · ${pipeline.openLeads} open · ${pipeline.won} won\n• Conversion: ${pipeline.conversionRate}%\n• Follow-ups due: ${pipeline.followUpsDue.length}${pipeline.followUpsDue.length ? ` (${pipeline.followUpsDue.slice(0, 3).map(item => item.name || 'Unnamed lead').join(', ')})` : ''}`;
   }
-  return quickVillaFactReply(message);
+  return quickVillaFactReply(message, userKey);
 }
 
 function messageWithAttachment(message, attachment) {
@@ -224,7 +252,7 @@ async function processForUser({ text, user, attachment }) {
   const commandReply = await assistant.tryCommand(message, user.key);
   if (commandReply) return commandReply;
 
-  const quickReply = await quickWorkspaceReply(message);
+  const quickReply = await quickWorkspaceReply(message, user.key);
   if (quickReply) return quickReply;
 
   try {

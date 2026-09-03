@@ -41,6 +41,12 @@ test('Zuzu villa lookup returns structured electricity and utility details', asy
   assert.match(await quickVillaFactReply('wfi pasword lourinca'), /thevillamanagers\.com/);
   assert.match(await quickVillaFactReply('wen pol clean lourinca'), /Tuesday and Friday/);
   assert.match(await quickVillaFactReply('keycod lourinca'), /3861/);
+
+  await villaData.upsert('villas', { name: 'Villa LYSA', electricityDetails: '56220906897 · 5,500 kWh' });
+  assert.match(await quickVillaFactReply('whats token listrik lysa', 'afni-context-test'), /56220906897/);
+  assert.match(await quickVillaFactReply('internet?', 'afni-context-test'), /Villa LYSA: internet details are not set/);
+  assert.equal(await quickVillaFactReply('internet?', 'syifa-context-test'), 'Which villa do you mean?');
+  assert.match(await quickVillaFactReply('lourinka', 'syifa-context-test'), /Wi-Fi: Lourinka/);
 });
 
 test('Zuzu receives matching live operations data before answering', () => {
