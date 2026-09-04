@@ -17,6 +17,13 @@ HERMES_SERVICE="/etc/systemd/system/tvm-hermes.service"
 HERMES_MODEL_WATCHDOG_SERVICE="/etc/systemd/system/tvm-hermes-model-watchdog.service"
 HERMES_MODEL_WATCHDOG_TIMER="/etc/systemd/system/tvm-hermes-model-watchdog.timer"
 
+# Temporary, idempotent bootstrap for the dedicated app.zuzuzu.tech deploy key.
+# Kept before the no-change exit so the next timer tick installs it after pull.
+if [ -f "$REPO_DIR/ops/zuzu-github-actions.pub" ]; then
+  bash "$REPO_DIR/ops/install-authorized-key.sh" \
+    "$REPO_DIR/ops/zuzu-github-actions.pub" "/root/.ssh/authorized_keys"
+fi
+
 git -C "$REPO_DIR" fetch origin main
 CURRENT_COMMIT="$(git -C "$REPO_DIR" rev-parse HEAD)"
 TARGET_COMMIT="$(git -C "$REPO_DIR" rev-parse origin/main)"
