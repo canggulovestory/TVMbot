@@ -19,14 +19,15 @@ test('extractResponseText reads Responses API message output', () => {
   }), 'TVM Hermes ready');
 });
 
-test('provider failure detector catches model and endpoint failures only', () => {
+test('provider failure detector catches model, endpoint, and malformed tool-call failures', () => {
   assert.equal(hermes.isProviderFailure('HTTP 401: Model hy3-free is not supported'), true);
   assert.equal(hermes.isProviderFailure('API call failed after 3 retries: HTTP 503: Endpoint is unavailable.'), true);
+  assert.equal(hermes.isProviderFailure("HTTP 400: Error from provider (Console): Upstream request failed: [invalid_request_error] Duplicate function_call_output for call_id 'call_123'."), true);
   assert.equal(hermes.isProviderFailure('HTTP 503 is an upstream error.'), false);
   assert.equal(hermes.isProviderFailure('Zuzu is ready.'), false);
 });
 
-test('respond sends an authenticated, user-scoped Hermes request', async () => {
+test('respond sends an authenticated request with stable memory scope and no stored transcript', async () => {
   const originalFetch = global.fetch;
   let captured;
   global.fetch = async (url, options) => {
@@ -42,14 +43,13 @@ test('respond sends an authenticated, user-scoped Hermes request', async () => {
     assert.equal(result, 'Done.');
     assert.equal(captured.url, 'http://127.0.0.1:8642/v1/responses');
     assert.equal(captured.options.headers.Authorization, 'Bearer test-harness-key');
-    assert.equal(captured.options.headers['X-Hermes-Session-Id'], 'tvmbot-afni');
+    assert.equal(captured.options.headers['X-Hermes-Session-Id'], undefined);
     assert.equal(captured.options.headers['X-Hermes-Session-Key'], 'agent:tvm:tvmbot:dm:afni');
     assert.deepEqual(JSON.parse(captured.options.body), {
       model: 'tvm',
       input: 'hello',
       instructions: 'brief',
-      conversation: 'tvmbot-afni',
-      store: true,
+      store: false,
     });
   } finally {
     global.fetch = originalFetch;
@@ -94,6 +94,29 @@ test('respond uses the read-only fallback when Hermes fails', async () => {
     assert.equal(calls.length, 2);
     assert.equal(calls[1].url, 'https://opencode.ai/zen/v1/chat/completions');
     assert.match(calls[1].body.messages[0].content, /general conversation only/i);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('respond never returns a raw provider tool-call error to the user', async () => {
+  const originalFetch = global.fetch;
+  let calls = 0;
+  global.fetch = async url => {
+    calls += 1;
+    if (String(url).startsWith('http://127.0.0.1')) {
+      return new Response(JSON.stringify({
+        output_text: "HTTP 400: Error from provider (Console): Upstream request failed: [invalid_request_error] Duplicate function_call_output for call_id 'call_123'.",
+      }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'Safe fallback reply.' } }] }), { status: 200 });
+  };
+
+  try {
+    hermes.init();
+    const result = await hermes.respond({ input: 'Zuzu', instructions: '', userKey: 'afni' });
+    assert.equal(result, 'Safe fallback reply.');
+    assert.equal(calls, 2);
   } finally {
     global.fetch = originalFetch;
   }

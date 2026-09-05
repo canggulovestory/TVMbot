@@ -89,7 +89,10 @@ function extractResponseText(body) {
 function isProviderFailure(text) {
   const value = String(text || '').trim();
   return /^API call failed after \d+ retries: HTTP (?:401|429|5\d{2}):/i.test(value)
-    || /^HTTP 401: Model .+ is not supported\.?$/i.test(value);
+    || /^HTTP 401: Model .+ is not supported\.?$/i.test(value)
+    || /^HTTP 400: Error from provider\b/i.test(value)
+    || /\binvalid_request_error\b.*\b(?:duplicate )?function_call_output\b/i.test(value)
+    || /\bupstream request failed\b.*\bfunction_call_output\b/i.test(value);
 }
 
 function scheduleModelRecovery() {
@@ -181,7 +184,6 @@ async function request(path, body, { userKey } = {}) {
       headers: {
         Authorization: `Bearer ${current.apiKey}`,
         'Content-Type': 'application/json',
-        'X-Hermes-Session-Id': `tvmbot-${identity}`,
         'X-Hermes-Session-Key': `agent:tvm:tvmbot:dm:${identity}`,
       },
       body: JSON.stringify(body),
@@ -213,13 +215,14 @@ async function request(path, body, { userKey } = {}) {
 
 async function respond({ input, instructions, userKey, allowFallback = true }) {
   const current = getConfig();
-  const identity = safeId(userKey);
   const body = {
     model: current.model,
     input: Array.isArray(input) ? input : String(input || ''),
     instructions: String(instructions || ''),
-    conversation: `tvmbot-${identity}`,
-    store: true,
+    // TVM records and relevant memories are injected for every request. Do not
+    // reuse Hermes' tool-call transcript: one malformed provider response can
+    // otherwise poison every later Telegram message for this user.
+    store: false,
   };
 
   let hermesError = null;
