@@ -167,3 +167,21 @@ test('secure requests do not use the external fallback', async () => {
     assert.equal(calls, 1);
   } finally { global.fetch = originalFetch; }
 });
+
+test('a general-chat fallback does not block the next secure request', async () => {
+  const originalFetch = global.fetch;
+  let primaryCalls = 0;
+  global.fetch = async url => {
+    if (String(url).startsWith('http://127.0.0.1')) {
+      primaryCalls += 1;
+      if (primaryCalls === 1) return new Response('{}', { status: 503 });
+      return new Response(JSON.stringify({ output_text: 'Secure records available.' }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'General reply.' } }] }), { status: 200 });
+  };
+  try {
+    hermes.init();
+    await hermes.respond({ input: 'hello', userKey: 'afni' });
+    assert.equal(await hermes.respond({ input: 'private request', userKey: 'afni', allowFallback: false }), 'Secure records available.');
+  } finally { global.fetch = originalFetch; }
+});

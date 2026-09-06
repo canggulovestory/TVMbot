@@ -133,6 +133,22 @@ async function upsert(collection, input) {
   });
 }
 
+async function saveReferenceLink({ villaId, title, url, userKey }) {
+  return mutate(store => {
+    if (!store.villas.some(villa => villa.id === villaId)) throw new Error('Villa not found');
+    const driveUrl = normalizeUrl(url);
+    if (!driveUrl || !String(title || '').trim()) throw new Error('Link and title required');
+    const existing = store.documents.find(doc => doc.villaId === villaId && doc.driveUrl === driveUrl);
+    if (existing) return existing;
+    const now = new Date().toISOString();
+    const record = { ...normalize('documents', { villaId, title, driveUrl, type: 'Other',
+      notes: `Saved reference link by ${clean(userKey, 80)}.`, signed: false }),
+      id: newId('documents'), createdAt: now, updatedAt: now };
+    store.documents.unshift(record);
+    return record;
+  });
+}
+
 function parseDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return null;
   const date = new Date(`${value}T00:00:00Z`);
@@ -475,4 +491,4 @@ async function remove(collection, id) {
   });
 }
 
-module.exports = { init, getAll, getActionSummary, upsert, remove, recordPaymentIncome, markInvoicePaid, markPayablePaid, createTenancyBundle, stayLength, addDays, addMonths };
+module.exports = { init, getAll, getActionSummary, upsert, saveReferenceLink, remove, recordPaymentIncome, markInvoicePaid, markPayablePaid, createTenancyBundle, stayLength, addDays, addMonths };

@@ -226,12 +226,14 @@ async function respond({ input, instructions, userKey, allowFallback = true }) {
   };
 
   let hermesError = null;
-  if (Date.now() >= hermesRetryAfter) {
+  // A public fallback cooldown must not deny requests that require Hermes.
+  if (!allowFallback || Date.now() >= hermesRetryAfter) {
     try {
       let response = await request('/v1/responses', body, { userKey });
       let text = extractResponseText(response);
       if (isProviderFailure(text)) throw new HermesError('Hermes provider returned an unavailable model', { code: 'HERMES_RESPONSE', status: 503 });
       if (!text || isProviderFailure(text)) throw new HermesError('Hermes returned no usable assistant text', { code: 'HERMES_EMPTY' });
+      hermesRetryAfter = 0;
       return text;
     } catch (error) {
       hermesError = error;

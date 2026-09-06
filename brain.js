@@ -9,6 +9,7 @@ const notion = require('./notion');
 const assistant = require('./assistant');
 const hermes = require('./hermes-client');
 const personalLife = require('./personal-life');
+const { tryVillaLink } = require('./villa-links');
 const { businessBrief, financeSummary, financeCockpit, marketingPipeline, searchOperations, closeWord } = require('./agent-tools');
 
 function init() {
@@ -251,6 +252,9 @@ async function processForUser({ text, user, attachment }) {
   // Structured commands remain deterministic and do not need a model provider.
   const commandReply = await assistant.tryCommand(message, user.key);
   if (commandReply) return commandReply;
+
+  const linkReply = !attachment && await tryVillaLink(message, user.key);
+  if (linkReply) return linkReply;
 
   const quickReply = await quickWorkspaceReply(message, user.key);
   if (quickReply) return quickReply;

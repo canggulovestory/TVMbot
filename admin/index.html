@@ -690,7 +690,7 @@
       <div class="f"><label>Villa</label><select name="villaId" data-villa-select></select></div>
       <div class="f"><label>Stay</label><select name="tenancyId" data-tenancy-select></select></div>
       <div class="f"><label>Expiry / renewal date</label><input name="expiryDate" type="date"></div>
-      <div class="f full"><label>Private Google Drive link *</label><input name="driveUrl" type="url" required></div>
+      <div class="f full"><label>Document or reference link *</label><input name="driveUrl" type="url" required></div>
       <div class="f-check"><input name="signed" type="checkbox" id="ck-docsigned"><label for="ck-docsigned">Signed</label></div>
       <div class="f"><label>Signed date</label><input name="signedDate" type="date"></div>
       <div class="f full"><label>Notes</label><textarea name="notes"></textarea></div>
@@ -1128,7 +1128,7 @@
       $('#vd-stays').innerHTML=stays.map(t=>`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td><td>${money(t.rentAmount,t.currency)}<span class="sub">${esc(t.paymentFrequency||'')}</span></td><td>${badge(t.bookingStatus)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No stays for this villa yet.</td></tr>';
       $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(paymentPurpose(p))}</strong><span class="sub">${esc(p.code||p.period||'—')} · ${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
       $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(depositPurpose(x))} · ${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No security deposits.</td></tr>';
-      $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'PDF')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
+      $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'Open')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
       // availability calendar (next 6 months)
       const bookings=stays.filter(t=>!['Cancelled','Enquiry'].includes(t.bookingStatus)&&t.checkIn&&t.checkOut);
       const todayISO=new Date().toISOString().slice(0,10);
@@ -1240,7 +1240,7 @@
       // documents table
       $('#t-documents').innerHTML=d.documents.map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
         return`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${esc(v.name||'—')}</td><td>${esc(t.guestName||'—')}</td>
-        <td>${x.signed?`Yes<span class="sub">${fdate(x.signedDate)}</span>`:'No'}</td><td>${fdate(x.expiryDate)}</td><td>${flink(x.driveUrl,'Open PDF')}</td>
+        <td>${x.signed?`Yes<span class="sub">${fdate(x.signedDate)}</span>`:'No'}</td><td>${fdate(x.expiryDate)}</td><td>${flink(x.driveUrl,'Open')}</td>
         <td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="documents:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No documents yet — click “+ Add document”.</td></tr>';
       // finance view
       const month=today.slice(0,7);
