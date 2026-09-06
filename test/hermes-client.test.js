@@ -20,11 +20,23 @@ test('extractResponseText reads Responses API message output', () => {
 });
 
 test('provider failure detector catches model, endpoint, and malformed tool-call failures', () => {
+  assert.equal(hermes.isProviderFailure('Operation interrupted: waiting for model response (50.2s elapsed).'), true);
   assert.equal(hermes.isProviderFailure('HTTP 401: Model hy3-free is not supported'), true);
   assert.equal(hermes.isProviderFailure('API call failed after 3 retries: HTTP 503: Endpoint is unavailable.'), true);
   assert.equal(hermes.isProviderFailure("HTTP 400: Error from provider (Console): Upstream request failed: [invalid_request_error] Duplicate function_call_output for call_id 'call_123'."), true);
   assert.equal(hermes.isProviderFailure('HTTP 503 is an upstream error.'), false);
   assert.equal(hermes.isProviderFailure('Zuzu is ready.'), false);
+});
+
+test('a failed primary request never contacts a different provider', async () => {
+  const originalFetch = global.fetch;
+  const urls = [];
+  global.fetch = async url => { urls.push(url); return Response.json({ error: { message: 'unavailable' } }, { status: 503 }); };
+  try {
+    hermes.init();
+    await assert.rejects(hermes.respond({ input: 'hello', userKey: 'afni' }));
+    assert.deepEqual(urls, ['http://127.0.0.1:8642/v1/responses']);
+  } finally { global.fetch = originalFetch; }
 });
 
 test('respond sends an authenticated request with stable memory scope and no stored transcript', async () => {
@@ -74,54 +86,6 @@ test('respond exposes a bounded Hermes API error', async () => {
   }
 });
 
-test('respond uses the read-only fallback when Hermes fails', async () => {
-  const originalFetch = global.fetch;
-  const calls = [];
-  global.fetch = async (url, options) => {
-    calls.push({ url, body: JSON.parse(options.body) });
-    if (String(url).startsWith('http://127.0.0.1')) {
-      return new Response(JSON.stringify({ error: { message: 'model route down' } }), { status: 503 });
-    }
-    return new Response(JSON.stringify({
-      choices: [{ message: { content: 'Fallback ready.' } }],
-    }), { status: 200 });
-  };
-
-  try {
-    hermes.init();
-    const result = await hermes.respond({ input: 'hello', instructions: 'Be brief.', userKey: 'afni' });
-    assert.equal(result, 'Fallback ready.');
-    assert.equal(calls.length, 2);
-    assert.equal(calls[1].url, 'https://opencode.ai/zen/v1/chat/completions');
-    assert.match(calls[1].body.messages[0].content, /general conversation only/i);
-  } finally {
-    global.fetch = originalFetch;
-  }
-});
-
-test('respond never returns a raw provider tool-call error to the user', async () => {
-  const originalFetch = global.fetch;
-  let calls = 0;
-  global.fetch = async url => {
-    calls += 1;
-    if (String(url).startsWith('http://127.0.0.1')) {
-      return new Response(JSON.stringify({
-        output_text: "HTTP 400: Error from provider (Console): Upstream request failed: [invalid_request_error] Duplicate function_call_output for call_id 'call_123'.",
-      }), { status: 200 });
-    }
-    return new Response(JSON.stringify({ choices: [{ message: { content: 'Safe fallback reply.' } }] }), { status: 200 });
-  };
-
-  try {
-    hermes.init();
-    const result = await hermes.respond({ input: 'Zuzu', instructions: '', userKey: 'afni' });
-    assert.equal(result, 'Safe fallback reply.');
-    assert.equal(calls, 2);
-  } finally {
-    global.fetch = originalFetch;
-  }
-});
-
 test('respond preserves Responses image input', async () => {
   const originalFetch = global.fetch;
   let captured;
@@ -137,26 +101,6 @@ test('respond preserves Responses image input', async () => {
   } finally { global.fetch = originalFetch; }
 });
 
-test('fallback never receives private instructions or attachments', async () => {
-  const originalFetch = global.fetch;
-  const calls = [];
-  global.fetch = async (url, options) => {
-    calls.push({ url, body: JSON.parse(options.body) });
-    if (String(url).startsWith('http://127.0.0.1')) return new Response(JSON.stringify({ error: { message: 'down' } }), { status: 503 });
-    return new Response(JSON.stringify({ choices: [{ message: { content: 'Public fallback reply.' } }] }), { status: 200 });
-  };
-  try {
-    hermes.init();
-    await hermes.respond({
-      input: [{ role: 'user', content: [{ type: 'input_text', text: 'hello' }, { type: 'input_image', image_url: 'data:image/jpeg;base64,PRIVATEIMAGE' }] }],
-      instructions: 'Current private TVM records: Wi-Fi password is SECRET-PASSWORD.', userKey: 'afni',
-    });
-    const sent = JSON.stringify(calls[1].body);
-    assert.doesNotMatch(sent, /SECRET-PASSWORD|PRIVATEIMAGE|image_url/);
-    assert.match(calls[1].body.messages[0].content, /no access to TVM records/i);
-  } finally { global.fetch = originalFetch; }
-});
-
 test('secure requests do not use the external fallback', async () => {
   const originalFetch = global.fetch;
   let calls = 0;
@@ -165,23 +109,5 @@ test('secure requests do not use the external fallback', async () => {
     hermes.init();
     await assert.rejects(() => hermes.respond({ input: 'private', instructions: 'secret', userKey: 'afni', allowFallback: false }), error => error.code === 'HERMES_RESPONSE');
     assert.equal(calls, 1);
-  } finally { global.fetch = originalFetch; }
-});
-
-test('a general-chat fallback does not block the next secure request', async () => {
-  const originalFetch = global.fetch;
-  let primaryCalls = 0;
-  global.fetch = async url => {
-    if (String(url).startsWith('http://127.0.0.1')) {
-      primaryCalls += 1;
-      if (primaryCalls === 1) return new Response('{}', { status: 503 });
-      return new Response(JSON.stringify({ output_text: 'Secure records available.' }), { status: 200 });
-    }
-    return new Response(JSON.stringify({ choices: [{ message: { content: 'General reply.' } }] }), { status: 200 });
-  };
-  try {
-    hermes.init();
-    await hermes.respond({ input: 'hello', userKey: 'afni' });
-    assert.equal(await hermes.respond({ input: 'private request', userKey: 'afni', allowFallback: false }), 'Secure records available.');
   } finally { global.fetch = originalFetch; }
 });

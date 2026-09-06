@@ -3,26 +3,17 @@
  *
  * The API server must remain bound to loopback on the same VPS. Hermes owns
  * model routing, tools, skills, memory, and its agent loop; TVMbot only owns
- * channel authentication and delivery. A small OpenCode fallback keeps
- * read-only chat available while Hermes or its model route is recovering.
+ * channel authentication and delivery. All AI calls stay on the configured
+ * Hermes provider; there is no external fallback or automatic model switching.
  */
 'use strict';
-
-const { execFile } = require('node:child_process');
 
 const DEFAULT_URL = 'http://127.0.0.1:8642';
 const DEFAULT_MODEL = 'tvm';
 // Keep this below nginx's proxy timeout so the admin receives a clear Zuzu
 // response instead of an HTML 504 page when the model service is slow.
 const DEFAULT_TIMEOUT_MS = 15000;
-const FALLBACK_URL = 'https://opencode.ai/zen/v1/chat/completions';
-const FALLBACK_MODELS = ['mimo-v2.5-free', 'ling-3.0-flash-fin-free'];
-const FALLBACK_TIMEOUT_MS = 12000;
-const HERMES_RETRY_DELAY_MS = 5 * 60 * 1000;
-
 let config = null;
-let hermesRetryAfter = 0;
-const fallbackHistory = new Map();
 
 class HermesError extends Error {
   constructor(message, { code = 'HERMES_ERROR', status = 0 } = {}) {
@@ -53,12 +44,7 @@ function init() {
     apiKey,
     model: String(process.env.HERMES_API_MODEL || DEFAULT_MODEL).trim(),
     timeoutMs: Math.min(parsePositiveInt(process.env.HERMES_API_TIMEOUT_MS, DEFAULT_TIMEOUT_MS), DEFAULT_TIMEOUT_MS),
-    fallbackUrl: String(process.env.ZUZU_FALLBACK_URL || FALLBACK_URL).trim(),
-    fallbackModels: String(process.env.ZUZU_FALLBACK_MODELS || FALLBACK_MODELS.join(','))
-      .split(',').map(value => value.trim()).filter(Boolean).slice(0, 3),
   };
-  hermesRetryAfter = 0;
-  fallbackHistory.clear();
 }
 
 function getConfig() {
@@ -88,88 +74,12 @@ function extractResponseText(body) {
 
 function isProviderFailure(text) {
   const value = String(text || '').trim();
-  return /^API call failed after \d+ retries: HTTP (?:401|429|5\d{2}):/i.test(value)
+  return /^Operation interrupted:/i.test(value)
+    || /^API call failed after \d+ retries: HTTP (?:401|429|5\d{2}):/i.test(value)
     || /^HTTP 401: Model .+ is not supported\.?$/i.test(value)
     || /^HTTP 400: Error from provider\b/i.test(value)
     || /\binvalid_request_error\b.*\b(?:duplicate )?function_call_output\b/i.test(value)
     || /\bupstream request failed\b.*\bfunction_call_output\b/i.test(value);
-}
-
-function scheduleModelRecovery() {
-  if (process.platform !== 'linux') return;
-  const child = execFile('systemctl', ['start', '--no-block', 'tvm-hermes-model-watchdog.service'], () => {});
-  child.unref();
-}
-
-function fallbackContent(input) {
-  if (!Array.isArray(input)) return String(input || '');
-  const content = [];
-  for (const message of input) {
-    for (const part of Array.isArray(message?.content) ? message.content : []) {
-      if (part?.type === 'input_text' && part.text) content.push({ type: 'text', text: String(part.text) });
-    }
-  }
-  return content.length ? content : String(input || '');
-}
-
-function fallbackHistoryText(input) {
-  if (!Array.isArray(input)) return String(input || '');
-  const texts = input.flatMap(message => Array.isArray(message?.content) ? message.content : [])
-    .filter(part => part?.type === 'input_text' && part.text)
-    .map(part => String(part.text));
-  return `${texts.join('\n')}${input.some(message => message?.content?.some?.(part => part?.type === 'input_image')) ? '\n[image attached]' : ''}`.trim();
-}
-
-function fallbackInstructions() {
-  return `You are Zuzu's temporary public fallback for general conversation only. You have no access to TVM records, private memories, uploaded files, or tools. Never answer questions about villas, guests, payments, finance, keys, passwords, documents, contacts, or any other private information. For those requests, say that Zuzu's secure record service must be retried. Be concise and never claim that you changed data.`;
-}
-
-async function fallbackRespond({ input, instructions, userKey }) {
-  const current = getConfig();
-  const identity = safeId(userKey);
-  const history = fallbackHistory.get(identity) || [];
-  let lastError = null;
-
-  for (const model of current.fallbackModels) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
-    try {
-      const response = await fetch(current.fallbackUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: fallbackInstructions() },
-            ...history,
-            { role: 'user', content: fallbackContent(input) },
-          ],
-          max_tokens: 900,
-        }),
-        signal: controller.signal,
-      });
-      const body = await response.json().catch(() => ({}));
-      const text = String(body?.choices?.[0]?.message?.content || '').trim();
-      if (!response.ok || !text || /<tool_call>|<arg_key>|<function=/i.test(text)) {
-        throw new Error(body?.error?.message || (!text ? `HTTP ${response.status}` : 'model attempted a tool call'));
-      }
-
-      const nextHistory = [...history,
-        { role: 'user', content: fallbackHistoryText(input) },
-        { role: 'assistant', content: text },
-      ].slice(-6);
-      fallbackHistory.set(identity, nextHistory);
-      return text;
-    } catch (error) {
-      lastError = error;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  throw new HermesError(`Zuzu fallback is unavailable: ${lastError?.message || 'no model responded'}`, {
-    code: 'HERMES_FALLBACK', status: 503,
-  });
 }
 
 async function request(path, body, { userKey } = {}) {
@@ -266,7 +176,7 @@ async function runWithApprovals(body, userKey, onApproval) {
   }
 }
 
-async function respond({ input, instructions, userKey, allowFallback = true, onApproval, conversationHistory = [] }) {
+async function respond({ input, instructions, userKey, onApproval, conversationHistory = [] }) {
   const current = getConfig();
   const body = {
     model: current.model,
@@ -286,36 +196,10 @@ async function respond({ input, instructions, userKey, allowFallback = true, onA
     return runWithApprovals(body, userKey, onApproval);
   }
 
-  let hermesError = null;
-  // A public fallback cooldown must not deny requests that require Hermes.
-  if (!allowFallback || Date.now() >= hermesRetryAfter) {
-    try {
-      let response = await request('/v1/responses', body, { userKey });
-      let text = extractResponseText(response);
-      if (isProviderFailure(text)) throw new HermesError('Hermes provider returned an unavailable model', { code: 'HERMES_RESPONSE', status: 503 });
-      if (!text || isProviderFailure(text)) throw new HermesError('Hermes returned no usable assistant text', { code: 'HERMES_EMPTY' });
-      hermesRetryAfter = 0;
-      return text;
-    } catch (error) {
-      hermesError = error;
-      scheduleModelRecovery();
-    }
-  }
-
-  if (!allowFallback) {
-    if (hermesError) throw hermesError;
-    throw new HermesError('Zuzu secure service is unavailable', { code: 'HERMES_UNAVAILABLE', status: 503 });
-  }
-
-  try {
-    const text = await fallbackRespond({ input, instructions, userKey });
-    hermesRetryAfter = Date.now() + HERMES_RETRY_DELAY_MS;
-    return text;
-  } catch (_) {
-    hermesRetryAfter = 0;
-    if (hermesError) throw hermesError;
-    throw new HermesError('Zuzu AI providers are unavailable', { code: 'HERMES_UNAVAILABLE', status: 503 });
-  }
+  const response = await request('/v1/responses', body, { userKey });
+  const text = extractResponseText(response);
+  if (!text || isProviderFailure(text)) throw new HermesError('Hermes returned no usable assistant text', { code: 'HERMES_RESPONSE' });
+  return text;
 }
 
-module.exports = { init, respond, fallbackRespond, extractResponseText, isProviderFailure, HermesError };
+module.exports = { init, respond, extractResponseText, isProviderFailure, HermesError };

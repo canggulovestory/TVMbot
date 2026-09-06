@@ -163,7 +163,7 @@ Never access, mention, search, infer, or use TVM business data, clients, finance
 Do not give medical, legal, financial, or mental-health diagnosis. Encourage professional help for urgent or high-stakes issues.
 Only ask to store a memory when Afni explicitly asks you to remember it. To save a private list item, ask Afni to use one explicit prefix: task:, goal:, habit:, journal:, routine:, travel:, shopping:, or note:. Current time: ${assistant.epochToWitaString(Date.now())} WITA.` +
     (memories.length ? `\n\nAfni's relevant private memories:\n${memories.map(item => `- ${item.fact}`).join('\n')}` : '');
-  try { return await hermes.respond({ input: message, instructions: prompt, userKey: `${userKey}-life`, allowFallback: false }); }
+  try { return await hermes.respond({ input: message, instructions: prompt, userKey: `${userKey}-life` }); }
   catch (error) { console.error(`[Hermes personal] ${error.code || 'ERROR'}:`, error.message); return 'Zuzu is temporarily unavailable. Your personal lists are still saved here.'; }
 }
 
@@ -297,13 +297,12 @@ async function processForUser({ text, user, attachment, onApproval, conversation
       input: messageWithAttachment(message, attachment),
       instructions: systemPrompt,
       userKey: user.key,
-      allowFallback: !secureTvmRequest,
       onApproval,
       conversationHistory,
     });
   } catch (err) {
     console.error(`[Hermes] ${err.code || 'ERROR'}:`, err.message);
-    if (secureTvmRequest) return 'Zuzu’s secure record service is temporarily unavailable. I won’t send private villa, guest, finance, document, key, or Wi-Fi information to a backup provider. Please retry shortly.';
+    if (secureTvmRequest) return 'I couldn’t finish that request because the AI connection was interrupted. I can’t confirm it was saved; please check the records before retrying to avoid duplicates.';
     return 'Hermes is temporarily unavailable. Structured commands still work: /remind, /reminders, /remember, /memory, /ops (see /help).';
   }
 }

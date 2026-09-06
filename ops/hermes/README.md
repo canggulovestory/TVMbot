@@ -14,12 +14,11 @@ The TVM profile is the model-provider boundary. TVMbot never imports a model SDK
 it calls Hermes through the authenticated Responses API on VPS loopback. Provider
 credentials, when used, stay in the profile secret file and never enter Git.
 
-The current transition provider is Hermes' keyless `OpenCode Free` route. TVMbot
-also has a short, read-only OpenCode fallback so ordinary chat remains usable
-while Hermes recovers. The model watchdog probes current free model IDs every
-10 minutes. For production business traffic, replace the free route with a
-chosen Hermes-supported provider or Nous Portal subscription after reviewing
-its privacy, limits, and billing.
+The provider is `openai-codex`, authenticated with the owner's Codex subscription
+through Hermes' device-login flow. Authentication tokens stay in Hermes' private
+auth store. Never copy them into this repository. Subscription limits still apply.
+There is no external model fallback and no automatic free-model rotation.
+Deployments disable the retired model-watchdog timer; it must not be re-enabled.
 
 ## Use
 
@@ -32,10 +31,13 @@ TVMbot calls:
 
 ```bash
 POST http://127.0.0.1:8642/v1/responses
+POST http://127.0.0.1:8642/v1/runs
 ```
 
-The request uses the bearer secret from `HERMES_API_KEY`, a stable named
-conversation for each authorized TVM user, and the profile's project skills.
+Requests use the bearer secret from `HERMES_API_KEY`, user-scoped memory and the
+profile's project skills. Telegram uses runs/SSE with one-time approval buttons.
+Recent dialogue is sent as plain user/assistant turns, never a stored tool-call
+transcript. Interrupted runs are failures, not completed assistant answers.
 
 ## Deliberately not enabled
 
