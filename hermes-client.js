@@ -213,7 +213,60 @@ async function request(path, body, { userKey } = {}) {
   }
 }
 
-async function respond({ input, instructions, userKey, allowFallback = true }) {
+async function runWithApprovals(body, userKey, onApproval) {
+  const current = getConfig();
+  const started = await request('/v1/runs', body, { userKey });
+  if (!/^run_[a-zA-Z0-9_]+$/.test(started.run_id || '')) throw new HermesError('Hermes did not start a run');
+  const path = `/v1/runs/${started.run_id}`;
+  const controller = new AbortController();
+  // Telegram is not behind the Admin HTTP proxy. Bound the whole tool run,
+  // including user approval time, instead of abandoning it after 15 seconds.
+  const timeout = setTimeout(() => controller.abort(), 180000);
+  let completed = false;
+  try {
+    const response = await fetch(`${current.baseUrl}${path}/events`, {
+      headers: { Authorization: `Bearer ${current.apiKey}` }, signal: controller.signal,
+    });
+    if (!response.ok || !response.body) throw new HermesError('Hermes run stream unavailable');
+    let pending = '';
+    const decoder = new TextDecoder();
+    for await (const chunk of response.body) {
+      pending += decoder.decode(chunk, { stream: true }).replace(/\r/g, '');
+      if (pending.length > 1024 * 1024) throw new HermesError('Hermes run event too large');
+      let boundary;
+      while ((boundary = pending.indexOf('\n\n')) >= 0) {
+        const frame = pending.slice(0, boundary);
+        pending = pending.slice(boundary + 2);
+        const data = frame.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).join('\n');
+        if (!data) continue;
+        const event = JSON.parse(data);
+        if (event.run_id !== started.run_id) throw new HermesError('Hermes run identity mismatch');
+        if (event.event === 'approval.request') {
+          const decision = await onApproval(event, { signal: controller.signal });
+          const choice = decision === 'once' && event.choices?.includes('once') ? 'once' : 'deny';
+          if (controller.signal.aborted) throw new HermesError('Approval expired');
+          await request(`${path}/approval`, { choice }, { userKey });
+        } else if (event.event === 'run.completed') {
+          const text = String(event.output || '').trim();
+          if (!text || isProviderFailure(text)) throw new HermesError('Hermes run returned no usable answer');
+          completed = true;
+          return text;
+        } else if (['run.failed', 'run.cancelled'].includes(event.event)) {
+          throw new HermesError('Hermes could not complete this run', { code: 'HERMES_RUN_FAILED' });
+        }
+      }
+    }
+    throw new HermesError('Hermes disconnected before completing the run');
+  } finally {
+    clearTimeout(timeout);
+    controller.abort();
+    // Never leave a potentially mutating run executing after delivery failed.
+    // Do not retry/fallback: the first run might already have changed a record.
+    if (!completed) await request(`${path}/stop`, {}, { userKey }).catch(() => {});
+  }
+}
+
+async function respond({ input, instructions, userKey, allowFallback = true, onApproval, conversationHistory = [] }) {
   const current = getConfig();
   const body = {
     model: current.model,
@@ -224,6 +277,14 @@ async function respond({ input, instructions, userKey, allowFallback = true }) {
     // otherwise poison every later Telegram message for this user.
     store: false,
   };
+  if (conversationHistory.length) body.conversation_history = conversationHistory;
+  if (onApproval) {
+    // /runs accepts Chat-style multimodal content, not Responses input blocks.
+    if (Array.isArray(input)) body.input = input.map(message => ({ ...message, content: message.content.map(part =>
+      part.type === 'input_text' ? { type: 'text', text: part.text } :
+        part.type === 'input_image' ? { type: 'image_url', image_url: { url: part.image_url, detail: part.detail || 'auto' } } : part) }));
+    return runWithApprovals(body, userKey, onApproval);
+  }
 
   let hermesError = null;
   // A public fallback cooldown must not deny requests that require Hermes.

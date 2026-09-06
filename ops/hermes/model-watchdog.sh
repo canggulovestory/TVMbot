@@ -41,6 +41,14 @@ if [[ "${1:-}" == "--self-test" ]]; then
   exit 0
 fi
 
+# This recovery policy only understands keyless models. Never overwrite a
+# deliberately configured paid provider (or an unreadable configuration).
+provider="$(hermes -p "$PROFILE" config get model.provider 2>/dev/null || true)"
+if [[ "$provider" != "opencode-free" ]]; then
+  echo "Provider is not managed by the free-model watchdog; configuration unchanged."
+  exit 0
+fi
+
 exec 9>/var/lock/tvm-hermes-model-watchdog.lock
 flock -n 9 || exit 0
 

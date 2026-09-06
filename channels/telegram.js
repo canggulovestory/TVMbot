@@ -9,6 +9,7 @@ const TelegramBot = TelegramBotModule.default || TelegramBotModule; // package e
 const brain = require('../brain');
 const zuzuIntake = require('../zuzu-intake');
 const googleWorkspace = require('../google-workspace');
+const { createApprovals } = require('./telegram-approvals');
 
 let bot = null;
 let running = false;
@@ -67,7 +68,7 @@ async function start() {
     return false;
   }
 
-  bot = new TelegramBot(token, { polling: true });
+  bot = new TelegramBot(token, { polling: true, request: { timeoutMs: 30000 } });
   try {
     const profile = await bot.getMe();
     running = true;
@@ -84,8 +85,15 @@ async function start() {
     return false;
   }
 
+  const approvals = createApprovals(bot);
+  bot.on('callback_query', query => {
+    if (!brain.isAllowed({ telegramId: String(query.from?.id) })) return;
+    approvals.handle(query).catch(error => console.error('[TG] Approval delivery failed:', error.message));
+  });
+  const chatQueue = new Map();
   bot.on('message', async (msg) => {
     let typing = null;
+    let releaseChat, queued;
     try {
       // Only private chats (DMs)
       if (msg.chat.type !== 'private') return;
@@ -100,6 +108,12 @@ async function start() {
       const meta = attachmentMeta(msg);
       const caption = String(msg.text || msg.caption || '').trim();
       if (!caption && !meta) return;
+      // Preserve rapid follow-ups in order; never drop a task list while the
+      // previous answer/approval is still in flight. Callbacks bypass this queue.
+      const previous = chatQueue.get(msg.chat.id);
+      queued = new Promise(resolve => { releaseChat = resolve; });
+      chatQueue.set(msg.chat.id, queued);
+      if (previous) await previous;
       console.log(`[TG] ${msg.from.first_name}: ${caption.substring(0, 60) || `[${meta.isImage ? 'photo' : 'file'}]`}`);
 
       await bot.sendChatAction(msg.chat.id, 'typing').catch(() => {});
@@ -115,7 +129,9 @@ async function start() {
         text = `${caption || `Please review this ${meta.isImage ? 'photo' : 'file'} and tell me the important details.`}\n\nAttached file: ${uploaded.item.fileName}${preview}`;
         await sendReply(msg.chat.id, `I received **${uploaded.item.fileName}** and added it to your private review inbox. I’m reviewing it now.`);
       }
-      const reply = await brain.processMessage({ text, telegramId, attachment });
+      const reply = await brain.processMessage({ text, telegramId, attachment,
+        onApproval: (event, options) => approvals.ask({ chatId: msg.chat.id, userId: telegramId }, event, options),
+      });
       clearInterval(typing);
       typing = null;
       if (reply) {
@@ -128,6 +144,8 @@ async function start() {
       } catch (_) {}
     } finally {
       if (typing) clearInterval(typing);
+      if (releaseChat) releaseChat();
+      if (queued && chatQueue.get(msg.chat.id) === queued) chatQueue.delete(msg.chat.id);
     }
   });
 

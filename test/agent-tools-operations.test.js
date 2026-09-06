@@ -47,6 +47,12 @@ test('Zuzu villa lookup returns structured electricity and utility details', asy
   assert.match(await quickVillaFactReply('internet?', 'afni-context-test'), /Villa LYSA: internet details are not set/);
   assert.equal(await quickVillaFactReply('internet?', 'syifa-context-test'), 'Which villa do you mean?');
   assert.match(await quickVillaFactReply('lourinka', 'syifa-context-test'), /Wi-Fi: Lourinka/);
+  const tasks = '• get water heater from Mitra10\n• get chair (black wheels) from office to lourinka\n• check villa lysa\n• make duplicate keys every villa';
+  assert.equal(await quickVillaFactReply(tasks, 'task-list-test'), null);
+  assert.equal(await quickVillaFactReply('internet?', 'cancel-test'), 'Which villa do you mean?');
+  assert.equal(await quickVillaFactReply('nothing just put it all;', 'cancel-test'), null);
+  assert.equal(await quickVillaFactReply('nothing', 'cancel-test'), null);
+  assert.equal(await quickVillaFactReply('get water heater from Mitra10', 'task-list-test'), null);
 });
 
 test('Zuzu receives matching live operations data before answering', () => {

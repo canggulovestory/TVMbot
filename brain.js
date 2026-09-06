@@ -55,7 +55,10 @@ function isAllowed({ phone, telegramId }) {
 function buildPrompt(user, memoryFacts = [], operations = null) {
   const nowWita = assistant.epochToWitaString(Date.now());
   let prompt = `You are Zuzu, the AI operating assistant for The Villa Managers team.
-You are talking to ${user.name}. Be brief — max 3-4 lines per response.
+You are talking to ${user.name}; authenticated tool user key: ${user.key}.
+Be natural and concise for simple questions, but include every requested task and important detail.
+Accept ordinary conversation, typos and bullet lists; never require a "todo:" prefix.
+Use the recent dialogue to understand follow-ups, such as a task list after a request to plan tomorrow.
 Complete safe internal task and reminder actions directly. For any client message,
 financial change, payment/invoice status change, or deletion: prepare the action
 and ask for explicit confirmation before doing it.
@@ -122,10 +125,20 @@ Organize her tasks by project name when listing.`;
 
 // ─── Process message ────────────────────────────────────────────────────────────
 
-async function processMessage({ text, phone, telegramId, attachment }) {
+// Short-lived dialogue only; never retain/replay model tool-call transcripts.
+const recentDialogue = new Map();
+async function processMessage({ text, phone, telegramId, attachment, onApproval }) {
   const user = identifyUser({ phone, telegramId });
   if (!user) return null;
-  return processForUser({ text, user, attachment });
+  const scope = `${telegramId ? 'telegram' : 'whatsapp'}:${user.key}`;
+  const previous = recentDialogue.get(scope);
+  const conversationHistory = previous && Date.now() - previous.at < 4 * 60 * 60 * 1000 ? previous.turns : [];
+  const reply = await processForUser({ text, user, attachment, onApproval, conversationHistory });
+  if (reply) recentDialogue.set(scope, { at: Date.now(), turns: [...conversationHistory,
+    { role: 'user', content: String(text || '').slice(0, 2000) },
+    { role: 'assistant', content: String(reply).slice(0, 4000) },
+  ].slice(-12) });
+  return reply;
 }
 
 /** Used by the protected Admin chat; it shares the same user-scoped Hermes conversation. */
@@ -193,18 +206,30 @@ function internetSummary(villa) {
 
 async function quickVillaFactReply(message, userKey = '') {
   const words = String(message || '').toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
+  // Fast lookup is only for short factual questions, never plans/task lists.
+  if (words.length > 18 || /[\n•]/.test(message) || /^(?:zuzu\s+)?(?:get|add|save|put|make|hire|create|check|remind|remember|todo|urgent|nothing|never\s?mind|cancel|stop|simpan|tambah|buat|batal)\b/i.test(String(message).trim())) {
+    pendingVillaFactByUser.delete(userKey);
+    return null;
+  }
   let lookup = VILLA_FACT_LOOKUPS.find(([pattern, , aliases]) => pattern.test(message)
     || words.some(word => aliases.some(alias => closeWord(word, alias))));
-  if (!lookup && userKey) lookup = pendingVillaFactByUser.get(userKey);
+  const pending = userKey && pendingVillaFactByUser.get(userKey);
+  const isFollowUp = !lookup && pending && Date.now() - pending.at < 2 * 60 * 1000;
+  if (isFollowUp) lookup = pending.lookup;
   if (!lookup) return null;
   let result = await searchOperations({ search: message, limit: 2 }).catch(() => null);
+  if (isFollowUp && (result?.villas?.length !== 1 || !words.every(word => ['villa', 'the'].includes(word)
+    || `${result.villas[0].name} ${result.villas[0].code || ''}`.toLowerCase().split(/\W+/).some(name => closeWord(word, name))))) {
+    pendingVillaFactByUser.delete(userKey);
+    return null;
+  }
   const onlyFactWords = words.every(word => FACT_CONTEXT_WORDS.has(word)
     || lookup[2].some(alias => closeWord(word, alias)));
   if (result?.villas?.length !== 1 && onlyFactWords && userKey && lastVillaByUser.has(userKey)) {
     result = await searchOperations({ search: `${message} ${lastVillaByUser.get(userKey)}`, limit: 2 }).catch(() => null);
   }
   if (result?.villas?.length !== 1) {
-    if (userKey) pendingVillaFactByUser.set(userKey, lookup);
+    if (userKey) pendingVillaFactByUser.set(userKey, { lookup, at: Date.now() });
     return 'Which villa do you mean?';
   }
   const [, field] = lookup;
@@ -245,7 +270,7 @@ function messageWithAttachment(message, attachment) {
   ] }];
 }
 
-async function processForUser({ text, user, attachment }) {
+async function processForUser({ text, user, attachment, onApproval, conversationHistory = [] }) {
   const message = String(text || '').trim().slice(0, 2000);
   if (!message) return 'Write a message for Zuzu first.';
 
@@ -273,6 +298,8 @@ async function processForUser({ text, user, attachment }) {
       instructions: systemPrompt,
       userKey: user.key,
       allowFallback: !secureTvmRequest,
+      onApproval,
+      conversationHistory,
     });
   } catch (err) {
     console.error(`[Hermes] ${err.code || 'ERROR'}:`, err.message);
