@@ -3,3 +3,4 @@ node_modules/
 wa-session/
 data/
 *.log
+.worktrees/
