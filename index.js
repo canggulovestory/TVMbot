@@ -609,18 +609,7 @@ async function handleAdminApi(req, res, url) {
       let record = collection === 'tenancies'
         ? await villaData.createTenancyBundle(body.record || {})
         : await villaData.upsert(collection, body.record || {});
-      // Auto-book rent income when an installment is marked Paid
-      if (collection === 'installments' && record.status === 'Paid') {
-        await villaData.recordPaymentIncome(record).catch(err => console.error('[Finance] auto-income failed:', err.message));
-      }
-      if (collection === 'invoices' && record.status === 'Paid') {
-        const settled = await villaData.markInvoicePaid(record.id, record);
-        record = settled.invoice;
-      }
-      if (collection === 'payables' && record.status === 'Paid') {
-        const settled = await villaData.markPayablePaid(record.id, record);
-        record = settled.payable;
-      }
+      // The shared store saves paid sources and finance entries atomically.
       audit.add(session.user, `saved ${collection.slice(0, -1)}`, record.name || record.guestName || record.title || record.code || record.description || record.id);
       return sendJson(res, 201, { ok: true, record });
     } catch (error) {
@@ -724,6 +713,11 @@ function isPersonalHost(req) {
 }
 
 async function handlePersonalApp(req, res, url) {
+  if (url.pathname === '/chat-state.js' && req.method === 'GET') {
+    const script = await fs.readFile(path.join(PERSONAL_DIR, 'chat-state.js'));
+    res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    return res.end(script);
+  }
   if (url.pathname === '/api/zuzu/login' && req.method === 'POST') {
     const body = await readBody(req);
     const account = await authUsers.verify(body.username, body.password);
@@ -811,7 +805,7 @@ const server = http.createServer(async (req, res) => {
         tenancies: data.tenancies.filter(t => allowed.has(t.villaId)).map(({ idDocumentUrl, notes, guestPhone, guestEmail, ...t }) => t),
         installments: data.installments.filter(p => allowed.has(p.villaId)).map(({ proofUrl, ...p }) => p),
         deposits: data.deposits.filter(d => allowed.has(d.villaId)).map(({ refundProofUrl, inventoryUrl, deductionNotes, ...d }) => d),
-        transactions: data.transactions.filter(x => allowed.has(x.villaId)).map(({ proofUrl, notes, sourceId, ...x }) => x),
+        transactions: data.transactions.filter(x => allowed.has(x.villaId)).map(({ proofUrl, notes, sourceId, corrections, ...x }) => x),
       });
     }
     if (url.pathname.startsWith('/api/admin/')) {

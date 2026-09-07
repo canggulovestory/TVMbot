@@ -75,7 +75,7 @@ test('Zuzu can retrieve complete records by collection name', async () => {
   });
   await villaData.upsert('deposits', {
     villaId: villa.id, tenancyId: stay.id, amount: 42000000, currency: 'IDR',
-    status: 'Held', deductionNotes: 'Refund after damage inspection',
+    status: 'Held', collectedDate: '2026-09-01', deductionNotes: 'Refund after damage inspection',
   });
 
   const stays = await searchOperations({ search: 'show all guest stays' });

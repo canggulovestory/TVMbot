@@ -165,7 +165,7 @@ async function searchOperations(input) {
     ])),
     stays: data.tenancies.filter(item => match(item, `${villaName(item.villaId)} guest stay stays tenancy booking renter tenant tamu penyewa gast verblijf`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'villaId', 'guestName', 'guestPhone', 'guestEmail', 'nationality', 'idDocumentUrl', 'bookingStatus', 'checkIn', 'checkOut', 'rentalTerm', 'guestCount', 'rentAmount', 'currency', 'paymentFrequency', 'source', 'agencyCommissionPercent', 'contractUrl', 'notes']), villaName: villaName(item.villaId) })),
     installments: data.installments.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)} ${item.purpose || ''} payment payments installment installments cicilan betaling termijn`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'installmentNumber', 'installmentTotal', 'period', 'purpose', 'amount', 'currency', 'dueDate', 'followUpDate', 'gracePeriodDays', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'lateFee', 'ownerPayoutStatus']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
-    deposits: data.deposits.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)} ${item.purpose || ''} deposit deposits security refundable borg jaminan`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'purpose', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'deductionNotes', 'refundDate', 'refundProofUrl', 'inventoryUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
+    deposits: data.deposits.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)} ${item.purpose || ''} deposit deposits security refundable borg jaminan`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'tenancyId', 'villaId', 'purpose', 'amount', 'currency', 'collectedDate', 'heldIn', 'status', 'refundDueDate', 'deductions', 'refundedAmount', 'refundableAmount', 'collectedAmount', 'deductionNotes', 'refundDate', 'refundProofUrl', 'inventoryUrl']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
     documents: data.documents.filter(item => match(item, `${villaName(item.villaId)} ${guestName(item.tenancyId)} document documents contract agreement lease kontrak perjanjian overeenkomst`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'title', 'type', 'villaId', 'tenancyId', 'driveUrl', 'signed', 'signedDate', 'expiryDate', 'notes']), villaName: villaName(item.villaId), guestName: guestName(item.tenancyId) })),
     transactions: data.transactions.filter(item => match(item, `${villaName(item.villaId)} finance transaction transactions income expense pemasukan pengeluaran`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'villaId', 'tenancyId', 'type', 'category', 'description', 'amount', 'currency', 'date', 'proofUrl', 'notes', 'sourceId']), villaName: villaName(item.villaId) })),
     invoices: data.invoices.filter(item => match(item, `${villaName(item.villaId)} invoice invoices receivable faktur tagihan`)).slice(0, limit).map(item => ({ ...compactRecord(item, ['id', 'code', 'clientName', 'clientEmail', 'villaId', 'category', 'description', 'amount', 'currency', 'issueDate', 'dueDate', 'status', 'paidDate', 'paymentMethod', 'proofUrl', 'notes', 'sourceId']), villaName: villaName(item.villaId) })),
@@ -181,9 +181,7 @@ async function saveRecord(input) {
   let record = collection === 'tenancies'
     ? await villaData.createTenancyBundle(recordInput)
     : await villaData.upsert(collection, recordInput);
-  if (collection === 'installments' && record.status === 'Paid') await villaData.recordPaymentIncome(record);
-  if (collection === 'invoices' && record.status === 'Paid') record = (await villaData.markInvoicePaid(record.id, record)).invoice;
-  if (collection === 'payables' && record.status === 'Paid') record = (await villaData.markPayablePaid(record.id, record)).payable;
+  // Source and ledger are committed together by the shared store.
   return { collection, record };
 }
 
@@ -283,7 +281,7 @@ async function financeCockpit() {
   ];
   const outgoing = [
     ...(data.payables || []).filter(item => open(item.status)).map(item => financeItem(item, 'outgoing', { party: item.vendorName || item.code, source: 'payable' })),
-    ...(data.deposits || []).filter(item => open(item.status) && item.refundDueDate).map(item => financeItem(item, 'outgoing', { category: 'Deposit refund', party: item.code || 'Deposit', dueDate: item.refundDueDate, source: 'deposit' })),
+    ...(data.deposits || []).filter(item => item.refundableAmount > 0 && item.refundDueDate).map(item => financeItem({ ...item, amount: item.refundableAmount }, 'outgoing', { category: 'Deposit refund', party: item.code || 'Deposit', dueDate: item.refundDueDate, source: 'deposit' })),
   ];
   const queue = items => items.filter(item => item.dueDate).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).map(item => ({ ...item, daysUntil: daysUntil(item.dueDate, today) }));
   const classify = item => item.daysUntil === null ? 'undated' : item.daysUntil < 0 ? 'overdue' : item.daysUntil <= 7 ? 'next7Days' : item.daysUntil <= 30 ? 'next30Days' : 'later';
