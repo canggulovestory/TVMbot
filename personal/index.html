@@ -2,12 +2,68 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zuzu Life</title>
 <style>
 :root{--ink:#2d1720;--wine:#551c2b;--cream:#f6f0e6;--paper:#fffdf9;--line:#e4d8ca;--muted:#786c66}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:16px/1.5 Arial,sans-serif}.shell{width:min(1080px,calc(100% - 32px));margin:auto;padding:34px 0 60px}.hero{background:var(--wine);color:#fff;border-radius:24px;padding:30px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.mark{font:400 clamp(2rem,7vw,4.5rem)/.85 Georgia,serif;letter-spacing:-.06em}.hero p{margin:10px 0 0;color:#ead8d9;max-width:540px}.logout{border:1px solid #cda8ae;color:#fff;background:transparent;border-radius:9px;padding:8px 11px;cursor:pointer}.grid{display:grid;grid-template-columns:1fr .9fr;gap:18px;margin-top:18px}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px}h2{font:400 1.55rem Georgia,serif;margin:0 0 5px}.sub{margin:0;color:var(--muted);font-size:.9rem}.counts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.count{min-width:82px;flex:1;border-radius:12px;background:#f4e8df;padding:12px}.count strong{display:block;font-size:1.55rem}.form{display:grid;gap:9px;margin-top:16px}input,select,textarea{font:inherit;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}textarea{min-height:72px;resize:vertical}.btn{border:0;background:var(--wine);color:#fff;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.items{display:grid;gap:9px;margin-top:15px}.item{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:11px;padding:11px}.item.done{opacity:.52;text-decoration:line-through}.tag{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--wine);font-weight:700}.item small{display:block;color:var(--muted)}.chat{height:290px;overflow:auto;background:#fbf7f1;border:1px solid var(--line);padding:12px;border-radius:12px;white-space:pre-wrap}.msg{margin:0 0 10px}.msg.me{color:var(--wine);font-weight:700}.login{min-height:100vh;display:grid;place-items:center;padding:20px}.login .card{width:min(420px,100%)}@media(max-width:750px){.grid{grid-template-columns:1fr}.shell{width:min(100% - 20px,1080px);padding-top:10px}.hero{border-radius:17px;padding:24px}.counts{gap:7px}}
-</style></head><body><main id="app"></main><script>
+.form label{display:grid;gap:5px;font-size:.85rem;font-weight:700}.form input,.form select,.form textarea{width:100%;min-width:0;font-weight:400}.btn:disabled{opacity:.55;cursor:wait}#page-error:not(:empty){padding:12px;background:#fbe6df;color:#782b22;border-radius:9px}.item>input{flex-shrink:0}.item>div{min-width:0;overflow-wrap:anywhere}
+</style></head><body><main id="app"></main><script src="/chat-state.js"></script><script>
 const app=document.querySelector('#app');
 const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 let data=null;
-async function api(url,options={}){const response=await fetch(url,{headers:{'Content-Type':'application/json'},...options});const body=await response.json();if(!response.ok)throw Error(body.error||'Request failed');return body}
-function login(){app.innerHTML=`<div class="login"><section class="card"><div class="mark" style="color:var(--wine)">zuzu</div><h2 style="margin-top:16px">Your private life space</h2><p class="sub">Separate from TVM. Plans, routines, goals and personal conversations live here.</p><form class="form" id="login"><input name="username" placeholder="Username" required><input name="password" type="password" required><button class="btn">Enter Zuzu Life</button></form></section></div>`;document.querySelector('#login').onsubmit=async event=>{event.preventDefault();try{await api('/api/zuzu/login',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(event.target)))});load()}catch(error){alert(error.message)}}}
-function render(){const items=data.items||[];app.innerHTML=`<div class="shell"><header class="hero"><div><div class="mark">zuzu life</div><p>A quiet private place for your day, goals, notes and Zuzu. TVM client and business data do not appear here.</p></div><button class="logout" id="logout">Sign out</button></header><div class="grid"><section class="card"><h2>Today</h2><p class="sub">Keep life light, visible and moving.</p><div class="counts"><div class="count"><strong>${data.counts.tasks}</strong>tasks</div><div class="count"><strong>${data.counts.goals}</strong>goals</div><div class="count"><strong>${data.counts.habits}</strong>habits</div><div class="count"><strong>${data.counts.routines}</strong>routines</div></div><form class="form" id="item"><select name="kind"><option value="task">Task</option><option value="goal">Goal</option><option value="habit">Habit</option><option value="routine">Routine</option><option value="journal">Journal</option><option value="travel">Travel</option><option value="shopping">Shopping</option><option value="note">Note</option></select><input name="title" placeholder="What matters now?" required><input name="dueDate" type="date"><textarea name="details" placeholder="Optional note"></textarea><button class="btn">Add to my life space</button></form><div class="items">${items.map(item=>`<label class="item ${item.done?'done':''}"><input type="checkbox" data-done="${esc(item.id)}" ${item.done?'checked':''}><div><span class="tag">${esc(item.kind)}</span><strong>${esc(item.title)}</strong>${item.dueDate?`<small>Due ${esc(item.dueDate)}</small>`:''}${item.details?`<small>${esc(item.details)}</small>`:''}</div></label>`).join('')||'<p class="sub">Start with one small thing.</p>'}</div></section><section class="card"><h2>Talk to Zuzu</h2><p class="sub">Personal reflection, planning and encouragement. She will not access TVM operations here. To save from chat, write “journal: …”, “routine: …”, “travel: …”, or “shopping: …”.</p><div class="chat" id="chat"><p class="msg">Hi Afni. What would make today feel lighter?</p></div><form class="form" id="chat-form"><textarea name="message" placeholder="Talk to Zuzu…" required></textarea><button class="btn">Send</button></form></section></div></div>`;document.querySelector('#logout').onclick=async()=>{await api('/api/zuzu/logout',{method:'POST'});login()};document.querySelector('#item').onsubmit=async event=>{event.preventDefault();await api('/api/zuzu/items',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(event.target)))});load()};document.querySelectorAll('[data-done]').forEach(node=>node.onchange=async()=>{await api('/api/zuzu/items/complete',{method:'POST',body:JSON.stringify({id:node.dataset.done,done:node.checked})});load()});document.querySelector('#chat-form').onsubmit=async event=>{event.preventDefault();const input=event.target.message,message=input.value.trim();if(!message)return;input.value='';const box=document.querySelector('#chat');box.insertAdjacentHTML('beforeend',`<p class="msg me">You: ${esc(message)}</p><p class="msg" id="wait">Zuzu is thinking…</p>`);box.scrollTop=box.scrollHeight;try{const result=await api('/api/zuzu/chat',{method:'POST',body:JSON.stringify({message})});document.querySelector('#wait').textContent='Zuzu: '+result.reply}catch(error){document.querySelector('#wait').textContent=error.message}}}
-async function load(){try{data=await api('/api/zuzu/overview');render()}catch(_){login()}}load();
+const chat=createLifeChat(message=>api('/api/zuzu/chat',{method:'POST',body:JSON.stringify({message})}),renderChat);
+async function api(url,options={}){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),65000);
+  try{
+    const response=await fetch(url,{headers:{'Content-Type':'application/json'},...options,signal:controller.signal});
+    const raw=await response.text(); let body;
+    try{body=JSON.parse(raw)}catch(_){throw Error('The service returned an unexpected response')}
+    if(!response.ok){const error=Error(body.error||'Request failed');error.status=response.status;throw error}
+    return body;
+  }catch(error){if(error.name==='AbortError')throw Error('The request timed out');throw error}
+  finally{clearTimeout(timer)}
+}
+function showError(error){
+  let box=document.querySelector('#page-error');
+  if(!box){box=document.createElement('p');box.id='page-error';box.setAttribute('role','alert');app.prepend(box)}
+  box.textContent=error.message;
+}
+function login(){
+  app.innerHTML=`<div class="login"><section class="card"><div class="mark" style="color:var(--wine)">zuzu</div><h2 style="margin-top:16px">Your private life space</h2><p class="sub">Separate from TVM. Plans, routines, goals and personal conversations live here.</p><form class="form" id="login"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn">Enter Zuzu Life</button></form></section></div>`;
+  document.querySelector('#login').onsubmit=async event=>{
+    event.preventDefault();const button=event.target.querySelector('button');button.disabled=true;
+    try{await api('/api/zuzu/login',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(event.target)))});await load()}
+    catch(error){showError(error)}finally{button.disabled=false}
+  };
+}
+function renderChat(){
+  const box=document.querySelector('#chat'); if(!box)return;
+  box.innerHTML='<p class="msg">Hi Afni. What would make today feel lighter?</p>'+chat.messages.map(m=>`<p class="msg ${m.role==='user'?'me':''}" ${m.pending?'aria-busy="true"':''}>${esc(m.role==='user'?'You: ':'Zuzu: ')}${esc(m.text)}</p>`).join('');
+  const button=document.querySelector('#chat-form button');if(button){button.disabled=chat.busy;button.textContent=chat.busy?'Waiting for Zuzu…':'Send'}
+  box.scrollTop=box.scrollHeight;
+}
+function render(){
+  const draft=document.querySelector('#chat-form textarea')?.value||'';
+  const items=data.items||[];
+  app.innerHTML=`<div class="shell"><header class="hero"><div><div class="mark">zuzu life</div><p>Your personal plans, notes and conversations. Separate from TVM.</p></div><button class="logout" id="logout">Sign out</button></header><p id="page-error" role="alert"></p><div class="grid">
+  <section class="card"><h2>Today</h2><p class="sub">Your tasks, goals and routines.</p><div class="counts">${['tasks','goals','habits','routines'].map(k=>`<div class="count"><strong>${data.counts[k]}</strong>${k}</div>`).join('')}</div>
+  <form class="form" id="item"><label>Type<select name="kind">${['task','goal','habit','routine','journal','travel','shopping','note'].map(k=>`<option value="${k}">${k[0].toUpperCase()+k.slice(1)}</option>`).join('')}</select></label><label>Title<input name="title" placeholder="What matters now?" required></label><label>Due date<input name="dueDate" type="date"></label><label>Details<textarea name="details" placeholder="Optional note"></textarea></label><button class="btn">Add to my life space</button></form>
+  <div class="items">${items.map(item=>`<label class="item ${item.done?'done':''}"><input type="checkbox" data-done="${esc(item.id)}" ${item.done?'checked':''}><div><span class="tag">${esc(item.kind)}</span> <strong>${esc(item.title)}</strong>${item.dueDate?`<small>Due ${esc(item.dueDate)}</small>`:''}${item.details?`<small>${esc(item.details)}</small>`:''}</div></label>`).join('')||'<p class="sub">Start with one small thing.</p>'}</div></section>
+  <section class="card"><h2>Talk to Zuzu</h2><p class="sub">Write in any language; Zuzu replies in English. To save a list item, use “task: …”, “note: …”, or “journal: …”.</p><div class="chat" id="chat" role="log" aria-live="polite"></div><form class="form" id="chat-form"><label>Your message<textarea name="message" placeholder="Talk to Zuzu…" maxlength="2000" required></textarea></label><button class="btn">Send</button></form></section></div></div>`;
+  document.querySelector('#chat-form textarea').value=draft;
+  document.querySelector('#logout').onclick=async()=>{
+    try{await api('/api/zuzu/logout',{method:'POST'});chat.messages.length=0;data=null;login()}catch(error){showError(error)}
+  };
+  document.querySelector('#item').onsubmit=async event=>{
+    event.preventDefault();const button=event.target.querySelector('button');if(button.disabled)return;button.disabled=true;
+    try{await api('/api/zuzu/items',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(event.target)))});await load()}catch(error){showError(error)}finally{button.disabled=false}
+  };
+  document.querySelectorAll('[data-done]').forEach(node=>node.onchange=async()=>{
+    node.disabled=true;
+    try{await api('/api/zuzu/items/complete',{method:'POST',body:JSON.stringify({id:node.dataset.done,done:node.checked})});await load()}
+    catch(error){node.checked=!node.checked;showError(error)}finally{node.disabled=false}
+  });
+  document.querySelector('#chat-form').onsubmit=async event=>{
+    event.preventDefault();const input=event.target.message,text=input.value.trim();if(!text||chat.busy)return;input.value='';await chat.send(text);
+  };
+  renderChat();
+}
+async function load(){try{data=await api('/api/zuzu/overview');render()}catch(error){if(error.status===401)login();else showError(error)}}
+load();
 </script></body></html>

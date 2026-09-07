@@ -125,7 +125,7 @@
     .vc-specs b{color:var(--ink);font-weight:600}
     /* ── Villa detail ── */
     .vd-head{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(460px,1.2fr);background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:0;margin-bottom:16px;overflow:hidden}
-    .vd-banner{min-height:390px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center;position:relative}
+    .vd-banner{min-height:160px;background:linear-gradient(135deg,#e9dfcd,#d6c3a3 55%,#c2a87e);display:flex;align-items:center;justify-content:center;position:relative}
     .vd-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(25,23,19,.18))}
     .vd-banner .vb-initial{font-size:3rem;font-weight:700;color:rgba(255,255,255,.85)}
     .vd-content{padding:28px 30px;display:flex;flex-direction:column;justify-content:center}
@@ -153,7 +153,7 @@
     .back{display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;color:var(--muted);background:none;border:none;font:inherit;font-size:.83rem;cursor:pointer}
     .back:hover{color:var(--ink)}
     .section-gap{margin-bottom:14px}
-    @media(max-width:1180px){.vd-head{grid-template-columns:1fr}.vd-banner{min-height:300px}.ops-sections{grid-template-columns:1fr}}
+    @media(max-width:1180px){.vd-head{grid-template-columns:1fr}.vd-banner{min-height:140px}.ops-sections{grid-template-columns:1fr}}
     @media(max-width:680px){.vd-content{padding:20px}.vd-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-grid{grid-template-columns:1fr}.villa-gallery{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 12px 12px}}
     /* ── Donut ── */
     .donut-wrap{display:flex;align-items:center;gap:20px;padding:18px}
@@ -277,6 +277,7 @@
       .content{padding:16px 14px}
       .hello{display:none}
     }
+    .marketing-details summary{padding:16px 18px;cursor:pointer;font-weight:700}.marketing-details[open] summary{border-bottom:1px solid var(--border)}.row-actions{flex-wrap:wrap}.ops-item strong{overflow-wrap:anywhere}@media(max-width:600px){.ops-grid{grid-template-columns:1fr}.card-head{flex-wrap:wrap}.vd-banner{min-height:100px}.vd-content{padding:18px}}
   </style>
 </head>
 <body>
@@ -371,22 +372,22 @@
         <section class="view" id="view-villa-detail">
           <button class="back" id="villa-back">← All villas</button>
           <div class="vd-head" id="vd-head"></div>
-          <div class="card operations-card section-gap" id="vd-operations"></div>
-          <div class="card section-gap" id="vd-ops-memory" hidden></div>
           <div class="stats" id="vd-stats"></div>
-          <div class="grid-2 section-gap">
-            <div class="card"><div class="card-head"><h3>Availability — next 6 months</h3></div><div class="cal-wrap" id="vd-calendar"></div><div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span><span><span class="dot" style="background:#fff;outline:2px solid var(--gold)"></span>Today</span></div></div>
-            <div class="card"><div class="card-head"><h3>Owner statement</h3><div class="stmt-controls"><input type="month" id="vd-month"><button class="btn secondary sm" id="vd-copy-stmt">Copy for WhatsApp</button><button class="btn sm" id="vd-print-stmt">Print / PDF</button></div></div><div class="stmt" id="vd-statement"></div></div>
-          </div>
-          <div class="card section-gap" id="vd-gallery"></div>
           <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
           <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
           <div class="grid-2 section-gap">
             <div class="card"><div class="card-head"><h3>Deposits</h3></div><div class="table-wrap"><table><thead><tr><th>Amount</th><th>Refund due</th><th>Refundable</th><th>Status</th><th></th></tr></thead><tbody id="vd-deposits"></tbody></table></div></div>
             <div class="card"><div class="card-head"><h3>Documents</h3><button class="btn sm secondary" id="vd-add-doc">+ Add</button></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>File</th><th></th></tr></thead><tbody id="vd-documents"></tbody></table></div></div>
           </div>
+          <div class="card operations-card section-gap" id="vd-operations"></div>
+          <div class="card section-gap" id="vd-ops-memory" hidden></div>
           <div class="card section-gap"><div class="card-head"><h3>Tasks & maintenance</h3><button class="btn sm" id="vd-add-task">+ Add task</button></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Category</th><th>Assignee</th><th>Due</th><th>Cost</th><th>Status</th><th></th></tr></thead><tbody id="vd-tasks"></tbody></table></div></div>
           <div class="card"><div class="card-head"><h3>Finance — income & expenses</h3><div style="display:flex;gap:8px;align-items:center"><span id="vd-net" style="font-weight:700;font-size:.85rem"></span><button class="btn secondary sm" id="vd-csv">CSV</button><button class="btn sm" id="vd-add-txn">+ Add</button></div></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody id="vd-finance"></tbody></table></div></div>
+          <div class="grid-2 section-gap">
+            <div class="card"><div class="card-head"><h3>Availability — next 6 months</h3></div><div class="cal-wrap" id="vd-calendar"></div><div class="cal-legend"><span><span class="dot" style="background:var(--espresso)"></span>Booked</span><span><span class="dot" style="background:#f4f1ec"></span>Free</span><span><span class="dot" style="background:#fff;outline:2px solid var(--gold)"></span>Today</span></div></div>
+            <div class="card"><div class="card-head"><h3>Owner statement</h3><div class="stmt-controls"><input type="month" id="vd-month"><button class="btn secondary sm" id="vd-copy-stmt">Copy for WhatsApp</button><button class="btn sm" id="vd-print-stmt">Print / PDF</button></div></div><div class="stmt" id="vd-statement"></div></div>
+          </div>
+          <details class="card section-gap marketing-details"><summary>Marketing photos — expand to view or reorder</summary><div id="vd-gallery"></div></details>
         </section>
 
         <!-- STAYS -->
@@ -443,7 +444,7 @@
               <div class="workspace-head"><h3>✦ Talk to Zuzu</h3><p>Personal planning, TVM operations, finance, leads, Google Workspace and document review.</p></div>
               <div class="zuzu-messages" id="zuzu-workspace-messages"><div class="zuzu-msg assistant">Hi Afni — this is your private workspace. You can ask about your day, a guest deposit, an invoice, a lead follow-up, or an uploaded contract.</div></div>
               <div class="zuzu-suggestions"><button type="button" data-zuzu-prompt="briefing">Briefing</button><button type="button" data-zuzu-prompt="marketing pipeline">Marketing pipeline</button><button type="button" data-zuzu-prompt="finance">Finance</button><button type="button" data-zuzu-prompt="show uploaded documents">Uploads</button></div>
-              <form class="zuzu-form" id="zuzu-workspace-form"><textarea id="zuzu-workspace-input" maxlength="2000" placeholder="Ask Zuzu anything…"></textarea><button class="btn" type="submit">Send</button></form>
+              <form class="zuzu-form" id="zuzu-workspace-form"><textarea aria-label="Message Zuzu workspace" id="zuzu-workspace-input" maxlength="2000" placeholder="Ask Zuzu anything…"></textarea><button class="btn" type="submit">Send</button></form>
             </div>
             <div>
               <div class="card" style="padding:18px"><div class="card-head"><h3>Drop a document</h3><span class="sub">Private review inbox</span></div>
@@ -675,6 +676,7 @@
       <div class="f"><label>Held in</label><select name="heldIn"><option>Owner account</option><option>TVM account</option></select></div>
       <div class="f"><label>Refund due date</label><input name="refundDueDate" type="date"></div>
       <div class="f"><label>Deductions</label><input name="deductions" type="number" min="0"></div>
+      <div class="f"><label>Already refunded amount</label><input name="refundedAmount" type="number" min="0"><small>For partial refunds, record the amount returned and refund date.</small></div>
       <div class="f full"><label>Deduction notes</label><input name="deductionNotes" placeholder="Itemised reason and evidence"></div>
       <div class="f"><label>Refund date</label><input name="refundDate" type="date"></div>
       <div class="f"><label>Refund proof (Drive)</label><input name="refundProofUrl" type="url"></div>
@@ -817,7 +819,7 @@
     const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
     const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     const fdate=v=>v?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(`${String(v).slice(0,10)}T00:00:00`)):'—';
-    const money=(a,c='IDR')=>a?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
+    const money=(a,c='IDR')=>a!==null&&a!==undefined&&a!==''?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
     const safeUrl=v=>{try{const u=new URL(v);return['https:','http:'].includes(u.protocol)?u.href:''}catch(_){return''}};
     const flink=(u,l='Open')=>safeUrl(u)?`<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener noreferrer">${esc(l)} ↗</a>`:'—';
     const BADGE={Paid:'green',Refunded:'green',Confirmed:'green','Checked-in':'green',Available:'green',Sent:'green',Won:'green',
@@ -848,11 +850,12 @@
     function addZuzuMessage(role,text){const created=[];['#zuzu-messages','#zuzu-workspace-messages'].forEach(selector=>{const box=$(selector);if(!box)return;const el=document.createElement('div');el.className=`zuzu-msg ${role}`;el.textContent=text;box.appendChild(el);box.scrollTop=box.scrollHeight;created.push(el)});return created}
     function openZuzu(){const panel=$('#zuzu-panel');panel.classList.add('open');panel.setAttribute('aria-hidden','false');setTimeout(()=>$('#zuzu-input').focus(),80)}
     function closeZuzu(){const panel=$('#zuzu-panel');panel.classList.remove('open');panel.setAttribute('aria-hidden','true')}
-    async function askZuzu(message,fromWorkspace=false){const text=String(message||'').trim();if(!text)return;if(!fromWorkspace)openZuzu();addZuzuMessage('user',text);const pending=addZuzuMessage('assistant thinking','Zuzu is thinking…');const submits=$$('.zuzu-form button');submits.forEach(button=>button.disabled=true);
-      try{const result=await api('/api/admin/assistant/chat',{method:'POST',body:JSON.stringify({message:text})});pending.forEach(node=>node.remove());addZuzuMessage('assistant',result.reply)}catch(error){pending.forEach(node=>node.remove());addZuzuMessage('assistant',`I couldn’t answer right now: ${error.message}`)}finally{submits.forEach(button=>button.disabled=false);(fromWorkspace?$('#zuzu-workspace-input'):$('#zuzu-input')).focus()}}
+    let zuzuBusy=false;
+    async function askZuzu(message,fromWorkspace=false){const text=String(message||'').trim();if(!text||zuzuBusy)return;zuzuBusy=true;if(!fromWorkspace)openZuzu();addZuzuMessage('user',text);const pending=addZuzuMessage('assistant thinking','Zuzu is thinking…');const submits=$$('.zuzu-form button');submits.forEach(button=>button.disabled=true);
+      try{const result=await api('/api/admin/assistant/chat',{method:'POST',body:JSON.stringify({message:text})});pending.forEach(node=>node.remove());addZuzuMessage('assistant',result.reply)}catch(error){pending.forEach(node=>node.remove());addZuzuMessage('assistant',`I couldn’t answer right now: ${error.message}`)}finally{zuzuBusy=false;submits.forEach(button=>button.disabled=false);(fromWorkspace?$('#zuzu-workspace-input'):$('#zuzu-input')).focus()}}
     $('#zuzu-open').addEventListener('click',openZuzu);$('#zuzu-close').addEventListener('click',closeZuzu);
-    $('#zuzu-form').addEventListener('submit',event=>{event.preventDefault();const input=$('#zuzu-input');const text=input.value;input.value='';askZuzu(text)});
-    $('#zuzu-workspace-form').addEventListener('submit',event=>{event.preventDefault();const input=$('#zuzu-workspace-input');const text=input.value;input.value='';askZuzu(text,true)});
+    $('#zuzu-form').addEventListener('submit',event=>{event.preventDefault();if(zuzuBusy)return;const input=$('#zuzu-input');const text=input.value;input.value='';askZuzu(text)});
+    $('#zuzu-workspace-form').addEventListener('submit',event=>{event.preventDefault();if(zuzuBusy)return;const input=$('#zuzu-workspace-input');const text=input.value;input.value='';askZuzu(text,true)});
     $('#zuzu-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#zuzu-form').requestSubmit()}});
     $('#zuzu-workspace-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#zuzu-workspace-form').requestSubmit()}});
     $$('[data-zuzu-prompt]').forEach(button=>button.addEventListener('click',()=>askZuzu(button.dataset.zuzuPrompt,button.closest('#view-zuzu')!==null)));
@@ -965,7 +968,8 @@
         .tot.final{border-top:2px solid #1b1813;font-weight:700;font-size:1.05rem;margin-top:6px}
         .foot{margin-top:40px;color:#8b8478;font-size:.75rem}
         @media print{body{margin:10mm auto}}
-      </style></head><body>
+        .marketing-details summary{padding:16px 18px;cursor:pointer;font-weight:700}.marketing-details[open] summary{border-bottom:1px solid var(--border)}.row-actions{flex-wrap:wrap}.ops-item strong{overflow-wrap:anywhere}@media(max-width:600px){.ops-grid{grid-template-columns:1fr}.card-head{flex-wrap:wrap}.vd-banner{min-height:100px}.vd-content{padding:18px}}
+  </style></head><body>
         <h1>Owner Statement — ${esc(v.name)}</h1><h2>${vdMonth} · Prepared by The Villa Managers</h2>
         <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows||'<tr><td colspan="4" style="color:#8b8478">No transactions this month.</td></tr>'}</tbody></table>
         <div class="tot"><span>Income</span><span>+${money(s.income,v.currency)}</span></div>
@@ -1039,7 +1043,7 @@
         if(t.dataset.zuzuApprove){const item=state.zuzuIntake.find(x=>x.id===t.dataset.zuzuApprove);if(!item)return;const title=prompt('Document title',item.draft?.suggestedTitle||item.fileName);if(title===null)return;const type=prompt('Document type',item.draft?.suggestedType||'Document');if(type===null)return;const expiryDate=prompt('Expiry date (YYYY-MM-DD, optional)','');if(expiryDate===null)return;await api(`/api/admin/zuzu/intake/${encodeURIComponent(item.id)}/approve`,{method:'POST',body:JSON.stringify({title,type,expiryDate})});await load();await loadZuzuWorkspace();toast('Document approved and added to TVM records.');return}
         if(t.dataset.edit){const[c,id]=t.dataset.edit.split(':');const r=state.villaData[c]?.find(x=>x.id===id);if(r)openModal(c,r);return}
         if(t.dataset.del){const[c,id]=t.dataset.del.split(':');
-          if(c==='tenancies'){if(confirm('Delete this booking? Its payments and deposit are deleted too.')){await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();toast('Booking deleted.')}return}
+          if(c==='tenancies'){if(confirm('Delete this booking? Bookings with linked financial records or documents are protected. Cancel the booking instead to retain its history.')){await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();toast('Booking deleted.')}return}
           const backup=state.villaData[c]?.find(x=>x.id===id);
           await api('/api/admin/records/delete',{method:'POST',body:JSON.stringify({collection:c,id})});await load();
           if(backup){const{id:_,createdAt:__,updatedAt:___,...rest}=backup;
@@ -1048,7 +1052,7 @@
         if(t.dataset.pay){const r=state.villaData.installments.find(x=>x.id===t.dataset.pay);await save('installments',{...r,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});toast('Marked paid.');return}
         if(t.dataset.invoicePaid){const r=await api('/api/admin/invoices/paid',{method:'POST',body:JSON.stringify({id:t.dataset.invoicePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdIncome?'Invoice paid — income recorded.':'Invoice was already paid; no duplicate income created.');return}
         if(t.dataset.payablePaid){const r=await api('/api/admin/payables/paid',{method:'POST',body:JSON.stringify({id:t.dataset.payablePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdExpense?'Payable paid — expense recorded.':'Payable was already paid; no duplicate expense created.');return}
-        if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
+        if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);if(!r||!(r.refundableAmount>0))throw Error('Only collected, refundable money can be refunded.');if(!confirm('Record the remaining '+money(r.refundableAmount,r.currency)+' as refunded? Only confirm after returning the money.'))return;await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
         if(t.hasAttribute('data-archive-all-tasks')){if(state.tasks.length&&confirm(`Archive all ${state.tasks.length} open tasks?`)){await api('/api/admin/tasks/archive',{method:'POST',body:JSON.stringify({ids:state.tasks.map(x=>x.id)})});await load();toast('All tasks archived.')}return}
         if(t.dataset.completeTask){await api('/api/admin/tasks/complete',{method:'POST',body:JSON.stringify({id:t.dataset.completeTask})});await load();toast('Task completed.');return}
         if(t.dataset.doneVtask){const r=state.villaData.villaTasks.find(x=>x.id===t.dataset.doneVtask);await save('villaTasks',{...r,status:'Done'});toast('Task done.');return}
@@ -1057,7 +1061,9 @@
     });
 
     // ── Villa detail page ──
-    function openVilla(id){currentVillaId=id;renderVilla();show('villa-detail')}
+    function transactionActions(x){if(x.sourceId){const source=String(x.sourceId),collection=source.startsWith('payable:')?'payables':source.startsWith('invoice:')?'invoices':'installments',id=source.replace(/^(payable|invoice):/,'');return `<button class="btn secondary sm" data-edit="${collection}:${esc(id)}">Edit source</button>`}return `<button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button>`}
+    function rentDisplay(t){const payments=state.villaData.installments.filter(p=>p.tenancyId===t.id&&(p.currency||'IDR')===(t.currency||'IDR'));const total=payments.reduce((sum,p)=>sum+Number(p.amount||0),0);return /upfront|yearly|annual/i.test(t.paymentFrequency||'')?`${payments.length?money(total,t.currency):'Schedule not set'}<span class="sub">Upfront schedule total · ${money(t.rentAmount,t.currency)} monthly equivalent</span>`:`${money(t.rentAmount,t.currency)}<span class="sub">Monthly rate · ${esc(t.paymentFrequency||'billing not set')}</span>`}
+    function openVilla(id){currentVillaId=id;show('villa-detail');renderVilla()}
     async function saveVillaGallery(v,gallery){
       const result=await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:'villas',record:{id:v.id,gallery}})});
       const current=state.villaData.villas.find(item=>item.id===v.id);if(current)current.gallery=result.record.gallery||[];
@@ -1081,7 +1087,8 @@
       const pays=d.installments.filter(p=>p.villaId===v.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
       const deps=d.deposits.filter(x=>x.villaId===v.id);
       const docs=d.documents.filter(x=>x.villaId===v.id);
-      const activeStay=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+      const activeStay=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus)&&t.checkIn<=new Date().toISOString().slice(0,10)&&t.checkOut>new Date().toISOString().slice(0,10));
+      const upcomingStay=stays.filter(t=>!['Cancelled','Enquiry','Checked-out'].includes(t.bookingStatus)&&t.checkIn>new Date().toISOString().slice(0,10)).sort((a,b)=>a.checkIn.localeCompare(b.checkIn))[0];
       const nextPay=pays.find(p=>p.status!=='Paid');
       const rate=v.yearlyRate?`${money(v.yearlyRate,v.currency)} / year`:v.monthlyRate?`${money(v.monthlyRate,v.currency)} / month`:'Not set';
       const leasePayments=activeStay?pays.filter(p=>p.tenancyId===activeStay.id):[];
@@ -1093,7 +1100,7 @@
       $('#vd-head').innerHTML=`<div class="vd-banner">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="${esc(v.name)}">`:`<span class="vb-initial">${esc(initials(v.name))}</span>`}</div><div class="vd-content"><div class="vd-row">
         <div class="vd-id"><div><span class="vd-kicker">${esc(v.code||'Villa')}</span><h2>${esc(v.name)}</h2><p>📍 ${esc(v.location||'Location not set')}</p></div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${badge(v.status)}<button class="btn secondary sm" data-edit="villas:${esc(v.id)}">Edit all details</button><button class="btn danger sm" data-del="villas:${esc(v.id)}">Delete</button></div></div>
-        <div class="vd-overview">
+        <details class="marketing-details"><summary>Property details & public listing</summary><div class="vd-overview">
           <div class="overview-item"><span>🛏 Bedrooms</span><strong>${v.bedrooms||0}</strong></div>
           <div class="overview-item"><span>🚿 Bathrooms</span><strong>${v.bathrooms||0}</strong></div>
           <div class="overview-item"><span>🏊 Pool</span><strong>${v.pool?'Private pool':'No pool recorded'}</strong></div>
@@ -1105,7 +1112,7 @@
         ${v.facilities?`<div class="vd-facilities"><span>✨ Public facilities</span><div class="facility-list">${v.facilities.split(/,\s+/).map(item=>`<i>${esc(item)}</i>`).join('')}</div></div>`:''}
         ${links?`<div class="vd-links">${links}</div>`:''}
         ${rateMismatch?`<p class="vd-note" style="border-color:#d8a64e;color:#744f12">⚠ Public listing is ${rate}; the current lease with ${esc(activeStay.guestName||'guest')} totals ${money(leaseTotal,activeStay.currency||v.currency)}. Review before changing the listing or agreement.</p>`:''}
-        ${v.marketingNotes?`<p class="vd-note">${esc(v.marketingNotes)}</p>`:''}</div>`;
+        ${v.marketingNotes?`<p class="vd-note">${esc(v.marketingNotes)}</p>`:''}</details></div>`;
       const opItem=(icon,label,value)=>`<div class="ops-item"><span>${icon} ${esc(label)}</span><strong>${value?esc(value):'<span class="missing">Not set</span>'}</strong></div>`;
       const opGroup=(title,items)=>`<section class="ops-group"><h4>${title}</h4><div class="ops-grid">${items.join('')}</div></section>`;
       const operations=$('#vd-operations');operations.hidden=state.session?.role!=='admin';
@@ -1117,17 +1124,17 @@
         ${v.operationsNotes?`<div class="ops-notes"><span>Private operations notes</span><p>${esc(v.operationsNotes)}</p></div>`:''}
       </div>`;
       const gallery=Array.isArray(v.gallery)?v.gallery:[];
-      $('#vd-gallery').innerHTML=`<div class="card-head"><div><h3>Public photo gallery</h3><p class="sub">Drag a photo onto another photo to change the website order.</p></div><span class="sub">${gallery.length} photo${gallery.length===1?'':'s'}</span></div>${gallery.length?`<div class="villa-gallery" id="vd-gallery-list">${gallery.map((photo,index)=>`<figure draggable="true" data-gallery-index="${index}"><img src="${esc(photo)}" alt="${esc(v.name)} photo ${index+1}"><figcaption>↕ Drag to reorder · ${index+1}</figcaption></figure>`).join('')}</div>`:'<p class="empty" style="padding:0 18px 18px">No gallery photos yet.</p>'}`;
+      $('#vd-gallery').innerHTML=`<div class="card-head"><div><h3>Public photo gallery</h3><p class="sub">Drag a photo onto another photo to change the website order.</p></div><span class="sub">${gallery.length} photo${gallery.length===1?'':'s'}</span></div>${gallery.length?`<div class="villa-gallery" id="vd-gallery-list">${gallery.map((photo,index)=>`<figure draggable="true" data-gallery-index="${index}"><img loading="lazy" src="${esc(photo)}" alt="${esc(v.name)} photo ${index+1}"><figcaption>↕ Drag to reorder · ${index+1}</figcaption></figure>`).join('')}</div>`:'<p class="empty" style="padding:0 18px 18px">No gallery photos yet.</p>'}`;
       bindVillaGallery(v);
       loadVillaOperationsMemory(v);
       $('#vd-stats').innerHTML=`
-        <div class="stat"><div class="label">Current guest</div><div class="value" style="font-size:1.1rem">${esc(activeStay?.guestName||'None')}</div><div class="sub">${activeStay?`until ${fdate(activeStay.checkOut)}`:'villa is free'}</div></div>
+        <div class="stat"><div class="label">Current guest</div><div class="value" style="font-size:1.1rem">${esc(activeStay?.guestName||'None')}</div><div class="sub">${activeStay?`until ${fdate(activeStay.checkOut)}`:upcomingStay?`Next: ${esc(upcomingStay.guestName)} · ${fdate(upcomingStay.checkIn)}`:'No current or upcoming stay recorded'}</div></div>
         <div class="stat"><div class="label">Next payment</div><div class="value" style="font-size:1.1rem">${nextPay?money(nextPay.amount,nextPay.currency):'—'}</div><div class="sub">${nextPay?`due ${fdate(nextPay.dueDate)}`:'nothing scheduled'}</div></div>
         <div class="stat"><div class="label">Deposits held</div><div class="value" style="font-size:1.1rem">${deps.filter(x=>['Held','Partially refunded'].includes(x.status)).length}</div><div class="sub">${deps.length} total</div></div>
         <div class="stat"><div class="label">Documents</div><div class="value" style="font-size:1.1rem">${docs.length}</div><div class="sub">private Drive files</div></div>`;
-      $('#vd-stays').innerHTML=stays.map(t=>`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td><td>${money(t.rentAmount,t.currency)}<span class="sub">${esc(t.paymentFrequency||'')}</span></td><td>${badge(t.bookingStatus)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No stays for this villa yet.</td></tr>';
+      $('#vd-stays').innerHTML=stays.map(t=>`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td><td>${rentDisplay(t)}</td><td>${badge(t.bookingStatus)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No stays for this villa yet.</td></tr>';
       $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(paymentPurpose(p))}</strong><span class="sub">${esc(p.code||p.period||'—')} · ${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
-      $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(depositPurpose(x))} · ${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No security deposits.</td></tr>';
+      $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(depositPurpose(x))} · ${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.refundableAmount>0?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No security deposits.</td></tr>';
       $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'Open')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
       // availability calendar (next 6 months)
       const bookings=stays.filter(t=>!['Cancelled','Enquiry'].includes(t.bookingStatus)&&t.checkIn&&t.checkOut);
@@ -1159,28 +1166,28 @@
       const vin=vtxns.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0),0);
       const vout=vtxns.filter(x=>x.type==='Expense').reduce((s,x)=>s+Number(x.amount||0),0);
       $('#vd-net').innerHTML=`<span style="color:var(--green)">+${money(vin)}</span> · <span style="color:var(--red)">−${money(vout)}</span> · Net <span style="color:${vin-vout>=0?'var(--green)':'var(--red)'}">${money(vin-vout)}</span>`;
-      $('#vd-finance').innerHTML=vtxns.slice(0,25).map(x=>`<tr><td>${fdate(x.date)}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No transactions yet. Rent income books automatically when payments are marked paid.</td></tr>';
+      $('#vd-finance').innerHTML=vtxns.slice(0,25).map(x=>`<tr><td>${fdate(x.date)}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td><div class="row-actions">${transactionActions(x)}</div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No transactions yet. Rent income books automatically when payments are marked paid.</td></tr>';
     }
 
     // ── Render everything ──
     function render(){const d=state.villaData,V=vMap(),S=sMap(),today=new Date().toISOString().slice(0,10);fillSelects();
-      const active=d.tenancies.filter(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+      const active=d.tenancies.filter(t=>['Confirmed','Checked-in'].includes(t.bookingStatus)&&t.checkIn<=new Date().toISOString().slice(0,10)&&t.checkOut>new Date().toISOString().slice(0,10));
       const act=d.installments.filter(p=>['Reminded','Due','Overdue','Late'].includes(p.status));
-      const held=d.deposits.filter(x=>['Held','Partially refunded','Awaiting collection'].includes(x.status));
+      const held=d.deposits.filter(x=>['Held','Partially refunded'].includes(x.status));
       const fresh=state.enquiries.filter(x=>leadStage(x.status)==='New').length;
       // sidebar counts
-      $('#n-villas').textContent=d.villas.length;$('#n-stays').textContent=d.tenancies.length;$('#n-payments').textContent=d.installments.filter(p=>p.status!=='Paid').length;$('#n-deposits').textContent=held.length;$('#n-documents').textContent=d.documents.length;$('#n-tasks').textContent=state.tasks.length;$('#n-enquiries').textContent=fresh;
+      $('#n-villas').textContent=d.villas.length;$('#n-stays').textContent=d.tenancies.length;$('#n-payments').textContent=d.installments.filter(p=>p.status!=='Paid').length;$('#n-deposits').textContent=d.deposits.length;$('#n-documents').textContent=d.documents.length;$('#n-tasks').textContent=state.tasks.length;$('#n-enquiries').textContent=fresh;
       // stats
       $('#m-villas').textContent=d.villas.length;$('#m-villas-sub').textContent=`${d.villas.filter(v=>v.status==='Available').length} available`;
       $('#m-stays').textContent=active.length;$('#m-checkouts').textContent=`${active.filter(t=>t.checkOut>=today).length} upcoming check-outs`;
       $('#m-payments').textContent=act.length;const od=act.filter(p=>['Overdue','Late'].includes(p.status)).length;const mo=$('#m-overdue');mo.textContent=`${od} overdue`;mo.className=od?'sub warn':'sub';
-      $('#m-deposits').textContent=held.length;const rd=held.filter(x=>x.refundDueDate&&x.refundDueDate<=today).length;const mr=$('#m-refunds');mr.textContent=`${rd} refunds due`;mr.className=rd?'sub warn':'sub';
+      $('#m-deposits').textContent=held.length;const rd=held.filter(x=>x.refundableAmount>0&&x.refundDueDate&&x.refundDueDate<=today).length;const mr=$('#m-refunds');mr.textContent=`${rd} refunds due · ${d.deposits.filter(x=>x.status==='Awaiting collection').length} awaiting collection`;mr.className=rd?'sub warn':'sub';
       $('#m-tasks').textContent=state.tasks.length;$('#m-high').textContent=`${state.tasks.filter(t=>t.priority==='High').length} high priority`;
       $('#m-enquiries').textContent=fresh;
       // overview lists
       $('#ov-payments').innerHTML=d.installments.filter(p=>p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,6).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
         return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(paymentPurpose(p))}</strong><small>${esc(t.guestName||p.period||'—')} · Follow-up ${fdate(p.followUpDate)} · Due ${fdate(p.dueDate)} · ${money(p.amount,p.currency)}</small></div>${badge(p.status)}</div>`}).join('')||'<div class="empty">No upcoming payments.</div>';
-      $('#ov-refunds').innerHTML=held.sort((a,b)=>(a.refundDueDate||'').localeCompare(b.refundDueDate||'')).slice(0,6).map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
+      $('#ov-refunds').innerHTML=held.filter(x=>x.refundableAmount>0).sort((a,b)=>(a.refundDueDate||'').localeCompare(b.refundDueDate||'')).slice(0,6).map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
         return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(depositPurpose(x))}</strong><small>${esc(t.guestName||'Guest')} · Refund ${money(x.refundableAmount,x.currency)} by ${fdate(x.refundDueDate)}</small></div>${badge(x.status)}</div>`}).join('')||'<div class="empty">No security deposits awaiting refund.</div>';
       $('#ov-enquiries').innerHTML=state.enquiries.slice(0,6).map(x=>`<div class="list-row"><div><strong>${esc(x.name||'—')}</strong><small>${esc((x.message||'').slice(0,80))}${(x.message||'').length>80?'…':''}</small></div><small style="white-space:nowrap;color:var(--muted)">${fdate(x.createdAt)}</small></div>`).join('')||'<div class="empty">No enquiries yet.</div>';
       // donut
@@ -1194,7 +1201,7 @@
       $('#nav-villa-list').innerHTML=d.villas.map(v=>`<button data-villa-nav="${esc(v.id)}" class="${currentVillaId===v.id&&$('#view-villa-detail').classList.contains('active')?'active':''}">${esc(v.name)}</button>`).join('');
       // villa cards
       const vf=state._villaFilter||'';
-      $('#villa-cards').innerHTML=d.villas.filter(v=>!vf||v.status===vf).map(v=>{const stays=d.tenancies.filter(t=>t.villaId===v.id);const cur=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus));
+      $('#villa-cards').innerHTML=d.villas.filter(v=>!vf||v.status===vf).map(v=>{const stays=d.tenancies.filter(t=>t.villaId===v.id);const cur=stays.find(t=>['Confirmed','Checked-in'].includes(t.bookingStatus)&&t.checkIn<=new Date().toISOString().slice(0,10)&&t.checkOut>new Date().toISOString().slice(0,10));
         const next=d.installments.filter(p=>p.villaId===v.id&&p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];
         return`<div class="villa-card" data-villa-open="${esc(v.id)}">
           <div class="vc-photo">${v.photoUrl?`<img src="${esc(v.photoUrl)}" alt="" loading="lazy">`:`<span class="vc-initial">${esc(initials(v.name))}</span>`}<span class="vc-status">${badge(v.status)}</span><span class="vc-arrow">↗</span></div>
@@ -1208,7 +1215,7 @@
       $('#t-stays').innerHTML=d.tenancies.map(t=>{const v=V[t.villaId]||{};const next=d.installments.filter(p=>p.tenancyId===t.id&&p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];
         return`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td>
         <td>${esc(v.name||'—')}</td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td>
-        <td>${money(t.rentAmount,t.currency)}<span class="sub">${esc(t.paymentFrequency||'')}</span></td>
+        <td>${rentDisplay(t)}</td>
         <td>${next?`${money(next.amount,next.currency)}<span class="sub">due ${fdate(next.dueDate)}</span>`:'—'}</td>
         <td>${flink(t.contractUrl,'Contract')}</td><td>${badge(t.bookingStatus)}</td>
         <td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">No stays yet — click “+ Add stay”.</td></tr>';
@@ -1236,7 +1243,7 @@
         <td>${fdate(x.refundDueDate)}</td><td>${money(x.deductions,x.currency)}</td>
         <td><strong>${money(x.refundableAmount,x.currency)}</strong></td>
         <td>${badge(x.status)}${x.refundDate?`<span class="sub">refunded ${fdate(x.refundDate)}</span>`:''}</td>
-        <td><div class="row-actions">${x.status!=='Refunded'?`<button class="btn sm" data-refund="${esc(x.id)}">Mark refunded</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="deposits:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No deposits yet. Created automatically with each guest stay.</td></tr>';
+        <td><div class="row-actions">${x.refundableAmount>0?`<button class="btn sm" data-refund="${esc(x.id)}">Mark refunded</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="deposits:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No deposits yet. Created automatically with each guest stay.</td></tr>';
       // documents table
       $('#t-documents').innerHTML=d.documents.map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
         return`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${esc(v.name||'—')}</td><td>${esc(t.guestName||'—')}</td>
@@ -1270,7 +1277,7 @@
       const payableGroups=upcomingPayables.slice().sort((a,b)=>`${a.category||'Other'}:${a.dueDate||''}`.localeCompare(`${b.category||'Other'}:${b.dueDate||''}`)).reduce((out,x)=>{const key=x.category||'Other';(out[key]||(out[key]=[])).push(x);return out},{});
       $('#t-payables').innerHTML=Object.entries(payableGroups).map(([category,items])=>`<tr><td colspan="8" style="background:var(--cream);font-weight:700">${esc(category)} <span class="sub" style="display:inline">· ${moneyTotals(items)}</span></td></tr>`+items.map(x=>{const v=V[x.villaId]||{},status=payableStatus(x);return`<tr><td>${esc(category)}</td><td><strong>${esc(x.vendorName||'—')}</strong><span class="sub">${esc(x.code||'')} · ${esc(x.description||'')}</span></td><td>${esc(v.name||'TVM internal')}</td><td>${fdate(x.dueDate)}</td><td>${money(x.amount,x.currency)}</td><td>${badge(status)}${x.paidDate?`<span class="sub">paid ${fdate(x.paidDate)}</span>`:''}</td><td>${flink(x.proofUrl,'Open')}</td><td><div class="row-actions"><button class="btn sm" data-payable-paid="${esc(x.id)}">Mark paid</button><button class="btn secondary sm" data-edit="payables:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="payables:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')).join('')||'<tr><td colspan="8" class="empty">No upcoming payables. Add supplier bills, ad spend, subscriptions, contractors or operating costs.</td></tr>';
       $('#t-finance').innerHTML=d.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(x=>{const v=V[x.villaId]||{},purpose=transactionPurpose(x);
-        return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'TVM internal')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${purpose?`<span class="sub">${esc(purpose)} · auto from payment</span>`:x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — add an agency retainer, commission, campaign cost, or another internal item.</td></tr>';
+        return`<tr><td>${fdate(x.date)}</td><td>${esc(v.name||'TVM internal')}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${purpose?`<span class="sub">${esc(purpose)} · auto from payment</span>`:x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td>${flink(x.proofUrl,'Proof')}</td><td><div class="row-actions">${transactionActions(x)}</div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No transactions yet — add an agency retainer, commission, campaign cost, or another internal item.</td></tr>';
       // tasks & enquiries
       $('#t-tasks').innerHTML=state.tasks.map(t=>`<tr><td>${esc(t.name)}</td><td>${badge(t.priority)}</td><td>${fdate(t.dueDate)}</td><td><div class="row-actions"><button class="btn secondary sm" data-complete-task="${esc(t.id)}">Complete</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No open tasks.</td></tr>';
       const leadToday=new Date().toISOString().slice(0,10),openLeads=state.enquiries.filter(x=>!['Won','Lost'].includes(leadStage(x.status))),dueLeads=openLeads.filter(x=>x.nextFollowUp&&x.nextFollowUp<=leadToday),wonLeads=state.enquiries.filter(x=>leadStage(x.status)==='Won');const leadSources=state.enquiries.reduce((out,x)=>{const key=x.utmSource||x.source||'Direct';out[key]=(out[key]||0)+1;return out},{});const topSource=Object.entries(leadSources).sort((a,b)=>b[1]-a[1])[0];$('#lead-open').textContent=openLeads.length;$('#lead-due').textContent=dueLeads.length;$('#lead-won').textContent=wonLeads.length;$('#lead-source').textContent=topSource?`${topSource[0]} · ${topSource[1]}`:'—';
