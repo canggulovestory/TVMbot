@@ -1,0 +1,26 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),{randomUUID}=require('node:crypto');
+const {createRuns}=require('../web-chat-runs');
+test('web run routes require login and bind reads, approvals and cancellation to the original session and app',async()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../index.js'),'utf8');
+  const context={JSON,webChatRuns:createRuns(),readBody:async req=>req.body||{},sendJson:(res,status,body)=>({status,body}),clean:v=>String(v||'').trim(),zuzuRateLimited:()=>false,audit:{add(){}},brain:{USERS:{preview:{}},processInternalMessage:async({onApproval,signal})=>onApproval({command:'Synthetic review',choices:['once','deny']},{signal})}};
+  context.brain.processPersonalMessage=context.brain.processInternalMessage;
+  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('async function handleChatRun('),source.indexOf('async function handlePersonalApp(')),context);
+  const id=randomUUID(),base='/api/admin/assistant/runs',session={user:'preview',nonce:'first',exp:999},other={...session,nonce:'second'};
+  const call=(method,tail='',body={},who=session,scope='admin')=>context.handleChatRun({method,body},{},{pathname:base+tail},who,scope,base);
+  assert.equal((await call('POST','',{id,message:'test'},null)).status,401);
+  assert.equal((await call('POST','',{id,message:'test'},{...session,user:'unknown'})).status,403);
+  assert.equal((await call('POST','',{id,message:'test'})).status,202);
+  await new Promise(setImmediate);
+  const pending=await call('GET','/'+id);
+  assert.equal(pending.body.status,'approval');
+  assert.equal((await call('GET','/'+id,{},other)).status,404);
+  assert.equal((await call('GET','/'+id,{},session,'life')).status,404);
+  const decision={token:pending.body.approval.token,choice:'once'};
+  assert.equal((await call('POST','/'+id+'/decision',decision,other)).status,404);
+  assert.equal((await call('POST','/'+id+'/cancel',{},other)).status,404);
+  assert.equal((await call('POST','/'+id+'/decision',decision)).status,200);
+  assert.equal((await call('POST','/'+id+'/decision',decision)).status,409);
+  await new Promise(setImmediate);
+  assert.equal((await call('GET','/'+id)).body.reply,'once');
+});

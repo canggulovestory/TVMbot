@@ -51,3 +51,43 @@ test('an interrupted Telegram run is stopped and never retried through a fallbac
     assert.ok(urls.every(url => url.startsWith('http://127.0.0.1')));
   } finally { global.fetch = original; }
 });
+
+test('web cancellation stops the Hermes run even while approval is pending',async()=>{
+  const original=global.fetch,controller=new AbortController(),urls=[];
+  global.fetch=async url=>{
+    urls.push(url);
+    if(url.endsWith('/v1/runs'))return Response.json({run_id:'run_cancel'});
+    if(url.endsWith('/events'))return new Response([
+      {event:'approval.request',run_id:'run_cancel',command:'synthetic',choices:['once','deny']},
+      {event:'run.completed',run_id:'run_cancel',output:'Should not be delivered'}
+    ].map(e=>'data: '+JSON.stringify(e)+'\n\n').join(''));
+    return Response.json({});
+  };
+  try{
+    hermes.init();
+    await assert.rejects(hermes.respond({input:'test',userKey:'afni',signal:controller.signal,onApproval:async()=>{controller.abort();return 'deny'}}));
+    assert.ok(urls.some(u=>u.endsWith('/stop')));
+    assert.equal(urls.some(u=>u.endsWith('/approval')),false);
+  }finally{global.fetch=original}
+});
+
+test('cancelling during the approval POST aborts it and ignores buffered completion',async()=>{
+  const original=global.fetch,controller=new AbortController(),urls=[];
+  let approvalSignal;
+  global.fetch=async(url,options={})=>{
+    urls.push(url);
+    if(url.endsWith('/v1/runs'))return Response.json({run_id:'run_post'});
+    if(url.endsWith('/events'))return new Response([
+      {event:'approval.request',run_id:'run_post',command:'synthetic',choices:['once','deny']},
+      {event:'run.completed',run_id:'run_post',output:'Must not be delivered'}
+    ].map(e=>'data: '+JSON.stringify(e)+'\n\n').join(''));
+    if(url.endsWith('/approval')){approvalSignal=options.signal;controller.abort();return Response.json({});}
+    return Response.json({});
+  };
+  try{
+    hermes.init();
+    await assert.rejects(hermes.respond({input:'test',userKey:'afni',signal:controller.signal,onApproval:async()=>'once'}));
+    assert.equal(approvalSignal.aborted,true);
+    assert.ok(urls.some(u=>u.endsWith('/stop')));
+  }finally{global.fetch=original}
+});

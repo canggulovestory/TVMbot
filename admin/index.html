@@ -278,6 +278,12 @@
       .hello{display:none}
     }
     .marketing-details summary{padding:16px 18px;cursor:pointer;font-weight:700}.marketing-details[open] summary{border-bottom:1px solid var(--border)}.row-actions{flex-wrap:wrap}.ops-item strong{overflow-wrap:anywhere}@media(max-width:600px){.ops-grid{grid-template-columns:1fr}.card-head{flex-wrap:wrap}.vd-banner{min-height:100px}.vd-content{padding:18px}}
+    .zuzu-panel,.zuzu-workspace .workspace-chat{grid-template-rows:auto minmax(60px,1fr) auto auto auto}
+    .chat-controls:empty{display:none}.chat-controls{padding:10px 14px;max-height:45vh;overflow:auto;border-top:1px solid var(--line);font-size:.85rem}.chat-controls small{display:block}.chat-controls button{margin:6px 6px 0 0}
+    @media(max-width:600px){
+      .topbar{flex-wrap:wrap;padding:10px 14px;gap:8px}.tb-left{min-width:0;width:100%}.tb-left>div{min-width:0}.topbar h1{overflow:hidden;text-overflow:ellipsis}.tb-right{width:100%;justify-content:flex-end;gap:8px}.topbar .updated,.topbar .avatar{display:none}
+      .zuzu-form textarea{min-width:0;font-size:16px}.zuzu-panel{height:min(700px,calc(100dvh - 96px))}.zuzu-messages{min-height:0}.zuzu-msg{overflow-wrap:anywhere}.qa-menu{max-width:calc(100vw - 28px)}
+    }
   </style>
 </head>
 <body>
@@ -311,7 +317,7 @@
     <main>
       <div class="topbar">
         <div class="tb-left">
-          <button class="menu-toggle" id="menu-toggle">☰</button>
+          <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
           <div><h1 id="page-title">Overview</h1><div class="hello" id="hello">Welcome back, Afni 👋</div></div>
         </div>
         <div class="search"><span class="sicon">🔎</span><input id="search" placeholder="Search villas, guests, payments…"></div>
@@ -430,7 +436,7 @@
             <div class="stat"><div class="s-ico">◷</div><div class="label">Receivables</div><div class="value" id="f-receivable" style="font-size:1.25rem">—</div><div class="sub" id="f-receivable-sub"></div></div>
             <div class="stat"><div class="s-ico">↗</div><div class="label">Upcoming payables</div><div class="value" id="f-payable" style="font-size:1.25rem">—</div><div class="sub" id="f-payable-sub"></div></div>
           </div>
-          <div class="card section-gap"><div class="card-head"><h3>Last 12 months — income vs expenses</h3></div><div class="bars" id="fin-bars"></div><div style="display:flex;gap:16px;padding:0 18px 16px;font-size:.74rem;color:var(--muted)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4f9066;margin-right:6px"></span>Income</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#cf8b80;margin-right:6px"></span>Expenses</span></div></div>
+          <div class="card section-gap"><div class="card-head"><h3>Last 12 months — income vs expenses</h3><label>Currency <select id="fin-currency"><option>IDR</option><option>USD</option></select></label></div><div class="bars" id="fin-bars"></div><div style="display:flex;gap:16px;padding:0 18px 16px;font-size:.74rem;color:var(--muted)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4f9066;margin-right:6px"></span>Income</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#cf8b80;margin-right:6px"></span>Expenses</span></div></div>
           <div class="card table-wrap section-gap"><div class="card-head"><h3>Invoices &amp; receivables</h3></div><table><thead><tr><th>Invoice</th><th>Client</th><th>Category</th><th>Issued</th><th>Due</th><th>Amount</th><th>Status</th><th>Proof</th><th></th></tr></thead><tbody id="t-invoices"></tbody></table></div>
           <div class="card table-wrap section-gap"><div class="card-head"><h3>Upcoming payables by category</h3><span class="sub">Overdue and due in the next 30 days</span></div><table><thead><tr><th>Category</th><th>Vendor / payment</th><th>Villa</th><th>Due</th><th>Amount</th><th>Status</th><th>Proof</th><th></th></tr></thead><tbody id="t-payables"></tbody></table></div>
           <div class="card table-wrap"><table><thead><tr><th>Date</th><th>Villa</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Proof</th><th></th></tr></thead><tbody id="t-finance"></tbody></table></div>
@@ -443,6 +449,7 @@
             <div class="workspace-chat">
               <div class="workspace-head"><h3>✦ Talk to Zuzu</h3><p>Personal planning, TVM operations, finance, leads, Google Workspace and document review.</p></div>
               <div class="zuzu-messages" id="zuzu-workspace-messages"><div class="zuzu-msg assistant">Hi Afni — this is your private workspace. You can ask about your day, a guest deposit, an invoice, a lead follow-up, or an uploaded contract.</div></div>
+              <div class="chat-controls" id="zuzu-workspace-controls"></div>
               <div class="zuzu-suggestions"><button type="button" data-zuzu-prompt="briefing">Briefing</button><button type="button" data-zuzu-prompt="marketing pipeline">Marketing pipeline</button><button type="button" data-zuzu-prompt="finance">Finance</button><button type="button" data-zuzu-prompt="show uploaded documents">Uploads</button></div>
               <form class="zuzu-form" id="zuzu-workspace-form"><textarea aria-label="Message Zuzu workspace" id="zuzu-workspace-input" maxlength="2000" placeholder="Ask Zuzu anything…"></textarea><button class="btn" type="submit">Send</button></form>
             </div>
@@ -801,6 +808,7 @@
   <aside class="zuzu-panel" id="zuzu-panel" aria-label="Zuzu private assistant" aria-hidden="true">
     <div class="zuzu-head"><div><strong>✦ Zuzu</strong><small>Your private TVM operating assistant</small></div><button class="zuzu-close" id="zuzu-close" aria-label="Close Zuzu">×</button></div>
     <div class="zuzu-messages" id="zuzu-messages"><div class="zuzu-msg assistant">Hi, I’m Zuzu. Ask me for a briefing, leads due, finance, invoices, or your email inbox. I can prepare actions, but I will always ask before sending a client message or changing financial data.</div></div>
+    <div class="chat-controls" id="zuzu-controls"></div>
     <div class="zuzu-suggestions"><button type="button" data-zuzu-prompt="briefing">Briefing</button><button type="button" data-zuzu-prompt="what needs attention?">What needs attention?</button><button type="button" data-zuzu-prompt="finance">Finance</button><button type="button" data-zuzu-prompt="email inbox">Email inbox</button></div>
     <form class="zuzu-form" id="zuzu-form"><textarea id="zuzu-input" maxlength="2000" placeholder="Message Zuzu…" aria-label="Message Zuzu"></textarea><button class="btn" type="submit">Send</button></form>
   </aside>
@@ -813,13 +821,15 @@
     <button data-view="finance"><span class="bi">📊</span>Finance</button>
   </nav>
 
+  <script src="/api/ui/currency.js"></script>
+  <script src="/api/ui/web-chat.js"></script>
   <script>
     const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},zuzuIntake:[],zuzuCockpit:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],invoices:[],payables:[],villaTasks:[]}};
     let currentVillaId=null;
     const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
     const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     const fdate=v=>v?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(`${String(v).slice(0,10)}T00:00:00`)):'—';
-    const money=(a,c='IDR')=>a!==null&&a!==undefined&&a!==''?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
+    const money=(a,c='IDR')=>TVMMoney.format(a,c);
     const safeUrl=v=>{try{const u=new URL(v);return['https:','http:'].includes(u.protocol)?u.href:''}catch(_){return''}};
     const flink=(u,l='Open')=>safeUrl(u)?`<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener noreferrer">${esc(l)} ↗</a>`:'—';
     const BADGE={Paid:'green',Refunded:'green',Confirmed:'green','Checked-in':'green',Available:'green',Sent:'green',Won:'green',
@@ -851,8 +861,9 @@
     function openZuzu(){const panel=$('#zuzu-panel');panel.classList.add('open');panel.setAttribute('aria-hidden','false');setTimeout(()=>$('#zuzu-input').focus(),80)}
     function closeZuzu(){const panel=$('#zuzu-panel');panel.classList.remove('open');panel.setAttribute('aria-hidden','true')}
     let zuzuBusy=false;
+    const webChat=createWebChat(api,'/api/admin/assistant/runs',driver=>['#zuzu-controls','#zuzu-workspace-controls'].forEach(id=>createWebChat.renderControls($(id),driver)));
     async function askZuzu(message,fromWorkspace=false){const text=String(message||'').trim();if(!text||zuzuBusy)return;zuzuBusy=true;if(!fromWorkspace)openZuzu();addZuzuMessage('user',text);const pending=addZuzuMessage('assistant thinking','Zuzu is thinking…');const submits=$$('.zuzu-form button');submits.forEach(button=>button.disabled=true);
-      try{const result=await api('/api/admin/assistant/chat',{method:'POST',body:JSON.stringify({message:text})});pending.forEach(node=>node.remove());addZuzuMessage('assistant',result.reply)}catch(error){pending.forEach(node=>node.remove());addZuzuMessage('assistant',`I couldn’t answer right now: ${error.message}`)}finally{zuzuBusy=false;submits.forEach(button=>button.disabled=false);(fromWorkspace?$('#zuzu-workspace-input'):$('#zuzu-input')).focus()}}
+      try{const result=await webChat.send(text);pending.forEach(node=>node.remove());addZuzuMessage('assistant',result.reply)}catch(error){pending.forEach(node=>node.remove());addZuzuMessage('assistant',`I couldn’t finish: ${error.message}. Check saved records before repeating an action.`)}finally{zuzuBusy=false;submits.forEach(button=>button.disabled=false);(fromWorkspace?$('#zuzu-workspace-input'):$('#zuzu-input')).focus()}}
     $('#zuzu-open').addEventListener('click',openZuzu);$('#zuzu-close').addEventListener('click',closeZuzu);
     $('#zuzu-form').addEventListener('submit',event=>{event.preventDefault();if(zuzuBusy)return;const input=$('#zuzu-input');const text=input.value;input.value='';askZuzu(text)});
     $('#zuzu-workspace-form').addEventListener('submit',event=>{event.preventDefault();if(zuzuBusy)return;const input=$('#zuzu-workspace-input');const text=input.value;input.value='';askZuzu(text,true)});
@@ -972,10 +983,10 @@
   </style></head><body>
         <h1>Owner Statement — ${esc(v.name)}</h1><h2>${vdMonth} · Prepared by The Villa Managers</h2>
         <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows||'<tr><td colspan="4" style="color:#8b8478">No transactions this month.</td></tr>'}</tbody></table>
-        <div class="tot"><span>Income</span><span>+${money(s.income,v.currency)}</span></div>
-        <div class="tot"><span>Agency commission</span><span>−${money(s.commission,v.currency)}</span></div>
-        <div class="tot"><span>Expenses</span><span>−${money(s.expenses,v.currency)}</span></div>
-        <div class="tot final"><span>Owner payout</span><span>${money(s.payout,v.currency)}</span></div>
+        ${s.totals.map(g=>`<h3>${esc(g.currency)}</h3><div class="tot"><span>Income</span><span>+${money(g.income,g.currency)}</span></div>
+        <div class="tot"><span>Agency commission</span><span>−${money(g.commission,g.currency)}</span></div>
+        <div class="tot"><span>Expenses</span><span>−${money(g.expenses,g.currency)}</span></div>
+        <div class="tot final"><span>Owner payout</span><span>${money(g.payout,g.currency)}</span></div>`).join('')}
         <p class="foot">The Villa Managers · thevillamanagers.cloud · Generated ${new Date().toLocaleDateString('en-GB')}</p>
         <script>window.onload=()=>window.print()<\/script></body></html>`);
       w.document.close()}
@@ -995,19 +1006,15 @@
     // ── Owner statement ──
     let vdMonth=new Date().toISOString().slice(0,7);
     $('#vd-month').addEventListener('change',e=>{vdMonth=e.target.value||vdMonth;renderVilla()});
+    $('#fin-currency').addEventListener('change',()=>render());
+    const currencyTotals=TVMMoney.totals;
     function villaStatement(villaId,month){const d=state.villaData,S=sMap();
       const txns=d.transactions.filter(x=>x.villaId===villaId&&(x.date||'').startsWith(month));
-      const income=txns.filter(x=>x.type==='Income');const expenses=txns.filter(x=>x.type==='Expense');
-      const sumA=a=>a.reduce((s,x)=>s+Number(x.amount||0),0);
-      const commission=income.reduce((s,x)=>{const pct=Number(S[x.tenancyId]?.agencyCommissionPercent||0);return s+Number(x.amount||0)*pct/100},0);
-      return {income:sumA(income),expenses:sumA(expenses),commission,payout:sumA(income)-commission-sumA(expenses),txns};}
+      return {totals:currencyTotals(txns,S,vMap()[villaId]?.currency||'IDR'),txns};}
     $('#vd-copy-stmt').addEventListener('click',()=>{const v=vMap()[currentVillaId];if(!v)return;
       const s=villaStatement(currentVillaId,vdMonth);
       const txt=`*${v.name} — Owner Statement ${vdMonth}*\n`+
-        `Income: ${money(s.income,v.currency)}\n`+
-        `Agency commission: −${money(s.commission,v.currency)}\n`+
-        `Expenses: −${money(s.expenses,v.currency)}\n`+
-        `*Owner payout: ${money(s.payout,v.currency)}*\n\n`+
+        s.totals.map(g=>`\n${g.currency}\nIncome: ${money(g.income,g.currency)}\nAgency commission: −${money(g.commission,g.currency)}\nExpenses: −${money(g.expenses,g.currency)}\n*Owner payout: ${money(g.payout,g.currency)}*\n`).join('\n')+'\n'+
         s.txns.map(x=>`${x.date} · ${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)} ${x.description||x.category}`).join('\n')+
         `\n\n— The Villa Managers`;
       navigator.clipboard.writeText(txt).then(()=>toast('Statement copied — paste into WhatsApp.')).catch(()=>toast('Copy failed.'))});
@@ -1092,8 +1099,9 @@
       const nextPay=pays.find(p=>p.status!=='Paid');
       const rate=v.yearlyRate?`${money(v.yearlyRate,v.currency)} / year`:v.monthlyRate?`${money(v.monthlyRate,v.currency)} / month`:'Not set';
       const leasePayments=activeStay?pays.filter(p=>p.tenancyId===activeStay.id):[];
-      const leaseTotal=leasePayments.reduce((sum,p)=>sum+Number(p.amount||0),0);
-      const rateMismatch=Number(v.yearlyRate||0)>0&&leaseTotal>0&&Number(v.yearlyRate)!==leaseTotal;
+      const leaseTotals=currencyTotals(leasePayments.map(p=>({...p,type:'Income'})),{},activeStay?.currency||v.currency||'IDR');
+      const comparableLease=leaseTotals.length===1&&leaseTotals[0].currency===(v.currency||'IDR')?leaseTotals[0].income:null;
+      const rateMismatch=Number(v.yearlyRate||0)>0&&comparableLease>0&&Number(v.yearlyRate)!==comparableLease;
       const coreOps=['keyBoxCode','checkInInstructions','internetProvider','internetBillingDetails','internetPaymentDetails','wifiName','wifiPassword','electricityDetails','poolServiceSchedule','cleaningSchedule','maintenanceContact','emergencyContact'];
       const missingOps=coreOps.filter(field=>!String(v[field]||'').trim()).length;
       const links=[v.mapUrl?flink(v.mapUrl,'📍 Google Maps'):'',v.photosFolderUrl?flink(v.photosFolderUrl,'📷 Drive photos'):'',v.listingUrl?flink(v.listingUrl,'🌐 Public page'):'',v.ownerAgreementUrl?flink(v.ownerAgreementUrl,'📄 Owner agreement'):''].filter(Boolean).join('');
@@ -1105,13 +1113,13 @@
           <div class="overview-item"><span>🚿 Bathrooms</span><strong>${v.bathrooms||0}</strong></div>
           <div class="overview-item"><span>🏊 Pool</span><strong>${v.pool?'Private pool':'No pool recorded'}</strong></div>
           <div class="overview-item"><span>💰 Public listing rate</span><strong>${rate}</strong></div>
-          ${activeStay?`<div class="overview-item"><span>🧾 Current lease total</span><strong>${money(leaseTotal,activeStay.currency||v.currency)}</strong></div>`:''}
+          ${activeStay?`<div class="overview-item"><span>🧾 Current lease total</span><strong>${leaseTotals.map(g=>money(g.income,g.currency)).join('<br>')}</strong></div>`:''}
           <div class="overview-item"><span>👥 Max guests</span><strong>${v.maxGuests||'Not set'}</strong></div>
           <div class="overview-item"><span>💳 Payment terms</span><strong>${esc(v.paymentTerms||'Not set')}</strong></div>
         </div>
         ${v.facilities?`<div class="vd-facilities"><span>✨ Public facilities</span><div class="facility-list">${v.facilities.split(/,\s+/).map(item=>`<i>${esc(item)}</i>`).join('')}</div></div>`:''}
         ${links?`<div class="vd-links">${links}</div>`:''}
-        ${rateMismatch?`<p class="vd-note" style="border-color:#d8a64e;color:#744f12">⚠ Public listing is ${rate}; the current lease with ${esc(activeStay.guestName||'guest')} totals ${money(leaseTotal,activeStay.currency||v.currency)}. Review before changing the listing or agreement.</p>`:''}
+        ${rateMismatch?`<p class="vd-note" style="border-color:#d8a64e;color:#744f12">⚠ Public listing is ${rate}; the current lease with ${esc(activeStay.guestName||'guest')} totals ${money(comparableLease,v.currency)}. Review before changing the listing or agreement.</p>`:''}
         ${v.marketingNotes?`<p class="vd-note">${esc(v.marketingNotes)}</p>`:''}</details></div>`;
       const opItem=(icon,label,value)=>`<div class="ops-item"><span>${icon} ${esc(label)}</span><strong>${value?esc(value):'<span class="missing">Not set</span>'}</strong></div>`;
       const opGroup=(title,items)=>`<section class="ops-group"><h4>${title}</h4><div class="ops-grid">${items.join('')}</div></section>`;
@@ -1152,20 +1160,18 @@
       // owner statement
       if(!$('#vd-month').value)$('#vd-month').value=vdMonth;
       const st=villaStatement(v.id,vdMonth);
-      $('#vd-statement').innerHTML=`
-        <div class="stmt-row"><span>Income</span><span style="color:var(--green);font-weight:600">+${money(st.income,v.currency)}</span></div>
-        <div class="stmt-row"><span>Agency commission</span><span style="color:var(--red)">−${money(st.commission,v.currency)}</span></div>
-        <div class="stmt-row"><span>Expenses (${st.txns.filter(x=>x.type==='Expense').length})</span><span style="color:var(--red)">−${money(st.expenses,v.currency)}</span></div>
-        <div class="stmt-row total"><span>Owner payout</span><span style="color:${st.payout>=0?'var(--green)':'var(--red)'}">${money(st.payout,v.currency)}</span></div>
-        ${st.txns.length===0?'<p style="color:var(--muted);font-size:.78rem;margin:10px 0 0">No transactions in this month yet.</p>':''}`;
+      $('#vd-statement').innerHTML=st.totals.map(g=>`<h4>${esc(g.currency)}</h4>
+        <div class="stmt-row"><span>Income</span><span>+${money(g.income,g.currency)}</span></div>
+        <div class="stmt-row"><span>Agency commission</span><span>−${money(g.commission,g.currency)}</span></div>
+        <div class="stmt-row"><span>Expenses</span><span>−${money(g.expenses,g.currency)}</span></div>
+        <div class="stmt-row total"><span>Owner payout</span><span>${money(g.payout,g.currency)}</span></div>`).join('')+
+        (st.txns.length===0?'<p>No transactions in this month yet.</p>':'');
       // villa tasks
       const vtasks=d.villaTasks.filter(x=>x.villaId===v.id).sort((a,b)=>(a.status==='Done')-(b.status==='Done')||(a.dueDate||'9').localeCompare(b.dueDate||'9'));
       $('#vd-tasks').innerHTML=vtasks.map(x=>`<tr><td><strong>${esc(x.title)}</strong>${x.notes?`<span class="sub">${esc(x.notes.slice(0,60))}</span>`:''}</td><td>${esc(x.category||'—')}</td><td>${esc(x.assignee||'—')}</td><td>${fdate(x.dueDate)}</td><td>${money(x.cost,'IDR')}</td><td>${badge(x.status==='Done'?'Paid':x.status==='In progress'?'Due':'Scheduled').replace(/>(.*?)</,`>${esc(x.status)}<`)}</td><td><div class="row-actions">${x.status!=='Done'?`<button class="btn sm" data-done-vtask="${esc(x.id)}">Done</button>`:''}<button class="btn secondary sm" data-edit="villaTasks:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="villaTasks:${esc(x.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No tasks for this villa — add cleaning, repairs, or maintenance.</td></tr>';
       // villa finance
       const vtxns=d.transactions.filter(x=>x.villaId===v.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-      const vin=vtxns.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0),0);
-      const vout=vtxns.filter(x=>x.type==='Expense').reduce((s,x)=>s+Number(x.amount||0),0);
-      $('#vd-net').innerHTML=`<span style="color:var(--green)">+${money(vin)}</span> · <span style="color:var(--red)">−${money(vout)}</span> · Net <span style="color:${vin-vout>=0?'var(--green)':'var(--red)'}">${money(vin-vout)}</span>`;
+      $('#vd-net').innerHTML=currencyTotals(vtxns,{},v.currency||'IDR').map(g=>`<div>${esc(g.currency)} · +${money(g.income,g.currency)} · −${money(g.expenses,g.currency)} · Net ${money(g.payout,g.currency)}</div>`).join('');
       $('#vd-finance').innerHTML=vtxns.slice(0,25).map(x=>`<tr><td>${fdate(x.date)}</td><td>${badge(x.type==='Income'?'Paid':'Overdue').replace(/>(.*?)</,`>${esc(x.type)}<`)}</td><td>${esc(x.category||'—')}</td><td>${esc(x.description||'—')}${x.sourceId?'<span class="sub">auto from payment</span>':''}</td><td style="font-weight:600;color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</td><td><div class="row-actions">${transactionActions(x)}</div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No transactions yet. Rent income books automatically when payments are marked paid.</td></tr>';
     }
 
@@ -1233,9 +1239,10 @@
         <td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button><button class="btn danger sm" data-del="installments:${esc(p.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No payments match this filter.</td></tr>';
       // finance 12-month chart
       (()=>{const now=new Date();const months=[];for(let i=11;i>=0;i-=1){const dt=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`,lbl:dt.toLocaleDateString('en-GB',{month:'short'})})}
-        const sums=months.map(m=>{const tx=d.transactions.filter(x=>(x.date||'').startsWith(m.key));return{...m,inc:tx.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0),0),out:tx.filter(x=>x.type==='Expense').reduce((s,x)=>s+Number(x.amount||0),0)}});
+        const currency=$('#fin-currency').value;
+        const sums=months.map(m=>{const tx=d.transactions.filter(x=>(x.date||'').startsWith(m.key)&&(x.currency||'IDR')===currency);const g=currencyTotals(tx,{},currency)[0];return{...m,inc:g.income,out:g.expenses}});
         const max=Math.max(1,...sums.map(s=>Math.max(s.inc,s.out)));
-        $('#fin-bars').innerHTML=sums.map(s=>`<div class="bar-g" title="${s.lbl}: +${money(s.inc)} / −${money(s.out)}"><div class="bar bin" style="height:${Math.round(s.inc/max*120)}px"></div><div class="bar bout" style="height:${Math.round(s.out/max*120)}px"></div><div class="bar-lbl">${s.lbl}</div></div>`).join('')})();
+        $('#fin-bars').innerHTML=sums.map(s=>`<div class="bar-g" title="${s.lbl}: +${money(s.inc,currency)} / −${money(s.out,currency)}"><div class="bar bin" style="height:${Math.round(s.inc/max*120)}px"></div><div class="bar bout" style="height:${Math.round(s.out/max*120)}px"></div><div class="bar-lbl">${s.lbl}</div></div>`).join('')})();
       // deposits table
       $('#t-deposits').innerHTML=d.deposits.map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
         return`<tr><td><strong>${esc(v.name||'—')}</strong><span class="sub">${esc(t.guestName||'')} · ${esc(depositPurpose(x))}</span></td>
@@ -1251,10 +1258,9 @@
         <td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="documents:${esc(x.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No documents yet — click “+ Add document”.</td></tr>';
       // finance view
       const month=today.slice(0,7);
-      const tin=d.transactions.filter(x=>x.type==='Income');const tout=d.transactions.filter(x=>x.type==='Expense');
-      const sum=a=>a.reduce((s,x)=>s+Number(x.amount||0),0);
-      const moneyTotals=a=>{const grouped=a.reduce((out,x)=>{const c=x.currency||'IDR';out[c]=(out[c]||0)+Number(x.amount||0);return out},{});const parts=Object.entries(grouped).map(([c,n])=>money(n,c));return parts.join(' + ')||money(0)};
-      const inM=sum(tin.filter(x=>(x.date||'').startsWith(month))),outM=sum(tout.filter(x=>(x.date||'').startsWith(month)));
+      const moneyTotals=a=>currencyTotals(a.map(x=>({...x,type:'Income'}))).map(g=>money(g.income,g.currency)).join(' / ');
+      const monthTotals=currencyTotals(d.transactions.filter(x=>(x.date||'').startsWith(month))),allTotals=currencyTotals(d.transactions);
+      const joined=(rows,key)=>rows.map(g=>money(g[key],g.currency)).join(' / ');
       const invoices=d.invoices||[];
       const receivables=invoices.filter(x=>!['Paid','Void'].includes(x.status));
       const invoiceOverdue=receivables.filter(x=>x.dueDate&&x.dueDate<today);
@@ -1265,11 +1271,10 @@
       const payableOverdue=openPayables.filter(x=>x.dueDate&&x.dueDate<today);
       const payableStatus=x=>{if(['Paid','Void'].includes(x.status))return x.status;if(x.dueDate&&x.dueDate<today)return'Overdue';if(x.dueDate===today)return'Due';return x.status||'Scheduled'};
       $('#n-finance').textContent=d.transactions.length+invoices.length+payables.length;
-      $('#f-income').textContent=money(inM);$('#f-income-all').textContent=`all time ${money(sum(tin))}`;
-      $('#f-expense').textContent=money(outM);$('#f-expense-all').textContent=`all time ${money(sum(tout))}`;
-      const netM=inM-outM,netAll=sum(tin)-sum(tout);
-      $('#f-net').textContent=money(netM);$('#f-net').style.color=netM>=0?'var(--green)':'var(--red)';
-      $('#f-net-all').textContent=`all time ${money(netAll)}`;
+      $('#f-income').textContent=joined(monthTotals,'income');$('#f-income-all').textContent=`all time ${joined(allTotals,'income')}`;
+      $('#f-expense').textContent=joined(monthTotals,'expenses');$('#f-expense-all').textContent=`all time ${joined(allTotals,'expenses')}`;
+      $('#f-net').textContent=joined(monthTotals,'payout');$('#f-net').style.color=monthTotals.every(g=>g.payout>=0)?'var(--green)':'var(--red)';
+      $('#f-net-all').textContent=`all time ${joined(allTotals,'payout')}`;
       $('#f-receivable').textContent=moneyTotals(receivables);$('#f-receivable-sub').textContent=`${receivables.length} open · ${invoiceOverdue.length} overdue`;
       $('#f-payable').textContent=moneyTotals(upcomingPayables);$('#f-payable-sub').textContent=`${upcomingPayables.length} due in 30 days · ${payableOverdue.length} overdue`;
       $('#t-invoices').innerHTML=invoices.slice().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(x=>{const shownStatus=!['Paid','Void'].includes(x.status)&&x.dueDate&&x.dueDate<today?'Overdue':x.status||'Draft';

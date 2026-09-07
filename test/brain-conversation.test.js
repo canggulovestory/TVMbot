@@ -49,3 +49,17 @@ test('a follow-up task list reaches Hermes with recent context and its approval 
     assert.deepEqual(received[2].conversationHistory, []);
   } finally { hermes.respond = original; await fs.rm(dir, { recursive: true, force: true }); }
 });
+
+test('web scopes forward approval and cancellation controls to Hermes', async t => {
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'tvm-web-approval-'));
+  assistant.init(dir);villaData.init(dir);personalLife.init(dir);
+  t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+  const original=hermes.respond,received=[];
+  hermes.respond=async args=>{received.push(args);return 'Ready'};
+  const onApproval=async()=>'deny',signal=new AbortController().signal;
+  try{
+    await brain.processInternalMessage({userKey:'afni',text:'Discuss a fictional idea',onApproval,signal});
+    await brain.processPersonalMessage({userKey:'afni',text:'Discuss a fictional walk',onApproval,signal});
+    for(const args of received){assert.equal(args.onApproval,onApproval);assert.equal(args.signal,signal)}
+  }finally{hermes.respond=original}
+});

@@ -24,6 +24,7 @@ const villaData = require('./villa-data');
 const googleWorkspace = require('./google-workspace');
 const zuzuIntake = require('./zuzu-intake');
 const personalLife = require('./personal-life');
+const webChatRuns = require('./web-chat-runs').createRuns();
 const { financeCockpit, leadFollowUps, inboxTriage } = require('./agent-tools');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
@@ -417,6 +418,9 @@ async function handleAdminApi(req, res, url) {
   if (!session) return sendJson(res, 401, { error: 'Authentication required.' });
   if (session.role === 'owner') return sendJson(res, 403, { error: 'Owner accounts use the owner portal at /owner.' });
   const requireAdmin = () => session.role === 'admin';
+  if (url.pathname === '/api/admin/assistant/runs' || url.pathname.startsWith('/api/admin/assistant/runs/')) {
+    return handleChatRun(req, res, url, session, 'admin', '/api/admin/assistant/runs');
+  }
 
   if (url.pathname === '/api/admin/session' && req.method === 'GET') {
     return sendJson(res, 200, { authenticated: true, user: session.user, role: session.role, name: session.name });
@@ -712,6 +716,41 @@ function isPersonalHost(req) {
   return String(req.headers.host || '').split(':')[0].toLowerCase() === 'app.zuzuzu.tech';
 }
 
+async function handleChatRun(req, res, url, session, scope, base) {
+  if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
+  if (!brain.USERS[session.user]) return sendJson(res, 403, { error: 'Zuzu is not configured for this account.' });
+  const owner=JSON.stringify([scope,session.user,session.nonce,session.exp]);
+  if (url.pathname===base && req.method==='POST') {
+    const body=await readBody(req),message=clean(body.message,2000);
+    if (!message) return sendJson(res,422,{error:'Write a message first.'});
+    if (zuzuRateLimited(`${scope}:${session.user}`)) return sendJson(res,429,{error:'Too many chat requests. Try again shortly.'});
+    try {
+      const run=webChatRuns.start({owner,id:body.id,message,work:async controls=>{
+        const reply=await (scope==='admin'?brain.processInternalMessage:brain.processPersonalMessage)({text:message,userKey:session.user,...controls});
+        audit.add(session.user,'asked Zuzu',`${scope} web chat`);
+        return reply;
+      }});
+      return sendJson(res,202,run);
+    } catch(error) { return sendJson(res,409,{error:error.message}); }
+  }
+  const [id,action,...extra]=url.pathname.slice(base.length+1).split('/');
+  if (extra.length) return sendJson(res,404,{error:'Not found.'});
+  const run=webChatRuns.get(owner,id);
+  if (!run) return sendJson(res,404,{error:'Chat request expired or belongs to another session. Check records before retrying.'});
+  if (req.method==='GET'&&!action) return sendJson(res,200,run);
+  if (req.method==='POST'&&action==='decision') {
+    const body=await readBody(req);
+    if (!webChatRuns.decide(owner,id,body.token,body.choice)) return sendJson(res,409,{error:'Approval expired or already answered.'});
+    audit.add(session.user,'Zuzu approval',`${scope}: ${body.choice}`);
+    return sendJson(res,200,{ok:true});
+  }
+  if (req.method==='POST'&&action==='cancel') {
+    webChatRuns.cancel(owner,id);
+    return sendJson(res,200,{ok:true});
+  }
+  return sendJson(res,404,{error:'Not found.'});
+}
+
 async function handlePersonalApp(req, res, url) {
   if (url.pathname === '/chat-state.js' && req.method === 'GET') {
     const script = await fs.readFile(path.join(PERSONAL_DIR, 'chat-state.js'));
@@ -729,9 +768,12 @@ async function handlePersonalApp(req, res, url) {
   }
   if (url.pathname === '/api/zuzu/logout' && req.method === 'POST') return sendJson(res, 200, { ok: true }, { 'Set-Cookie': personalSessionCookie('', 0) });
   const session = await getPersonalSession(req);
+  if (url.pathname === '/api/zuzu/runs' || url.pathname.startsWith('/api/zuzu/runs/')) {
+    return handleChatRun(req,res,url,session,'life','/api/zuzu/runs');
+  }
   if (url.pathname === '/api/zuzu/overview' && req.method === 'GET') {
     if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
-    return sendJson(res, 200, await personalLife.overview(session.user));
+    return sendJson(res, 200, await personalLife.overview(session.user, Object.fromEntries(url.searchParams)));
   }
   if (url.pathname === '/api/zuzu/items' && req.method === 'POST') {
     if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
@@ -759,6 +801,10 @@ async function handlePersonalApp(req, res, url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
+    if (['/api/ui/currency.js','/api/ui/web-chat.js'].includes(url.pathname) && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+      return res.end(await fs.readFile(path.join(ADMIN_DIR, path.basename(url.pathname))));
+    }
     if (isPersonalHost(req)) return await handlePersonalApp(req, res, url);
     if (url.pathname === '/health' && req.method === 'GET') {
       return sendJson(res, 200, {

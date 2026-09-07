@@ -3,15 +3,19 @@
 <style>
 :root{--ink:#2d1720;--wine:#551c2b;--cream:#f6f0e6;--paper:#fffdf9;--line:#e4d8ca;--muted:#786c66}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:16px/1.5 Arial,sans-serif}.shell{width:min(1080px,calc(100% - 32px));margin:auto;padding:34px 0 60px}.hero{background:var(--wine);color:#fff;border-radius:24px;padding:30px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.mark{font:400 clamp(2rem,7vw,4.5rem)/.85 Georgia,serif;letter-spacing:-.06em}.hero p{margin:10px 0 0;color:#ead8d9;max-width:540px}.logout{border:1px solid #cda8ae;color:#fff;background:transparent;border-radius:9px;padding:8px 11px;cursor:pointer}.grid{display:grid;grid-template-columns:1fr .9fr;gap:18px;margin-top:18px}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px}h2{font:400 1.55rem Georgia,serif;margin:0 0 5px}.sub{margin:0;color:var(--muted);font-size:.9rem}.counts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.count{min-width:82px;flex:1;border-radius:12px;background:#f4e8df;padding:12px}.count strong{display:block;font-size:1.55rem}.form{display:grid;gap:9px;margin-top:16px}input,select,textarea{font:inherit;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}textarea{min-height:72px;resize:vertical}.btn{border:0;background:var(--wine);color:#fff;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.items{display:grid;gap:9px;margin-top:15px}.item{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:11px;padding:11px}.item.done{opacity:.52;text-decoration:line-through}.tag{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--wine);font-weight:700}.item small{display:block;color:var(--muted)}.chat{height:290px;overflow:auto;background:#fbf7f1;border:1px solid var(--line);padding:12px;border-radius:12px;white-space:pre-wrap}.msg{margin:0 0 10px}.msg.me{color:var(--wine);font-weight:700}.login{min-height:100vh;display:grid;place-items:center;padding:20px}.login .card{width:min(420px,100%)}@media(max-width:750px){.grid{grid-template-columns:1fr}.shell{width:min(100% - 20px,1080px);padding-top:10px}.hero{border-radius:17px;padding:24px}.counts{gap:7px}}
 .form label{display:grid;gap:5px;font-size:.85rem;font-weight:700}.form input,.form select,.form textarea{width:100%;min-width:0;font-weight:400}.btn:disabled{opacity:.55;cursor:wait}#page-error:not(:empty){padding:12px;background:#fbe6df;color:#782b22;border-radius:9px}.item>input{flex-shrink:0}.item>div{min-width:0;overflow-wrap:anywhere}
-</style></head><body><main id="app"></main><script src="/chat-state.js"></script><script>
+.life-nav{display:none}.chat-controls:empty{display:none}.chat-controls{border:1px solid var(--line);padding:12px;border-radius:9px;margin-top:12px;overflow-wrap:anywhere}.chat-controls button{margin:6px 6px 0 0}.chat-controls small{display:block}.record-search{display:flex;gap:8px;align-items:end;margin:18px 0 10px}.record-search label{flex:1;min-width:0}.record-search input{width:100%;min-width:0}.pagination{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}.card{min-width:0}.item small{white-space:pre-wrap}.item a,.chat a{overflow-wrap:anywhere}
+@media(max-width:750px){.life-nav{display:flex;position:sticky;top:0;z-index:5;gap:8px;background:var(--cream);padding:10px 0}.life-nav button{flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font:inherit}.life-nav button[aria-pressed="true"]{background:var(--wine);color:white}.shell[data-view="chat"] .records-card,.shell[data-view="records"] .chat-card{display:none}.grid{margin-top:0}.hero{padding:18px}.hero p{font-size:.85rem}.chat{height:clamp(180px,35dvh,360px)}input,textarea,select{font-size:16px}.counts{display:grid;grid-template-columns:1fr 1fr}.count{min-width:0}}
+</style></head><body><main id="app"></main><script src="/chat-state.js"></script><script src="/api/ui/web-chat.js"></script><script>
 const app=document.querySelector('#app');
 const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 let data=null;
-const chat=createLifeChat(message=>api('/api/zuzu/chat',{method:'POST',body:JSON.stringify({message})}),renderChat);
+let lifeView='chat',recordOffset=0,recordQuery='',loadedQuery='',loadVersion=0;
+const webChat=createWebChat(api,'/api/zuzu/runs',driver=>createWebChat.renderControls(document.querySelector('#chat-controls'),driver));
+const chat=createLifeChat(message=>webChat.send(message),renderChat);
 async function api(url,options={}){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),65000);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
   try{
-    const response=await fetch(url,{headers:{'Content-Type':'application/json'},...options,signal:controller.signal});
+    const response=await fetch(url,{headers:{'Content-Type':'application/json'},...options,signal:options.signal||controller.signal});
     const raw=await response.text(); let body;
     try{body=JSON.parse(raw)}catch(_){throw Error('The service returned an unexpected response')}
     if(!response.ok){const error=Error(body.error||'Request failed');error.status=response.status;throw error}
@@ -40,19 +44,29 @@ function renderChat(){
 }
 function render(){
   const draft=document.querySelector('#chat-form textarea')?.value||'';
+  const oldForm=document.querySelector('#item'),itemDraft=oldForm?Object.fromEntries(new FormData(oldForm)):null;
   const items=data.items||[];
-  app.innerHTML=`<div class="shell"><header class="hero"><div><div class="mark">zuzu life</div><p>Your personal plans, notes and conversations. Separate from TVM.</p></div><button class="logout" id="logout">Sign out</button></header><p id="page-error" role="alert"></p><div class="grid">
-  <section class="card"><h2>Today</h2><p class="sub">Your tasks, goals and routines.</p><div class="counts">${['tasks','goals','habits','routines'].map(k=>`<div class="count"><strong>${data.counts[k]}</strong>${k}</div>`).join('')}</div>
+  app.innerHTML=`<div class="shell" data-view="${lifeView}"><header class="hero"><div><div class="mark">zuzu life</div><p>Your personal plans, notes and conversations. Separate from TVM.</p></div><button class="logout" id="logout">Sign out</button></header><nav class="life-nav" aria-label="Personal space"><button data-life-view="chat" aria-pressed="${lifeView==='chat'}">Chat</button><button data-life-view="records" aria-pressed="${lifeView==='records'}">My records</button></nav><p id="page-error" role="alert"></p><div class="grid">
+  <section class="card records-card"><h2>My records</h2><p class="sub">All your tasks, goals, routines and notes. Nothing is removed automatically.</p><div class="counts">${['tasks','goals','habits','routines'].map(k=>`<div class="count"><strong>${data.counts[k]}</strong>${k}</div>`).join('')}</div>
   <form class="form" id="item"><label>Type<select name="kind">${['task','goal','habit','routine','journal','travel','shopping','note'].map(k=>`<option value="${k}">${k[0].toUpperCase()+k.slice(1)}</option>`).join('')}</select></label><label>Title<input name="title" placeholder="What matters now?" required></label><label>Due date<input name="dueDate" type="date"></label><label>Details<textarea name="details" placeholder="Optional note"></textarea></label><button class="btn">Add to my life space</button></form>
-  <div class="items">${items.map(item=>`<label class="item ${item.done?'done':''}"><input type="checkbox" data-done="${esc(item.id)}" ${item.done?'checked':''}><div><span class="tag">${esc(item.kind)}</span> <strong>${esc(item.title)}</strong>${item.dueDate?`<small>Due ${esc(item.dueDate)}</small>`:''}${item.details?`<small>${esc(item.details)}</small>`:''}</div></label>`).join('')||'<p class="sub">Start with one small thing.</p>'}</div></section>
-  <section class="card"><h2>Talk to Zuzu</h2><p class="sub">Write in any language; Zuzu replies in English. To save a list item, use “task: …”, “note: …”, or “journal: …”.</p><div class="chat" id="chat" role="log" aria-live="polite"></div><form class="form" id="chat-form"><label>Your message<textarea name="message" placeholder="Talk to Zuzu…" maxlength="2000" required></textarea></label><button class="btn">Send</button></form></section></div></div>`;
+  <form id="record-search" class="record-search"><label>Search all records<input name="q" type="search" value="${esc(recordQuery)}" maxlength="200"></label><button class="btn">Search</button><button class="btn" type="button" id="clear-search">Clear</button></form>
+  <div class="items">${items.map(item=>`<label class="item ${item.done?'done':''}"><input type="checkbox" data-done="${esc(item.id)}" ${item.done?'checked':''}><div><span class="tag">${esc(item.kind)}</span> <strong>${esc(item.title)}</strong>${item.dueDate?`<small>Due ${esc(item.dueDate)}</small>`:''}${item.details?`<small>${esc(item.details)}</small>`:''}</div></label>`).join('')||'<p class="sub">No matching records.</p>'}</div>
+  <nav class="pagination" aria-label="Record pages"><button class="btn" id="records-prev" ${recordOffset===0?'disabled':''}>Previous</button><span>${data.total?recordOffset+1:0}–${recordOffset+items.length} of ${data.total||0}</span><button class="btn" id="records-next" ${data.hasMore?'':'disabled'}>Next</button></nav></section>
+  <section class="card chat-card"><h2>Talk to Zuzu</h2><p class="sub">Write in any language; Zuzu replies in English. To save a list item, use “task: …”, “note: …”, or “journal: …”.</p><div class="chat" id="chat" role="log" aria-live="polite"></div><div id="chat-controls" class="chat-controls"></div><form class="form" id="chat-form"><label>Your message<textarea name="message" placeholder="Talk to Zuzu…" maxlength="2000" required></textarea></label><button class="btn">Send</button></form></section></div></div>`;
   document.querySelector('#chat-form textarea').value=draft;
+  if(itemDraft)for(const [key,value] of Object.entries(itemDraft))document.querySelector('#item').elements[key].value=value;
+  document.querySelectorAll('[data-life-view]').forEach(button=>button.onclick=()=>{lifeView=button.dataset.lifeView;document.querySelector('.shell').dataset.view=lifeView;document.querySelectorAll('[data-life-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lifeView===lifeView)))});
+  document.querySelector('#record-search').onsubmit=event=>{event.preventDefault();recordQuery=event.target.elements.q.value;recordOffset=0;load()};
+  document.querySelector('#clear-search').onclick=()=>{recordQuery='';recordOffset=0;load()};
+  document.querySelector('#records-prev').onclick=()=>{recordOffset=Math.max(0,recordOffset-40);load()};
+  document.querySelector('#records-next').onclick=()=>{recordOffset+=40;load()};
+  createWebChat.renderControls(document.querySelector('#chat-controls'),webChat);
   document.querySelector('#logout').onclick=async()=>{
-    try{await api('/api/zuzu/logout',{method:'POST'});chat.messages.length=0;data=null;login()}catch(error){showError(error)}
+    try{await webChat.cancel();await api('/api/zuzu/logout',{method:'POST'});chat.messages.length=0;data=null;login()}catch(error){showError(error)}
   };
   document.querySelector('#item').onsubmit=async event=>{
     event.preventDefault();const button=event.target.querySelector('button');if(button.disabled)return;button.disabled=true;
-    try{await api('/api/zuzu/items',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(event.target)))});await load()}catch(error){showError(error)}finally{button.disabled=false}
+    try{await api('/api/zuzu/items',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(event.target)))});event.target.reset();recordOffset=0;recordQuery='';await load()}catch(error){showError(error)}finally{button.disabled=false}
   };
   document.querySelectorAll('[data-done]').forEach(node=>node.onchange=async()=>{
     node.disabled=true;
@@ -64,6 +78,18 @@ function render(){
   };
   renderChat();
 }
-async function load(){try{data=await api('/api/zuzu/overview');render()}catch(error){if(error.status===401)login();else showError(error)}}
+async function load(){
+  const version=++loadVersion,query=recordQuery;
+  document.querySelectorAll('.pagination button').forEach(b=>b.disabled=true);
+  try{
+    const result=await api('/api/zuzu/overview?'+new URLSearchParams({offset:recordOffset,limit:40,q:query}));
+    if(version!==loadVersion)return;
+    data=result;loadedQuery=query;render();
+  }catch(error){
+    if(version!==loadVersion)return;
+    if(error.status===401)login();
+    else{if(data){recordOffset=data.offset;recordQuery=loadedQuery;render()}showError(error)}
+  }
+}
 load();
 </script></body></html>

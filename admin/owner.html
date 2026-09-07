@@ -86,11 +86,12 @@
     <p class="foot">Prepared by The Villa Managers · thevillamanagers.cloud · Questions? WhatsApp +62 821 2292 2252</p>
   </div>
 
+<script src="/api/ui/currency.js"></script>
 <script>
   const $=s=>document.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const fdate=v=>v?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(`${String(v).slice(0,10)}T00:00:00`)):'—';
-  const money=(a,c='IDR')=>a?new Intl.NumberFormat('id-ID',{style:'currency',currency:c||'IDR',maximumFractionDigits:0}).format(Number(a)):'—';
+  const money=TVMMoney.format;
   const BAD={Paid:'green',Confirmed:'green','Checked-in':'green',Available:'green',Reminded:'amber',Due:'amber',Held:'amber',Reserved:'amber',Booked:'blue',Scheduled:'blue',Overdue:'red',Late:'red'};
   const badge=v=>`<span class="badge ${BAD[v]||''}">${esc(v||'—')}</span>`;
   const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -141,16 +142,14 @@
     $('#t-pay').innerHTML=pays.map(p=>`<tr><td>${esc(p.period||p.code||'—')}</td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}${p.paidDate?`<span class="sub">paid ${fdate(p.paidDate)}</span>`:''}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No payments scheduled.</td></tr>';
     // statement
     const txns=data.transactions.filter(x=>x.villaId===v.id&&(x.date||'').startsWith(month));
-    const sum=a=>a.reduce((s,x)=>s+Number(x.amount||0),0);
-    const inc=sum(txns.filter(x=>x.type==='Income')),out=sum(txns.filter(x=>x.type==='Expense'));
     const stayById=Object.fromEntries(data.tenancies.map(t=>[t.id,t]));
-    const comm=txns.filter(x=>x.type==='Income').reduce((s,x)=>s+Number(x.amount||0)*Number(stayById[x.tenancyId]?.agencyCommissionPercent||0)/100,0);
+    const totals=TVMMoney.totals(txns,stayById,v.currency||'IDR');
     $('#stmt').innerHTML=`
       ${txns.map(x=>`<div class="stmt-row"><span>${fdate(x.date)} · ${esc(x.description||x.category||'')}</span><span style="color:${x.type==='Income'?'var(--green)':'var(--red)'}">${x.type==='Income'?'+':'−'}${money(x.amount,x.currency)}</span></div>`).join('')||'<div class="stmt-row"><span style="color:var(--muted)">No transactions this month.</span><span></span></div>'}
-      <div class="stmt-row"><span><strong>Income</strong></span><span style="color:var(--green);font-weight:600">+${money(inc)}</span></div>
-      <div class="stmt-row"><span>Agency commission</span><span style="color:var(--red)">−${money(comm)}</span></div>
-      <div class="stmt-row"><span>Expenses</span><span style="color:var(--red)">−${money(out)}</span></div>
-      <div class="stmt-row total"><span>Your payout</span><span style="color:${inc-comm-out>=0?'var(--green)':'var(--red)'}">${money(inc-comm-out)}</span></div>`;
+      ${totals.map(g=>`<h3>${esc(g.currency)}</h3><div class="stmt-row"><span>Income</span><span>+${money(g.income,g.currency)}</span></div>
+      <div class="stmt-row"><span>Agency commission</span><span>−${money(g.commission,g.currency)}</span></div>
+      <div class="stmt-row"><span>Expenses</span><span>−${money(g.expenses,g.currency)}</span></div>
+      <div class="stmt-row total"><span>Your payout</span><span>${money(g.payout,g.currency)}</span></div>`).join('')}`;
   }
 
   $('#logout').addEventListener('click',async()=>{await fetch('/api/admin/logout',{method:'POST'});location.href='/admin/login'});

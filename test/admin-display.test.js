@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const html = fs.readFileSync(require('node:path').join(__dirname, '../admin/index.html'), 'utf8');
 test('zero money is explicit and differs from missing money', () => {
   const line=html.split('\n').find(line=>line.includes("const money=(a,c='IDR')"));
-  const context={}; vm.createContext(context); vm.runInContext(line+';globalThis.format=money',context);
+  const context={TVMMoney:require('../admin/currency')}; vm.createContext(context); vm.runInContext(line+';globalThis.format=money',context);
   assert.match(context.format(0), /0/); assert.equal(context.format(undefined),'—');
 });
 test('upfront rent displays schedule total, not monthly equivalent as annual price', () => {

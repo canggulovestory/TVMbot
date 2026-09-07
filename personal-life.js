@@ -24,16 +24,21 @@ function mutate(work) {
   });
   writeQueue = task.catch(() => {}); return task;
 }
-async function overview(user) {
+async function overview(user, options = {}) {
   const data = await read(); const today = new Date().toISOString().slice(0, 10);
   const own = data.items.filter(item => item.user === user);
-  return { today, items: own.slice().sort((a, b) => Number(a.done) - Number(b.done) || (a.dueDate || '9999').localeCompare(b.dueDate || '9999')).slice(0, 120),
+  const q = clean(options.q, 200).toLocaleLowerCase();
+  const limit = Number.isInteger(Number(options.limit)) && Number(options.limit) > 0 ? Math.min(Number(options.limit), 120) : 120;
+  const offset = Number.isSafeInteger(Number(options.offset)) && Number(options.offset) >= 0 ? Number(options.offset) : 0;
+  const matching = own.filter(item => !q || [item.title, item.details, item.kind].join(' ').toLocaleLowerCase().includes(q))
+    .sort((a, b) => Number(a.done) - Number(b.done) || (a.dueDate || '9999').localeCompare(b.dueDate || '9999') || String(b.createdAt || '').localeCompare(String(a.createdAt || '')) || String(a.id).localeCompare(String(b.id)));
+  return { today, items: matching.slice(offset, offset + limit), total: matching.length, offset, limit, hasMore: offset + limit < matching.length,
     counts: { tasks: own.filter(x => x.kind === 'task' && !x.done).length, goals: own.filter(x => x.kind === 'goal' && !x.done).length, habits: own.filter(x => x.kind === 'habit' && !x.done).length, routines: own.filter(x => x.kind === 'routine' && !x.done).length, travel: own.filter(x => x.kind === 'travel' && !x.done).length, shopping: own.filter(x => x.kind === 'shopping' && !x.done).length } };
 }
 async function add(user, input) {
   const kind = KINDS.has(String(input.kind)) ? String(input.kind) : 'task'; const title = clean(input.title, 300);
   if (!title) throw new Error('Write something first.');
-  return mutate(data => { const item = { id: `LIFE-${crypto.randomUUID()}`, user, kind, title, details: clean(input.details, 2000), dueDate: clean(input.dueDate, 20), done: false, createdAt: new Date().toISOString() }; data.items.unshift(item); data.items = data.items.slice(0, 1000); return item; });
+  return mutate(data => { const item = { id: `LIFE-${crypto.randomUUID()}`, user, kind, title, details: clean(input.details, 2000), dueDate: clean(input.dueDate, 20), done: false, createdAt: new Date().toISOString() }; data.items.unshift(item); return item; });
 }
 async function complete(user, id, done) {
   return mutate(data => { const item = data.items.find(x => x.id === String(id) && x.user === user); if (!item) return null; item.done = done !== false; item.updatedAt = new Date().toISOString(); return item; });

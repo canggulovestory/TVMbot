@@ -82,7 +82,7 @@ function isProviderFailure(text) {
     || /\bupstream request failed\b.*\bfunction_call_output\b/i.test(value);
 }
 
-async function request(path, body, { userKey } = {}) {
+async function request(path, body, { userKey, signal } = {}) {
   const current = getConfig();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), current.timeoutMs);
@@ -97,10 +97,11 @@ async function request(path, body, { userKey } = {}) {
         'X-Hermes-Session-Key': `agent:tvm:tvmbot:dm:${identity}`,
       },
       body: JSON.stringify(body),
-      signal: controller.signal,
+      signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
     });
 
     const raw = await response.text();
+    signal?.throwIfAborted();
     let parsed = {};
     try { parsed = raw ? JSON.parse(raw) : {}; } catch (_) {}
 
@@ -123,12 +124,18 @@ async function request(path, body, { userKey } = {}) {
   }
 }
 
-async function runWithApprovals(body, userKey, onApproval) {
+async function runWithApprovals(body, userKey, onApproval, signal) {
+  signal?.throwIfAborted();
   const current = getConfig();
   const started = await request('/v1/runs', body, { userKey });
   if (!/^run_[a-zA-Z0-9_]+$/.test(started.run_id || '')) throw new HermesError('Hermes did not start a run');
   const path = `/v1/runs/${started.run_id}`;
   const controller = new AbortController();
+  let stopPromise;
+  const stop=()=>stopPromise||(stopPromise=request(`${path}/stop`,{}, {userKey}).catch(()=>{}));
+  const cancel=()=>{controller.abort();void stop();};
+  signal?.addEventListener('abort',cancel,{once:true});
+  if(signal?.aborted)cancel();
   // Telegram is not behind the Admin HTTP proxy. Bound the whole tool run,
   // including user approval time, instead of abandoning it after 15 seconds.
   const timeout = setTimeout(() => controller.abort(), 180000);
@@ -145,6 +152,7 @@ async function runWithApprovals(body, userKey, onApproval) {
       if (pending.length > 1024 * 1024) throw new HermesError('Hermes run event too large');
       let boundary;
       while ((boundary = pending.indexOf('\n\n')) >= 0) {
+        controller.signal.throwIfAborted();
         const frame = pending.slice(0, boundary);
         pending = pending.slice(boundary + 2);
         const data = frame.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).join('\n');
@@ -155,7 +163,7 @@ async function runWithApprovals(body, userKey, onApproval) {
           const decision = await onApproval(event, { signal: controller.signal });
           const choice = decision === 'once' && event.choices?.includes('once') ? 'once' : 'deny';
           if (controller.signal.aborted) throw new HermesError('Approval expired');
-          await request(`${path}/approval`, { choice }, { userKey });
+          await request(`${path}/approval`, { choice }, { userKey, signal:controller.signal });
         } else if (event.event === 'run.completed') {
           const text = String(event.output || '').trim();
           if (!text || isProviderFailure(text)) throw new HermesError('Hermes run returned no usable answer');
@@ -169,14 +177,15 @@ async function runWithApprovals(body, userKey, onApproval) {
     throw new HermesError('Hermes disconnected before completing the run');
   } finally {
     clearTimeout(timeout);
+    signal?.removeEventListener('abort',cancel);
     controller.abort();
     // Never leave a potentially mutating run executing after delivery failed.
     // Do not retry/fallback: the first run might already have changed a record.
-    if (!completed) await request(`${path}/stop`, {}, { userKey }).catch(() => {});
+    if (!completed) await stop();
   }
 }
 
-async function respond({ input, instructions, userKey, onApproval, conversationHistory = [] }) {
+async function respond({ input, instructions, userKey, onApproval, signal, conversationHistory = [] }) {
   const current = getConfig();
   const body = {
     model: current.model,
@@ -193,7 +202,7 @@ async function respond({ input, instructions, userKey, onApproval, conversationH
     if (Array.isArray(input)) body.input = input.map(message => ({ ...message, content: message.content.map(part =>
       part.type === 'input_text' ? { type: 'text', text: part.text } :
         part.type === 'input_image' ? { type: 'image_url', image_url: { url: part.image_url, detail: part.detail || 'auto' } } : part) }));
-    return runWithApprovals(body, userKey, onApproval);
+    return runWithApprovals(body, userKey, onApproval, signal);
   }
 
   const response = await request('/v1/responses', body, { userKey });
