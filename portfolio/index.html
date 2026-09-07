@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Afni Harfiyan — UGC Creator in Bali | zuzuzu.tech</title>
+<meta name="description" content="Afni Harfiyan’s portfolio. Skincare, travel and hospitality UGC, with a background in AI automation and business operations. Based in Bali, working in English and Bahasa Indonesia.">
+<link rel="canonical" href="https://zuzuzu.tech/">
+<meta property="og:type" content="profile"><meta property="og:title" content="Afni Harfiyan — UGC Creator in Bali"><meta property="og:description" content="Skincare. Bali life. Travel. Content for your brand’s channels and ads."><meta property="og:url" content="https://zuzuzu.tech/">
+<meta name="twitter:card" content="summary"><meta name="theme-color" content="#651f2d">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23651f2d'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Georgia' font-size='52' fill='%23fffaf5'%3Ez%3C/text%3E%3C/svg%3E">
+<style>
+    :root{
+      --bg:#f5eee4;--bg2:#eadfd2;--ink:#2b1a1a;--muted:#776862;--line:rgba(91,30,43,.16);
+      --acid:#651f2d;--acid-dark:#49131f;--display:'Syne',sans-serif;--body:'Space Grotesk',sans-serif;
+      --gutter:clamp(20px,5vw,80px);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);overflow-x:hidden}
+    ::selection{background:var(--acid);color:#fffaf5}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .shell{max-width:1280px;margin:0 auto;padding:0 var(--gutter)}
+    h1,h2,h3{font-family:var(--display);line-height:1.02;letter-spacing:-.02em}
+
+    /* ── Nav ── */
+    .nav{position:fixed;top:0;right:0;left:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px var(--gutter);background:linear-gradient(rgba(245,238,228,.96),rgba(245,238,228,.78) 70%,transparent);backdrop-filter:blur(10px)}
+    .brand{font-family:var(--display);font-weight:800;font-size:1.05rem;letter-spacing:.02em}
+    .brand span{color:var(--acid)}
+    .nav-links{display:flex;gap:28px;font-size:.82rem;color:var(--muted)}
+    .nav-links a:hover{color:var(--ink)}
+    .nav-cta{padding:10px 20px;border-radius:999px;background:var(--acid);color:#fffaf5;font-weight:600;font-size:.82rem;transition:transform .2s}
+    .nav-cta:hover{transform:scale(1.05)}
+    .menu{display:none;background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 12px;font-size:1rem}
+
+    /* ── Hero ── */
+    .hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:120px var(--gutter) 60px;overflow:hidden}
+    .hero::before{content:"";position:absolute;top:-30%;right:-15%;width:60vw;height:60vw;background:radial-gradient(circle,rgba(101,31,45,.12),transparent 60%);pointer-events:none}
+    .hero-kicker{display:inline-flex;align-items:center;gap:10px;color:var(--acid);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;margin-bottom:26px}
+    .hero-kicker::before{content:"";width:34px;height:1px;background:var(--acid)}
+    .hero h1{font-size:clamp(2.9rem,8.5vw,7.2rem);font-weight:800;max-width:1100px}
+    .hero h1 em{font-style:normal;color:var(--acid)}
+    .hero h1 .stroke{color:transparent;-webkit-text-stroke:1.5px var(--ink)}
+    .hero-sub{max-width:520px;margin-top:30px;color:var(--muted);font-size:1.02rem;font-weight:300}
+    .hero-sub strong{color:var(--ink);font-weight:500}
+    .hero-ctas{display:flex;gap:16px;margin-top:42px;flex-wrap:wrap;align-items:center}
+    .btn-acid{display:inline-flex;align-items:center;gap:10px;padding:17px 32px;border-radius:999px;background:var(--acid);color:#fffaf5;font-weight:600;font-size:.95rem;transition:transform .2s,box-shadow .2s}
+    .btn-acid:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(101,31,45,.22)}
+    .btn-ghost{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-size:.9rem;transition:border-color .2s,background .2s}
+    .btn-ghost:hover{border-color:var(--acid);color:var(--acid)}
+    .hero-foot{position:absolute;bottom:26px;left:var(--gutter);right:var(--gutter);display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+
+    /* ── Marquee ── */
+    .marquee{border-block:1px solid var(--line);padding:20px 0;overflow:hidden;background:var(--bg2)}
+    .marquee-track{display:flex;gap:44px;width:max-content;animation:scroll 28s linear infinite;font-family:var(--display);font-weight:700;font-size:1.05rem;white-space:nowrap}
+    .marquee-track span{display:flex;align-items:center;gap:44px}
+    .marquee-track i{color:var(--acid);font-style:normal}
+    @keyframes scroll{to{transform:translateX(-50%)}}
+
+    /* ── Stats ── */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+    .stat{background:var(--bg);padding:44px var(--gutter) 44px;text-align:left}
+    .stat b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(2rem,4vw,3.2rem);color:var(--acid)}
+    .stat span{color:var(--muted);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+
+    /* ── Sections ── */
+    section{padding:clamp(80px,11vw,150px) 0}
+    .sec-head{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:clamp(40px,6vw,70px);flex-wrap:wrap}
+    .sec-tag{color:var(--acid);font-size:.75rem;letter-spacing:.24em;text-transform:uppercase;margin-bottom:16px;display:block}
+    .sec-head h2{font-size:clamp(2.2rem,5.5vw,4.4rem);font-weight:800;max-width:720px}
+    .sec-head p{max-width:380px;color:var(--muted);font-size:.92rem;font-weight:300}
+
+    /* ── Services rows ── */
+    .svc-rows{border-top:1px solid var(--line)}
+    .svc-row{display:grid;grid-template-columns:70px 1fr auto;gap:24px;align-items:center;padding:34px 8px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .25s,padding .25s;position:relative}
+    .svc-row:hover{background:var(--bg2);padding-left:22px}
+    .svc-no{font-family:var(--display);font-weight:700;color:var(--muted);font-size:.9rem}
+    .svc-row h3{font-size:clamp(1.3rem,3vw,2.1rem);font-weight:700;transition:color .25s}
+    .svc-row:hover h3{color:var(--acid)}
+    .svc-row p{color:var(--muted);font-size:.86rem;max-width:640px;margin-top:8px;font-weight:300}
+    .svc-arrow{font-size:1.5rem;color:var(--muted);transition:transform .25s,color .25s}
+    .svc-row:hover .svc-arrow{transform:translate(6px,-6px);color:var(--acid)}
+    .svc-side{margin-top:56px;padding:30px;border:1px dashed var(--line);border-radius:16px;display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+    .svc-side h3{font-size:1.15rem;font-weight:700;color:var(--ink)}
+    .svc-side p{color:var(--muted);font-size:.85rem;max-width:560px}
+    .svc-side .tags{display:flex;gap:9px;flex-wrap:wrap}
+    .tag{padding:7px 14px;border-radius:999px;border:1px solid var(--line);font-size:.75rem;color:var(--muted)}
+
+    /* ── Work ── */
+    .work{background:var(--bg2);border-block:1px solid var(--line)}
+    .case{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,70px);align-items:center;padding:clamp(36px,5vw,60px) 0;border-bottom:1px solid var(--line)}
+    .case:last-child{border-bottom:0}
+    .case:nth-child(even){direction:rtl}
+    .case:nth-child(even)>*{direction:ltr}
+    .case-visual{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/10;background:#d8c8b8}
+    .case-visual img{width:100%;height:100%;object-fit:cover;filter:saturate(.85);transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+    .case:hover .case-visual img{transform:scale(1.05)}
+    .case-visual .case-no{position:absolute;top:16px;left:16px;padding:6px 14px;border-radius:999px;background:rgba(255,250,245,.84);backdrop-filter:blur(6px);font-family:var(--display);font-weight:700;font-size:.78rem;color:var(--acid)}
+    .case-copy .case-type{color:var(--acid);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase}
+    .case-copy h3{font-size:clamp(1.7rem,3.6vw,2.7rem);font-weight:800;margin:14px 0 16px}
+    .case-copy p{color:var(--muted);font-size:.94rem;font-weight:300;max-width:520px}
+    .case-points{margin:22px 0 0;display:grid;gap:10px;list-style:none}
+    .case-points li{display:flex;gap:12px;font-size:.87rem;color:var(--ink)}
+    .case-points li::before{content:"→";color:var(--acid);flex-shrink:0}
+    .case-link{display:inline-flex;align-items:center;gap:8px;margin-top:26px;color:var(--acid);font-weight:600;font-size:.86rem}
+    .case-link:hover{gap:14px}
+    .case-link{transition:gap .25s}
+
+    /* ── Process ── */
+    .process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .step{padding:30px 26px;border:1px solid var(--line);border-radius:18px;background:var(--bg2);transition:transform .25s,border-color .25s}
+    .step:hover{transform:translateY(-6px);border-color:var(--acid)}
+    .step b{display:block;font-family:var(--display);font-weight:800;font-size:2rem;color:var(--acid);margin-bottom:14px}
+    .step h3{font-size:1.12rem;font-weight:700;margin-bottom:9px}
+    .step p{color:var(--muted);font-size:.83rem;font-weight:300}
+
+    /* ── About ── */
+    .about-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(34px,6vw,80px);align-items:center}
+    .about-photo{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#d8c8b8}
+    .about-photo img{width:100%;height:100%;object-fit:cover;filter:grayscale(.25)}
+    .about-photo::after{content:"AFNI · BALI · AFNI · BALI · ";position:absolute;bottom:-8px;left:0;right:0;font-family:var(--display);font-weight:800;font-size:2rem;color:transparent;-webkit-text-stroke:1px rgba(255,250,245,.58);white-space:nowrap;overflow:hidden}
+    .about-copy h2{font-size:clamp(1.9rem,4.2vw,3.2rem);font-weight:800;margin-bottom:22px}
+    .about-copy h2 em{font-style:normal;color:var(--acid)}
+    .about-copy p{color:var(--muted);font-weight:300;margin-bottom:16px;max-width:560px}
+    .about-copy p strong{color:var(--ink);font-weight:500}
+    .about-facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+    .fact{padding:16px 18px;border:1px solid var(--line);border-radius:12px;font-size:.82rem;color:var(--muted)}
+    .fact b{display:block;color:var(--ink);font-size:.92rem;margin-bottom:2px;font-weight:600}
+
+    /* ── Contact ── */
+    .contact{background:#eadfd2;color:var(--ink);border-top:1px solid var(--line)}
+    .contact .sec-tag{color:var(--acid)}
+    .contact h2{font-size:clamp(2.4rem,6.5vw,5rem);font-weight:800;max-width:900px}
+    .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(34px,6vw,80px);margin-top:clamp(36px,5vw,60px)}
+    .contact-left p{color:var(--muted);font-weight:400;max-width:440px;margin-bottom:28px}
+    .contact-ways{display:grid;gap:14px}
+    .way{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:14px;background:rgba(101,31,45,.08);font-weight:600;transition:background .2s,transform .2s}
+    .way:hover{background:rgba(101,31,45,.15);transform:translateX(6px)}
+    .way small{display:block;font-weight:400;color:var(--muted);font-size:.75rem}
+    .cform{display:grid;gap:14px}
+    .cform input,.cform select,.cform textarea{width:100%;padding:15px 17px;border-radius:12px;border:1.5px solid rgba(101,31,45,.25);background:rgba(255,253,249,.78);color:var(--ink);font:inherit;font-size:.9rem}
+    .cform input::placeholder,.cform textarea::placeholder{color:rgba(43,26,26,.48)}
+    .cform input:focus,.cform select:focus,.cform textarea:focus{outline:2.5px solid var(--acid)}
+    .cform textarea{min-height:120px;resize:vertical}
+    .cform button{padding:17px;border-radius:999px;border:0;background:var(--acid);color:#fffaf5;font:600 .95rem var(--body);cursor:pointer;transition:transform .2s}
+    .cform button:hover{transform:scale(1.02)}
+    .form-msg{font-size:.85rem;font-weight:500;min-height:1.2em}
+
+    /* ── Footer ── */
+    .footer{padding:34px var(--gutter);display:flex;justify-content:space-between;gap:16px;color:var(--muted);font-size:.78rem;flex-wrap:wrap}
+    .footer a:hover{color:var(--acid)}
+
+    /* ── Reveal ── */
+    .reveal{opacity:0;transform:translateY(34px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:none}
+
+    @media(max-width:900px){
+      .nav-links{display:none;position:absolute;top:100%;right:0;left:0;flex-direction:column;gap:0;background:var(--bg2);border-block:1px solid var(--line)}
+      .nav-links.open{display:flex}
+      .nav-links a{padding:16px var(--gutter);border-bottom:1px solid var(--line)}
+      .menu{display:block}
+      .stats{grid-template-columns:1fr 1fr}
+      .case,.case:nth-child(even){grid-template-columns:1fr;direction:ltr}
+      .process-grid{grid-template-columns:1fr 1fr}
+      .about-grid,.contact-grid{grid-template-columns:1fr}
+      .hero-foot{display:none}
+    }
+    @media(max-width:560px){
+      .process-grid{grid-template-columns:1fr}
+      .about-facts{grid-template-columns:1fr}
+      .svc-row{grid-template-columns:44px 1fr auto;gap:12px}
+    }
+  
+/* Afni's original portfolio: quieter motion, readable type, UGC first. */
+:root{--muted:#6d5c56}html{scroll-padding-top:95px}.reveal{opacity:1;transform:none}.hero{min-height:auto;padding-top:155px;padding-bottom:70px}.hero-layout{display:grid;grid-template-columns:1.6fr .8fr;align-items:center;gap:55px;max-width:1280px;margin:auto}.hero h1{font-size:clamp(3rem,6.7vw,6.3rem)}.hero-sub{font-weight:400}.hero-kicker{font-size:12px;letter-spacing:.12em}.hero-ctas{margin-top:28px}.nav{background:rgba(245,238,228,.97);border-bottom:1px solid var(--line)}.nav-links{font-size:14px;gap:22px}.brand{font-size:1.2rem;letter-spacing:-.04em}.brand small{font:400 12px var(--body);letter-spacing:0}.private-link{font-size:14px;border-left:1px solid var(--line);padding-left:18px;color:var(--muted)}.nav-cta{font-size:14px}.skip{position:fixed;top:-80px;left:20px;z-index:100;background:var(--acid);color:white;padding:12px}.skip:focus{top:12px}a:focus-visible,summary:focus-visible,button:focus-visible{outline:3px solid var(--acid);outline-offset:5px}
+.identity{background:var(--acid);color:var(--bg);min-height:410px;border-radius:120px 120px 12px 12px;padding:40px 30px 25px;display:flex;flex-direction:column;justify-content:space-between;position:relative}.identity .initial{font:800 clamp(80px,10vw,145px)/1 var(--display);letter-spacing:-.09em;text-align:center;margin:45px 0 40px}.identity .tiny{font-size:12px;text-transform:uppercase;letter-spacing:.14em}.identity h2{font-size:23px;line-height:1.2;margin:8px 0}.identity p{font-size:14px;color:#e6cbd0}.identity-line{border-top:1px solid #a56a77;padding-top:16px;display:flex;justify-content:space-between;font-size:12px;gap:10px;margin-top:25px}
+.specialties{display:flex;justify-content:space-between;gap:20px;padding:24px var(--gutter);border-block:1px solid var(--line);background:var(--bg2);font-family:var(--display);font-weight:700;font-size:clamp(16px,2vw,24px)}.specialties span{display:flex;align-items:center;gap:20px}.specialties i{font-style:normal;color:var(--acid);font-size:14px}.sec-head p,.case-copy p,.step p,.about-copy p{font-weight:400;font-size:16px}.sec-tag,.case-copy .case-type{font-size:12px;letter-spacing:.13em}.svc-row p{font-size:16px;font-weight:400}.svc-row{grid-template-columns:45px 1fr auto;padding:27px 8px}.svc-row h3{font-size:clamp(22px,2.5vw,30px)}section{padding:80px 0}.sec-head{margin-bottom:38px}.sec-head h2{font-size:clamp(32px,4.5vw,54px)}
+.sample-note{border:1px solid var(--line);border-radius:16px;padding:30px;background:var(--bg);display:flex;justify-content:space-between;gap:35px;align-items:center}.sample-note h3{font-size:23px;margin-bottom:12px}.sample-note p{max-width:650px;color:var(--muted)}.badge{border:1px solid var(--line);padding:8px 14px;border-radius:30px;font-size:12px;white-space:nowrap}.sample-note+.note{margin-top:17px}.note{font-size:14px;color:var(--muted)}.sample-topics{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:24px}.topic{padding:25px;border:1px solid var(--line);border-radius:12px}.topic small{font-size:12px;color:var(--acid)}.topic h3{font-size:20px;margin:12px 0}.topic p{font-size:15px;color:var(--muted)}
+.background{background:var(--bg2);border-block:1px solid var(--line)}.project-list{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.project{padding:28px;background:var(--bg);border:1px solid var(--line);border-radius:15px;display:flex;flex-direction:column}.project h3{font-size:24px;line-height:1.1;margin:16px 0}.project p{font-size:16px;color:var(--muted)}.project .case-link{margin-top:auto;padding-top:24px;font-size:14px}.project .case-type{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--acid)}.other-services{margin-top:28px;border-top:1px solid var(--line);padding-top:23px}.other-services summary{cursor:pointer;font-weight:600;font-size:17px}.other-services ul{margin:18px 0 0;padding-left:22px;columns:2;column-gap:35px;color:var(--muted)}.other-services li{margin-bottom:10px;break-inside:avoid}.process-grid{gap:15px}.step p{font-size:15px}.step:hover{transform:none}.about-grid{grid-template-columns:.8fr 1.2fr;align-items:start}.about-title{font:800 clamp(40px,5vw,64px)/1.1 var(--display);letter-spacing:-.05em;color:var(--acid)}.about-facts .fact{font-size:14px}.about-copy h2{font-size:30px}.contact h2{font-size:clamp(36px,5.5vw,68px)}.contact-grid{margin-top:35px}.way{justify-content:space-between;flex-wrap:wrap;font-size:16px;overflow-wrap:anywhere}.way small{font-size:13px}.cform label{display:block;font-size:14px;font-weight:500}.cform textarea{margin-top:9px;min-height:170px;font-size:16px}.cform button{font-size:16px}.footer{font-size:14px}.footer a{text-decoration:underline;text-underline-offset:4px}
+@media(max-width:900px){.nav-links{display:flex;position:static;flex-direction:row;background:none;border:0}.nav-links a{padding:0;border:0}.nav-links .wide{display:none}.hero-layout{grid-template-columns:1.2fr .8fr;gap:30px}.identity{min-height:340px;padding:30px 23px 23px}.identity .initial{font-size:95px}.project-list{grid-template-columns:1fr}.sample-topics{grid-template-columns:1fr}.topic{display:grid;grid-template-columns:30px 1fr;gap:8px 15px}.topic h3{margin:0}.topic p{grid-column:2}.about-grid{grid-template-columns:1fr;gap:35px}}
+@media(max-width:620px){.nav{padding:16px 20px;gap:15px}.nav-links{display:none}.private-link{border:0;padding:0;font-size:13px}.nav-cta{padding:9px 14px;font-size:13px}.hero{padding-top:110px;padding-bottom:40px}.hero-layout{grid-template-columns:1fr;gap:35px}.hero h1{font-size:clamp(46px,11.5vw,66px)}.hero-sub{font-size:16px;margin-top:22px}.hero-kicker{font-size:11px;letter-spacing:.08em}.hero-ctas{gap:10px}.btn-acid,.btn-ghost{padding:14px 20px;font-size:14px}.identity{min-height:0;border-radius:16px;padding:24px;display:grid;grid-template-columns:90px 1fr;gap:10px 20px}.identity .tiny{grid-column:1/-1}.identity .initial{font-size:75px;margin:14px 0}.identity-line{grid-column:1/-1;margin-top:0}.identity h2{font-size:21px}.identity p{font-size:13px}.specialties{gap:10px;padding:19px 20px;font-size:14px}.specialties span{gap:8px}.specialties i{font-size:11px}.sample-note{flex-direction:column;align-items:flex-start;padding:23px;gap:20px}section{padding:55px 0}.sec-head{gap:18px;margin-bottom:26px}.other-services ul{columns:1}.contact-grid{gap:28px}.footer{font-size:13px}.contact-ways .way{font-size:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main navigation">
+<a class="brand" href="#top">zuzuzu<span>.</span><small>tech</small></a>
+<div class="nav-links"><a href="#work">UGC portfolio</a><a class="wide" href="#services">Services</a><a class="wide" href="#projects">Other work</a><a class="wide" href="#about">About</a></div>
+<div style="display:flex;gap:16px;align-items:center"><a class="private-link" href="/login">Private login ↗</a><a class="nav-cta" href="#contact">Let’s talk</a></div>
+</nav>
+<main id="main">
+<header class="hero" id="top"><div class="hero-layout"><div>
+<span class="hero-kicker">Afni Harfiyan · UGC creator · Bali</span>
+<h1>Real routines.<br><em>Fresh places.</em><br>Your brand’s story.</h1>
+<p class="hero-sub">I’m Afni. I create <strong>skincare, travel and hospitality content</strong> for brands to use on their own channels and ads. Based in Bali, working in English and Bahasa Indonesia.</p>
+<div class="hero-ctas"><a class="btn-acid" href="#contact">Talk about a project ↗</a><a class="btn-ghost" href="#work">Explore my work ↓</a></div>
+</div><aside class="identity" aria-label="About the creator"><span class="tiny">The person behind zuzuzu.tech</span><div class="initial" aria-hidden="true">af.</div><div><h2>Afni Harfiyan<br>Hendrani</h2><p>Skincare. Bali life. Travel.</p></div><div class="identity-line"><span>BALI, INDONESIA</span><span>EN / ID</span></div></aside></div></header>
+<div class="specialties" aria-label="Specialties"><span><i aria-hidden="true">✦</i> Skincare</span><span><i aria-hidden="true">✦</i> Bali life</span><span><i aria-hidden="true">✦</i> Travel & stays</span></div>
+<section class="work" id="work"><div class="shell"><div class="sec-head"><div><span class="sec-tag">UGC portfolio</span><h2>A new chapter.<br>Made from real experience.</h2></div><p>My focus is the detail: how a product applies, what a place feels like, and the moments worth showing.</p></div>
+<div class="sample-note"><div><h3>My first UGC samples are in progress.</h3><p>I’m starting with skincare, Bali life and travel. Finished videos will be added here. Independent samples will be labeled as spec work, separate from commissioned projects.</p></div><span class="badge">Coming soon</span></div>
+<div class="sample-topics"><article class="topic"><small>01</small><h3>Skincare in use</h3><p>Application, textures and everyday routines.</p></article><article class="topic"><small>02</small><h3>A local perspective</h3><p>Bali places and the details of being there.</p></article><article class="topic"><small>03</small><h3>On the road</h3><p>Stay experiences and products that travel along.</p></article></div>
+</div></section>
+<section id="services"><div class="shell"><div class="sec-head"><div><span class="sec-tag">What I can create</span><h2>Content for your brand.</h2></div><p>Choose the format that fits your brief. We agree the scope, timeline, revisions and usage before filming.</p></div><div class="svc-rows">
+<a class="svc-row" href="#contact"><span class="svc-no">01</span><div><h3>Product demonstrations</h3><p>Show your product in use, with application, close-ups and the details people want to see.</p></div><span class="svc-arrow" aria-hidden="true">↗</span></a>
+<a class="svc-row" href="#contact"><span class="svc-no">02</span><div><h3>Talking head & voiceover</h3><p>A clear story or honest first-person experience, supported by product footage.</p></div><span class="svc-arrow" aria-hidden="true">↗</span></a>
+<a class="svc-row" href="#contact"><span class="svc-no">03</span><div><h3>Travel & hospitality videos</h3><p>Walkthroughs and stay experiences that help a guest picture being there.</p></div><span class="svc-arrow" aria-hidden="true">↗</span></a>
+<a class="svc-row" href="#contact"><span class="svc-no">04</span><div><h3>Lifestyle footage & creative variations</h3><p>Product-in-use clips, supporting B-roll and alternate hooks for your content library.</p></div><span class="svc-arrow" aria-hidden="true">↗</span></a>
+</div></div></section>
+<section class="background" id="projects"><div class="shell"><div class="sec-head"><div><span class="sec-tag">Other work · Technology & operations</span><h2>The experience I bring with me.</h2></div><p>Before this UGC chapter, my portfolio focused on business systems. These are the projects behind that experience.</p></div>
+<div class="project-list">
+<article class="project"><span class="case-type">01 · Business platform</span><h3>The Villa Managers</h3><p>A villa marketing platform connecting public listings with bookings, payments and a private operations workspace.</p><a class="case-link" href="https://thevillamanagers.cloud/" target="_blank" rel="noopener">Explore the public site ↗</a></article>
+<article class="project"><span class="case-type">02 · Conversational AI</span><h3>AI Assistant</h3><p>WhatsApp and Telegram workflows for tasks, reminders and day-to-day team operations.</p><a class="case-link" href="#contact">Ask about this project ↗</a></article>
+<article class="project"><span class="case-type">03 · Process automation</span><h3>Operations Workflows</h3><p>Connected business tools for follow-ups, reporting and repeatable administrative work.</p><a class="case-link" href="#contact">Discuss automation ↗</a></article>
+</div><details class="other-services"><summary>Also available for technology & operations projects</summary><ul><li>AI assistants and business process automation</li><li>WhatsApp conversational workflows</li><li>CRM, lead generation and digital marketing</li><li>Shopify operations</li><li>Websites and no-code tools</li><li>Project management and bilingual operations</li></ul></details>
+</div></section>
+<section id="process"><div class="shell"><div class="sec-head"><div><span class="sec-tag">Working together</span><h2>From your brief to your channels.</h2></div></div><div class="process-grid">
+<article class="step"><b>01</b><h3>The brief</h3><p>Tell me about the product, audience, deliverables and where you want to use the content.</p></article>
+<article class="step"><b>02</b><h3>The idea</h3><p>We agree the concept, scope, price, timeline and usage rights.</p></article>
+<article class="step"><b>03</b><h3>The content</h3><p>I film and edit around the agreed direction, then share a draft for review.</p></article>
+<article class="step"><b>04</b><h3>The delivery</h3><p>After the agreed revisions, you receive the files for the channels we’ve covered.</p></article>
+</div></div></section>
+<section id="about" style="padding-top:0"><div class="shell"><div class="about-grid"><div><span class="sec-tag">A little about me</span><p class="about-title">Afni.<br>Bali-based.<br>Always curious.</p></div><div class="about-copy"><h2>The person behind the work.</h2><p>I’m <strong>Afni Harfiyan Hendrani</strong>, an Information Systems graduate from Universitas Multimedia Nusantara, based in Bali.</p><p>My background is in business operations, digital tools and The Villa Managers. My UGC interests are personal: skincare, Bali life and travel.</p><p>I’m bringing those interests into content for brands, with clear communication and an organised approach to each project.</p><div class="about-facts"><div class="fact"><b>Bali · Remote</b>Local shoots and remote collaboration</div><div class="fact"><b>English + Bahasa Indonesia</b>Briefs and content in either language</div></div></div></div></div></section>
+<section class="contact" id="contact"><div class="shell"><span class="sec-tag">Have a brief?</span><h2>Let’s make something<br>for your brand.</h2><div class="contact-grid"><div class="contact-left"><p>Send your product or location, the content you need, your timeline and intended usage. You can also reach out about my technology and operations work.</p><div class="contact-ways">
+<a class="way" href="https://wa.me/6282122922252?text=Hi%20Afni%2C%20I%20found%20your%20portfolio%20on%20zuzuzu.tech%20and%20would%20like%20to%20discuss%20a%20project." target="_blank" rel="noopener"><span>WhatsApp ↗</span><small>Message Afni · EN / ID</small></a>
+<a class="way" href="mailto:hello@thevillamanagers.com?subject=Project%20enquiry%20%E2%80%94%20zuzuzu.tech"><span>Email ↗</span><small>hello@thevillamanagers.com</small></a>
+<a class="way" href="https://www.linkedin.com/in/afniharfiyan/" target="_blank" rel="noopener"><span>LinkedIn ↗</span><small>afniharfiyan</small></a>
+</div></div><form class="cform" action="https://wa.me/6282122922252" method="get" target="_blank" rel="noopener"><label for="brief">Your project brief<textarea id="brief" name="text" required maxlength="2000" placeholder="Hi Afni! I’m reaching out from…&#10;&#10;Our product / location:&#10;Content needed:&#10;Timeline:&#10;Budget and usage:"></textarea></label><button type="submit">Open your brief in WhatsApp ↗</button><p class="note">WhatsApp opens with your draft. Review it there and press send when you’re ready.</p></form></div></div></section>
+</main>
+<footer class="footer"><span>© 2026 Afni Harfiyan Hendrani · zuzuzu.tech</span><a href="https://thevillamanagers.cloud/" target="_blank" rel="noopener">The Villa Managers ↗</a><a href="/login">Zuzu private space ↗</a></footer>
+</body></html>
