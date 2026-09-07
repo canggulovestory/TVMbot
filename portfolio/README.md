@@ -23,7 +23,10 @@ UGC videos are still in progress; no commissioned work is invented.
 Existing public WhatsApp, email and LinkedIn contacts are retained from the Afni page.
 The brief form opens WhatsApp for the visitor to review and send; it does not
 submit to the TVM enquiry API. The old TVM /afni routes redirect to this domain.
-The stock image formerly labeled as Afni’s portrait is replaced by a name card.
+No stock portrait is used. The editorial redesign uses credited TVM location
+photography, a warm-white/olive palette, visible UGC status, native mobile
+navigation and expandable background/brief sections. Images load from
+https://thevillamanagers.cloud, explicitly allowed by the Content Security Policy.
 
 For content updates, copy index.html to a staging file on the server and then
 install it as `/var/www/zuzuzu-portfolio/index.html`. Keep ops and this README
