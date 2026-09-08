@@ -10,12 +10,14 @@ test('challenge routes reject anonymous reads/writes and cross-origin writes',as
  vm.runInContext(source.slice(source.indexOf('async function handlePersonalApp('),source.indexOf('const server = http.createServer')),context);
  const call=(method,pathname,body={},origin)=>context.handlePersonalApp({method,body,headers:origin?{origin}:{}},{},{pathname});
  for(const [method,p] of [['GET','/api/zuzu/challenge'],['POST','/api/zuzu/challenge/import'],['POST','/api/zuzu/challenge/day']])assert.equal((await call(method,p)).status,401);
- assert.equal((await call('GET','/challenge')).location,'/login');
+ assert.equal((await call('GET','/challenge')).location,'https://zuzuzu.tech/challenge');
  session={user:'afni'};
  assert.equal((await call('POST','/api/zuzu/challenge/import',{},'https://evil.example')).status,403);
  assert.equal((await call('GET','/api/zuzu/challenge')).body.challenge,null);
  assert.equal((await call('POST','/api/zuzu/challenge/import',{})).status,422);
  assert.equal((await call('POST','/api/zuzu/challenge/day',{day:0,status:'done'})).status,422);
- assert.equal((await call('GET','/challenge')).status,200);
+ assert.equal((await call('GET','/challenge')).location,'https://zuzuzu.tech/challenge');
+ assert.equal((await call('GET','/login')).location,'https://zuzuzu.tech/login');
+ assert.equal((await call('GET','/')).location,'https://zuzuzu.tech/workspace');
  assert.equal((await call('POST','/api/zuzu/challenge/day',null)).status,422);
 });

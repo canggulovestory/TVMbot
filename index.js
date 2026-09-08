@@ -752,6 +752,11 @@ async function handleChatRun(req, res, url, session, scope, base) {
 }
 
 async function handlePersonalApp(req, res, url) {
+  // The private UI now runs from canggulovestory/zuzu on its own server.
+  if (req.method === 'GET' && ['/', '/login', '/login/', '/challenge', '/challenge/'].includes(url.pathname)) {
+    const destination = url.pathname.startsWith('/challenge') ? '/challenge' : url.pathname === '/' ? '/workspace' : '/login';
+    return redirect(res, 'https://zuzuzu.tech' + destination);
+  }
   if (url.pathname === '/chat-state.js' && req.method === 'GET') {
     const script = await fs.readFile(path.join(PERSONAL_DIR, 'chat-state.js'));
     res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
