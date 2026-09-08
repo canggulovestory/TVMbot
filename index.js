@@ -71,9 +71,9 @@ async function sendHtml(res, fileName, status = 200) {
   }
 }
 
-async function sendPersonalHtml(res) {
+async function sendPersonalHtml(res, fileName = 'index.html') {
   try {
-    const html = await fs.readFile(path.join(PERSONAL_DIR, 'index.html'));
+    const html = await fs.readFile(path.join(PERSONAL_DIR, fileName));
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
     res.end(html);
   } catch (error) { console.error('[HTTP] Personal app error:', error.message); sendJson(res, 500, { error: 'Personal space unavailable.' }); }
@@ -768,6 +768,28 @@ async function handlePersonalApp(req, res, url) {
   }
   if (url.pathname === '/api/zuzu/logout' && req.method === 'POST') return sendJson(res, 200, { ok: true }, { 'Set-Cookie': personalSessionCookie('', 0) });
   const session = await getPersonalSession(req);
+  if ((url.pathname === '/challenge' || url.pathname === '/challenge/') && req.method === 'GET') {
+    if (!session) return redirect(res, '/login');
+    return sendPersonalHtml(res, 'challenge.html');
+  }
+  if (['/api/zuzu/challenge', '/api/zuzu/challenge/import', '/api/zuzu/challenge/day'].includes(url.pathname)) {
+    if (!session) return sendJson(res, 401, { error: 'Sign in required.' });
+    if (req.method === 'POST' && req.headers.origin && req.headers.origin !== 'https://app.zuzuzu.tech') return sendJson(res, 403, { error: 'Use your private Zuzu workspace.' });
+    if (url.pathname === '/api/zuzu/challenge' && req.method === 'GET') return sendJson(res, 200, { challenge: await personalLife.challenge(session.user) });
+    if (req.method === 'POST') {
+      let body;
+      try { body = await readBody(req, 384 * 1024); }
+      catch (_) { return sendJson(res, 400, { error: 'Invalid or oversized challenge file.' }); }
+      try {
+        if (url.pathname === '/api/zuzu/challenge/import') return sendJson(res, 200, { challenge: await personalLife.importChallenge(session.user, body) });
+        if (url.pathname === '/api/zuzu/challenge/day') return sendJson(res, 200, { progress: await personalLife.updateChallengeDay(session.user, body?.day, body) });
+      } catch (error) {
+        if (/Invalid |must contain|already exists|No challenge/.test(error.message)) return sendJson(res, 422, { error: error.message });
+        throw error;
+      }
+    }
+    return sendJson(res, 405, { error: 'Method not allowed.' });
+  }
   if (url.pathname === '/api/zuzu/runs' || url.pathname.startsWith('/api/zuzu/runs/')) {
     return handleChatRun(req,res,url,session,'life','/api/zuzu/runs');
   }

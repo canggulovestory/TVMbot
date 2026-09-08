@@ -1,0 +1,21 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),vm=require('node:vm'),path=require('node:path'),os=require('node:os');
+const life=require('../personal-life');
+test('challenge routes reject anonymous reads/writes and cross-origin writes',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'challenge-route-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));life.init(dir);
+ let session=null;
+ const context={personalLife:life,getPersonalSession:async()=>session,readBody:async req=>req.body,sendJson:(res,status,body)=>({status,body}),redirect:(res,location)=>({status:302,location}),sendPersonalHtml:async()=>({status:200}),JSON,Number};
+ vm.createContext(context);
+ const source=await fs.readFile(path.join(__dirname,'../index.js'),'utf8');
+ vm.runInContext(source.slice(source.indexOf('async function handlePersonalApp('),source.indexOf('const server = http.createServer')),context);
+ const call=(method,pathname,body={},origin)=>context.handlePersonalApp({method,body,headers:origin?{origin}:{}},{},{pathname});
+ for(const [method,p] of [['GET','/api/zuzu/challenge'],['POST','/api/zuzu/challenge/import'],['POST','/api/zuzu/challenge/day']])assert.equal((await call(method,p)).status,401);
+ assert.equal((await call('GET','/challenge')).location,'/login');
+ session={user:'afni'};
+ assert.equal((await call('POST','/api/zuzu/challenge/import',{},'https://evil.example')).status,403);
+ assert.equal((await call('GET','/api/zuzu/challenge')).body.challenge,null);
+ assert.equal((await call('POST','/api/zuzu/challenge/import',{})).status,422);
+ assert.equal((await call('POST','/api/zuzu/challenge/day',{day:0,status:'done'})).status,422);
+ assert.equal((await call('GET','/challenge')).status,200);
+ assert.equal((await call('POST','/api/zuzu/challenge/day',null)).status,422);
+});
