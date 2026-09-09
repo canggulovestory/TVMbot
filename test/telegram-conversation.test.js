@@ -35,6 +35,8 @@ test('Telegram keeps a second message queued and carries the authenticated appro
     assert.equal(calls.length, 2);
     assert.equal(calls[1].text, 'Get water heater');
     assert.equal(calls[1].telegramId, '1');
+    assert.equal(calls[1].telegramMessage.text, 'Get water heater');
+    assert.equal(calls[1].telegramMessage.from.id, 1);
     assert.equal(typeof calls[1].onApproval, 'function');
   } finally {
     release(); brain.processMessage = originalProcess; brain.isAllowed = originalAllowed;

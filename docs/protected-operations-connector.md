@@ -1,7 +1,7 @@
 # Protected task/villa connector — 2026-09-10 checkpoint
 
-Status: connector and channel adapters implemented; synthetic checks run on both
-online hosts. **Not mounted in the production chat handlers. No live chat cutover.**
+Status: connector, isolated host dispatch and rollout scripts implemented.
+Online cutover must be verified using the read-only probes below.
 Finance remains disabled. Financial entries still require the planned signed-in
 financial website confirmation; this connector has no financial actions.
 
@@ -52,7 +52,32 @@ may truncate data. Completion requires an exact ID present in that task source.
 - TVM online checks run under non-root `zuzu-gateway`; personal-host auth checks
   use synthetic data only. Existing services were not restarted.
 
-## Required before live wiring
+## Live wiring
+
+The trusted loopback broker runs as a separate service. Its credentials and
+Notion token are never available to the non-root model worker. The previous root
+Hermes service is disabled at cutover; the deploy synchronizer must not revive it.
+Telegram carries the original bot message into the host; Admin supplies its real
+HTTP request and session authenticator. Personal web uses its existing private-auth
+owner session. Staff bindings are read-only; task writes are owner-only.
+
+Durable chat runs complement the per-operation journal. Identical same-day task
+requests replay their successful answer without repeating a write, even when a
+user resends the text as a new message. A failed run that may have written remains
+blocked for review. Failed read-only requests can retry, and repeated reads always
+fetch fresh records. This deliberately favors duplicate safety: to request another
+identical task intentionally, say explicitly that it is an additional task.
+
+Installed Notion SDK 2.3.0 was checked with a retryable HTTP failure and makes one
+write attempt. A runnable regression test protects that assumption; no unsupported
+retry configuration was added.
+
+Read-only production probe: `node integration/check-live-operations.cjs`. The
+personal repository's `scripts/check-isolated-web.cjs` exercises its real auth
+module with a disposable session and the live tunnel/connector. Neither probe
+creates business tasks, changes financial records or sends Telegram messages.
+
+## Original prerequisites (now implemented in the rollout)
 
 1. Replace/isolate the personal web chat's root-level Claude/general-tool runner.
    Its current filesystem/code execution can reach server credentials. Do not

@@ -475,7 +475,7 @@ async function handleAdminApi(req, res, url) {
     if (!message) return sendJson(res, 422, { error: 'Write a message for Zuzu first.' });
     if (!brain.USERS[session.user]) return sendJson(res, 403, { error: 'Zuzu is not configured for this team account.' });
     if (zuzuRateLimited(session.user)) return sendJson(res, 429, { error: 'Zuzu needs a short break. Please try again in a few minutes.' });
-    const reply = await brain.processInternalMessage({ text: message, userKey: session.user });
+    const reply = await brain.processInternalMessage({ text: message, userKey: session.user, req });
     if (!reply) return sendJson(res, 503, { error: 'Zuzu is temporarily unavailable.' });
     audit.add(session.user, 'asked Zuzu', 'admin assistant chat');
     return sendJson(res, 200, { ok: true, reply: String(reply).slice(0, 6000) });
@@ -726,7 +726,7 @@ async function handleChatRun(req, res, url, session, scope, base) {
     if (zuzuRateLimited(`${scope}:${session.user}`)) return sendJson(res,429,{error:'Too many chat requests. Try again shortly.'});
     try {
       const run=webChatRuns.start({owner,id:body.id,message,work:async controls=>{
-        const reply=await (scope==='admin'?brain.processInternalMessage:brain.processPersonalMessage)({text:message,userKey:session.user,...controls});
+        const reply=await (scope==='admin'?brain.processInternalMessage:brain.processPersonalMessage)({text:message,userKey:session.user,req,...controls});
         audit.add(session.user,'asked Zuzu',`${scope} web chat`);
         return reply;
       }});
@@ -1015,7 +1015,7 @@ async function boot() {
   audit.init(DATA_DIR);
   await authUsers.init(DATA_DIR);
   notion.init();
-  brain.init();
+  brain.init({authenticateWeb:async req=>{const session=req&&await getSession(req);return session?{id:session.user}:null;}});
   if (process.env.DISABLE_CHANNELS !== 'true') {
     await whatsapp.start();
     await telegram.start();

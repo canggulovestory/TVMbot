@@ -12,8 +12,15 @@ const personalLife = require('./personal-life');
 const { tryVillaLink } = require('./villa-links');
 const { businessBrief, financeSummary, financeCockpit, marketingPipeline, searchOperations, closeWord } = require('./agent-tools');
 
-function init() {
-  hermes.init();
+let protectedChat;
+function init({authenticateWeb}={}) {
+  if(process.env.ZUZU_PROTECTED_CHAT!=='true'){hermes.init();return;}
+  const fs=require('node:fs'),config=JSON.parse(fs.readFileSync('/etc/zuzu-runtime/operations-chat.json','utf8'));
+  const channels=require('./operations-channel-client').createOperationsChannels({...config.operations,authenticateWeb});
+  protectedChat=require('./operations-chat').createOperationsChat({
+    chat:require('./isolated-chat').createChat(config.hermes),channels,
+    turns:require('./protected-turns').createTurns('/var/lib/zuzu-operations/chat-runs'),
+  });
 }
 
 // ─── User identification ────────────────────────────────────────────────────────
@@ -144,17 +151,34 @@ function withDialogue(scope, text, work) {
   queued.finally(() => { if (dialogueQueues.get(scope) === queued) dialogueQueues.delete(scope); });
   return task;
 }
-async function processMessage({ text, phone, telegramId, attachment, onApproval }) {
+async function processMessage({ text, phone, telegramId, telegramMessage, attachment, onApproval }) {
   const user = identifyUser({ phone, telegramId });
   if (!user) return null;
   const scope = `${telegramId ? 'telegram' : 'whatsapp'}:${user.key}`;
+  if(protectedChat&&telegramId){
+    if(String(telegramMessage?.from?.id)!==String(telegramId))return null;
+    try{protectedChat.authenticateTelegram(telegramMessage);}catch(_){return null;}
+    return withDialogue(scope,text,async history=>{
+      // Existing explicit memory/reminder commands stay host-side; no /ops finance path.
+      if(/^\/(help|remember|memory|remind|reminders)\b/i.test(text)){
+        const reply=await assistant.tryCommand(text,user.key);if(reply)return reply;
+      }
+      if(!attachment){const reply=await tryVillaLink(text,user.key);if(reply)return reply;}
+      try{return await protectedChat.telegram({message:telegramMessage,text,history});}
+      catch(_){return 'I could not finish that request. If you asked to save or complete a task, check the task list before resending; it may already have been saved. Finance is not enabled in this chat.';}
+    });
+  }
   return withDialogue(scope, text, conversationHistory => processForUser({ text, user, attachment, onApproval, conversationHistory }));
 }
 
 /** Protected Admin dialogue is separate from messaging and personal-life history. */
-async function processInternalMessage({ text, userKey, onApproval, signal }) {
+async function processInternalMessage({ text, userKey, req, onApproval, signal }) {
   const user = USERS[userKey];
   if (!user) return null;
+  if(protectedChat)return withDialogue(`admin:${userKey}`,text,async history=>{
+    try{return await protectedChat.web({req,text,history,signal});}
+    catch(_){return 'I could not finish that request. Check the task list before retrying a task change. Finance is not enabled in this chat.';}
+  });
   return withDialogue(`admin:${userKey}`, text, conversationHistory => {signal?.throwIfAborted();return processForUser({ text, user: { ...user, key: userKey }, conversationHistory, onApproval, signal })});
 }
 

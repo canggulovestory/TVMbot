@@ -1,0 +1,20 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),http=require('node:http');
+const {createOperationsHandler}=require('../operations-connector'),{createOperationsChannels}=require('../operations-channel-client'),{createTurns}=require('../protected-turns');
+test('Telegram chat binds the real sender, writes once per delivery, and exposes no finance tools',async t=>{
+ let api;try{api=require('../operations-chat');}catch(e){if(e.code!=='MODULE_NOT_FOUND')throw e;}assert.equal(typeof api?.createOperationsChat,'function');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ops-chat-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const token='synthetic-telegram-token'.repeat(3);let writes=0,models=0;
+ const server=http.createServer(createOperationsHandler({enabled:true,bindings:[{token,actor:'afni',channel:'telegram',canWriteTasks:true}],journalDir:path.join(dir,'broker'),tasks:{async getTasks(){return [];},async createTask(input){writes++;return {id:'12345678-1234-1234-1234-123456789abc',...input};}},villas:{async getAll(){return {villas:[]};}}}));
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.close();server.closeAllConnections();});
+ const channels=createOperationsChannels({enabled:true,url:`http://127.0.0.1:${server.address().port}/v1/operations`,telegramBindings:[{senderId:'100',token}]});
+ const chat={async respond({tools}){models++;assert.deepEqual(Object.keys(tools).sort(),['tvm_complete_task','tvm_create_task','tvm_list_tasks','tvm_list_villas']);const saved=await tools.tvm_create_task({name:'Check synthetic villa'},{toolIndex:0});return {response:saved.result.name};}};
+ const runner=api.createOperationsChat({chat,channels,turns:createTurns(path.join(dir,'turns'))});
+ const message={message_id:1,from:{id:100},chat:{id:100,type:'private'}};
+ assert.equal(await runner.telegram({message,text:'Add a TVM task'}),'Check synthetic villa');
+ assert.equal(await runner.telegram({message:{...message,message_id:2},text:'Add a TVM task'}),'Check synthetic villa');
+ assert.equal(await runner.telegram({message,text:'Add a TVM task'}),'Check synthetic villa');
+ assert.equal(writes,1);assert.equal(models,1);
+ await assert.rejects(runner.telegram({message:{...message,from:{id:101}},text:'Read villas'}),/unauthorized/);
+ assert.equal(models,1);
+});

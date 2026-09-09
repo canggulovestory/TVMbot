@@ -22,6 +22,9 @@ TARGET_COMMIT="$(git -C "$REPO_DIR" rev-parse origin/main)"
 if [ "$CURRENT_COMMIT" = "$TARGET_COMMIT" ]; then
   exit 0
 fi
+if git -C "$REPO_DIR" merge-base --is-ancestor "$TARGET_COMMIT" "$CURRENT_COMMIT"; then
+  exit 0
+fi
 
 install -d -m 700 "$BACKUP_DIR"
 tar -czf "$BACKUP_DIR/website-$(date +%Y%m%d-%H%M%S).tar.gz" -C "$PUBLIC_DIR" .
@@ -30,6 +33,13 @@ git -C "$REPO_DIR" merge --ff-only origin/main
 npm ci --omit=dev --prefix "$REPO_DIR"
 rsync -a --delete "$REPO_DIR/website/" "$PUBLIC_DIR/"
 
+if [ -f /etc/zuzu-runtime/operations-chat.json ]; then
+  systemctl disable --now tvm-hermes.service
+  systemctl is-active --quiet zuzu-hermes-isolated.service
+  install -m 644 "$REPO_DIR/ops/zuzu-operations.service" /etc/systemd/system/zuzu-operations.service
+  systemctl daemon-reload
+  systemctl enable --now zuzu-operations.service
+else
 command -v hermes >/dev/null || { echo "Hermes Agent is not installed" >&2; exit 1; }
 hermes -p tvm skills trust "$REPO_DIR"
 install -m 644 "$REPO_DIR/ops/hermes/tvm-hermes.service" "$HERMES_SERVICE"
@@ -46,6 +56,7 @@ for _ in $(seq 1 20); do
   sleep 1
 done
 curl -fsS --max-time 5 http://127.0.0.1:8642/health >/dev/null
+fi
 
 cp "$NGINX_FILE" "$NGINX_FILE.previous"
 install -m 644 "$REPO_DIR/ops/nginx-tvmbot.conf" "$NGINX_FILE"

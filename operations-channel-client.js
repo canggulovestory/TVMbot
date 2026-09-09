@@ -47,14 +47,22 @@ function createOperationsChannels({ enabled = false, url, telegramBindings = [],
       throw error(write ? 'outcome_uncertain' : 'service_unavailable');
     }
   }
+  function telegramIdentity(message) {
+    if (!Number.isSafeInteger(message?.message_id) || message.message_id < 1 || !Number.isSafeInteger(message?.from?.id) || message.from.is_bot || message.chat?.type !== 'private' || message.chat.id !== message.from.id || !telegram.has(String(message.from.id))) throw error('unauthorized');
+    return String(message.from.id);
+  }
+  async function webIdentity(req) {
+    const user = typeof authenticateWeb === 'function' ? await authenticateWeb(req) : null;
+    if (!user || !web.has(user.id)) throw error('unauthorized');
+    return user.id;
+  }
   return Object.freeze({
+    telegramIdentity, webIdentity,
     async fromTelegram(message, tool, options) {
-      if (!Number.isSafeInteger(message?.message_id) || message.message_id < 1 || !Number.isSafeInteger(message?.from?.id) || message.from.is_bot || message.chat?.type !== 'private' || message.chat.id !== message.from.id) throw error('unauthorized');
-      return invoke(telegram.get(String(message.from.id)), tool, `telegram:${message.chat.id}:${message.message_id}`, options);
+      return invoke(telegram.get(telegramIdentity(message)), tool, `telegram:${message.chat.id}:${message.message_id}`, options);
     },
     async fromWeb(req, tool, options = {}) {
-      const user = typeof authenticateWeb === 'function' ? await authenticateWeb(req) : null;
-      return invoke(user && web.get(user.id), tool, options.deliveryId, options);
+      return invoke(web.get(await webIdentity(req)), tool, options.deliveryId, options);
     },
   });
 }

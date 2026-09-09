@@ -114,7 +114,7 @@ async function start() {
       queued = new Promise(resolve => { releaseChat = resolve; });
       chatQueue.set(msg.chat.id, queued);
       if (previous) await previous;
-      console.log(`[TG] ${msg.from.first_name}: ${caption.substring(0, 60) || `[${meta.isImage ? 'photo' : 'file'}]`}`);
+      console.log('[TG] Authenticated private message received');
 
       await bot.sendChatAction(msg.chat.id, 'typing').catch(() => {});
       typing = setInterval(() => {
@@ -129,7 +129,7 @@ async function start() {
         text = `${caption || `Please review this ${meta.isImage ? 'photo' : 'file'} and tell me the important details.`}\n\nAttached file: ${uploaded.item.fileName}${preview}`;
         await sendReply(msg.chat.id, `I received **${uploaded.item.fileName}** and added it to your private review inbox. I’m reviewing it now.`);
       }
-      const reply = await brain.processMessage({ text, telegramId, attachment,
+      const reply = await brain.processMessage({ text, telegramId, telegramMessage: msg, attachment,
         onApproval: (event, options) => approvals.ask({ chatId: msg.chat.id, userId: telegramId }, event, options),
       });
       clearInterval(typing);
