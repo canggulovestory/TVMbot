@@ -6,9 +6,9 @@ function taskTools(invoke,beforeWrite){
   return invoke({action,input},options);
  }]));
 }
-function createOperationsChat({chat,channels,turns}){
- async function respond(id,text,history,invoke,signal){
-  const result=await turns(id,text,async({beforeWrite})=>chat.respond({scope:id,message:text,history,signal,tools:taskTools(invoke,beforeWrite)}));
+function createOperationsChat({chat,channels,turns,finance}){
+ async function respond(id,text,history,invoke,signal,financeTools={}){
+  const result=await turns(id,text,async({beforeWrite})=>chat.respond({scope:id,message:text,history,signal,tools:{...taskTools(invoke,beforeWrite),...financeTools}}));
   return result.response;
  }
  return {
@@ -16,7 +16,7 @@ function createOperationsChat({chat,channels,turns}){
   async telegram({message,text,history=[],signal}){
    const user=channels.telegramIdentity(message),day=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Makassar'});
    const id=`telegram:${user}:${day}:${crypto.createHash('sha256').update(text).digest('hex')}`;
-   return respond(id,text,history,(tool,options)=>channels.fromTelegram(message,tool,options),signal);
+   return respond(id,text,history,(tool,options)=>channels.fromTelegram(message,tool,options),signal,finance?.telegram(message)||{});
   },
   async web({req,text,history=[],signal}){
    const user=await channels.webIdentity(req);

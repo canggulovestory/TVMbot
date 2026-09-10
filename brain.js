@@ -17,8 +17,9 @@ function init({authenticateWeb}={}) {
   if(process.env.ZUZU_PROTECTED_CHAT!=='true'){hermes.init();return;}
   const fs=require('node:fs'),config=JSON.parse(fs.readFileSync('/etc/zuzu-runtime/operations-chat.json','utf8'));
   const channels=require('./operations-channel-client').createOperationsChannels({...config.operations,authenticateWeb});
+  const finance=require('./vendor/finance/finance-host.cjs').loadFinanceHost('/etc/zuzu-finance/telegram.json');
   protectedChat=require('./operations-chat').createOperationsChat({
-    chat:require('./isolated-chat').createChat(config.hermes),channels,
+    chat:require('./isolated-chat').createChat({...config.hermes,financeDefinitions:finance?.definitions||{}}),channels,finance,
     turns:require('./protected-turns').createTurns('/var/lib/zuzu-operations/chat-runs'),
   });
 }

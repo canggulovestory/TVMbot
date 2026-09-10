@@ -1,0 +1,13 @@
+{
+  "name": "@tvm/finance-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "main": "finance-adapter.cjs",
+  "exports": {
+    ".": "./finance-adapter.cjs",
+    "./tools": "./finance-tools.cjs",
+    "./host": "./finance-host.cjs"
+  },
+  "files": ["finance-adapter.cjs", "finance-tools.cjs", "finance-host.cjs"],
+  "engines": {"node": ">=22"}
+}

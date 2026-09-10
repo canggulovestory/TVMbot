@@ -29,12 +29,14 @@ function scheduleReconnect() {
 }
 
 async function sendReply(chatId, text) {
+  const links=[...new Set(String(text).match(/https:\/\/financial-ten-inky\.vercel\.app\/\?financeProposal=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![0-9a-f-])/gi)||[])].slice(0,3);
+  const options=links.length?{reply_markup:{inline_keyboard:links.map(url=>[{text:'Review on Financial website',url}])}}:{};
   try {
-    await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+    await bot.sendMessage(chatId, text, { ...options, parse_mode: 'Markdown' });
   } catch (error) {
     // A model reply can contain an accidental Markdown character. The message
     // is still useful, so retry as ordinary text instead of dropping it.
-    await bot.sendMessage(chatId, text);
+    await bot.sendMessage(chatId, text, options);
   }
 }
 

@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/canggulovestory/financial",
+  "commit": "177dcc871913a05a6d597515e5f1900ab42d92c7",
+  "artifact": "tvm-finance-adapter-0.1.0.tgz",
+  "sha256": "371739db62e69781e85cb94041651b97b401740b1366588054213834d0605d7b",
+  "note": "Extracted from the inspected npm artifact. Update from one verified artifact in both hosts; do not hand-edit these files."
+}

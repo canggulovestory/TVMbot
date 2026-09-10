@@ -18,3 +18,13 @@ test('Telegram chat binds the real sender, writes once per delivery, and exposes
  await assert.rejects(runner.telegram({message:{...message,from:{id:101}},text:'Read villas'}),/unauthorized/);
  assert.equal(models,1);
 });
+test('Telegram dispatch exposes owner-bound finance tools without changing Admin or task access',async()=>{
+ const {createOperationsChat}=require('../operations-chat');let attached=0;
+ const channels={telegramIdentity:m=>String(m.from.id),webIdentity:async()=> 'afni',fromTelegram(){},fromWeb(){}};
+ const finance={telegram:m=>m.chat.type==='private'&&m.from.id===100?{finance_read:async()=>({revision:9,items:[]})}:{}};
+ const chat={async respond({tools}){if(tools.finance_read){attached++;assert.equal((await tools.finance_read({resource:'accounts'})).revision,9);}assert.equal(tools.finance_confirm,undefined);return {response:'Checked'};}};
+ const runner=createOperationsChat({chat,channels,finance,turns:async(id,text,work)=>work({beforeWrite(){}})});
+ await runner.telegram({message:{from:{id:100},chat:{type:'private'},message_id:1},text:'saldo rekening?'});
+ await runner.telegram({message:{from:{id:101},chat:{type:'private'},message_id:1},text:'accounts'});
+ await runner.web({req:{},text:'accounts'});assert.equal(attached,1);
+});
