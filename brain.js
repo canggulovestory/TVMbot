@@ -166,7 +166,7 @@ async function processMessage({ text, phone, telegramId, telegramMessage, attach
       }
       if(!attachment){const reply=await tryVillaLink(text,user.key);if(reply)return reply;}
       try{return await protectedChat.telegram({message:telegramMessage,text,history});}
-      catch(_){return 'I could not finish that request. If you asked to save or complete a task, check the task list before resending; it may already have been saved. Finance is not enabled in this chat.';}
+      catch(_){return 'The record lookup or AI response is temporarily unavailable. I cannot confirm an answer right now. If this was a save or task-completion request, check the records before resending; it may already have succeeded.';}
     });
   }
   return withDialogue(scope, text, conversationHistory => processForUser({ text, user, attachment, onApproval, conversationHistory }));
