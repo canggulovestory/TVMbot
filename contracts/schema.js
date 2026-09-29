@@ -8,7 +8,8 @@ const groups={
  appendix:['additional_agreements']
 };
 const fields=Object.freeze(Object.fromEntries(Object.entries(groups).flatMap(([group,keys])=>keys.map(key=>[`${group}.${key}`,key==='additional_agreements'?12000:key==='address'||key==='residence'?2000:300]))));
-function blankContract(){return {...Object.fromEntries(Object.keys(fields).map(k=>[k,''])),
+function blankContract(now=new Date()){return {...Object.fromEntries(Object.keys(fields).map(k=>[k,''])),
+ 'lease.agreement_date':new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit',day:'2-digit'}).format(now),
  'lease.checkin_time':'15:00','lease.checkout_time':'12:00','payment.currency':'IDR','payment.method':'Bank Transfer'};}
 function applyFields(data,patch){
  if(!patch||Array.isArray(patch)||Object.getPrototypeOf(patch)!==Object.prototype)throw Error('Invalid contract fields');

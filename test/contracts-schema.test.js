@@ -52,3 +52,7 @@ test('passport expiry and duration override warn without inventing identity fiel
  assert.ok(r.some(x=>x.field==='lease.duration_months'&&x.level==='warning'));
  assert.equal(complete()['lessee.phone'],'');assert.equal(complete()['lessee.residence'],'');
 });
+test('new agreement date uses Bali calendar day across the UTC date boundary',()=>{
+ assert.equal(blankContract(new Date('2026-09-29T15:59:59Z'))['lease.agreement_date'],'2026-09-29');
+ assert.equal(blankContract(new Date('2026-09-29T16:00:00Z'))['lease.agreement_date'],'2026-09-30');
+});

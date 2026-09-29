@@ -56,7 +56,7 @@ function fill(template,data,editable,company={}){
   if(!match)return escape(part);
   const [,key,format]=match;if(key.startsWith('company.'))return escape(company[key.slice(8)]||'________________');if(!Object.hasOwn(fields,key))throw Error('Unknown template field');
   const value=formatted(data,key,format);
-  return editable?`<button type="button" class="contract-field ${value?'':'empty'}" data-field="${key}" aria-label="Edit ${escape(key.replaceAll('.',' ').replaceAll('_',' '))}">${escape(value||'Click to fill')}</button>`:escape(value||'________________');
+  return editable?`<button type="button" class="contract-field ${value?'':'empty'}" data-field="${key}" aria-label="Edit ${escape(key.replaceAll('.',' ').replaceAll('_',' '))}">${escape(value||'________________')}</button>`:escape(value||'________________');
  }).join('');
 }
 function renderContract(data,{editable=false,company={}}={}){
