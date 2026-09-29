@@ -15,3 +15,16 @@ test('edits typed while preview refreshes are persisted before autosave finishes
  assert.equal((await store.get(actor,draft.id)).data['property.name'],'Edit made during preview');
  assert.equal(Object.keys(context.pending).length,0);
 });
+test('opening the editor resumes the latest contract and creates one only when none exist',async()=>{
+ const source=await fs.readFile(path.join(__dirname,'../admin/contract.js'),'utf8');
+ const start=source.indexOf('async function initialize(){');assert.notEqual(start,-1);
+ const init=source.slice(start,source.indexOf('\ninitialize().catch',start));
+ for(const items of [[{id:'existing-contract'}],[]]){
+  const calls=[],buttons={new:{disabled:true}};
+  const context={schema:{},$:id=>buttons[id],api:async(suffix,options)=>{calls.push([suffix,options?.method]);return suffix==='/schema'?{fields:{}}:{id:'new-contract'};},list:async()=>items,open:async id=>calls.push(['open',id])};
+  vm.createContext(context);vm.runInContext(init,context);await context.initialize();
+  assert.deepEqual(calls.filter(c=>c[0]==='open'),[['open',items.length?'existing-contract':'new-contract']]);
+  assert.equal(calls.filter(c=>c[1]==='POST').length,items.length?0:1);
+  assert.equal(buttons.new.disabled,false);
+ }
+});
