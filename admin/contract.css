@@ -2,3 +2,5 @@
 
 /* The document is the editor; only approved field blanks accept input. */
 main{display:block}#document{padding:28px 16px}.document-notes{max-width:794px;margin:0 auto 28px;padding:0 16px}.inline-field{font:inherit;color:#193d36;background:#fffde9;border:1px solid #568f80;border-radius:2px;padding:1px 3px;max-width:100%;width:18ch;box-sizing:border-box}.inline-field[type=date]{width:11em}.inline-field[type=time]{width:7em}textarea.inline-field{display:block;width:100%;min-height:5em}#passport-panel{width:min(480px,calc(100vw - 40px))}#close-passport{float:right}.contract-field.empty{min-width:8ch}.contract-field{border-radius:0}.document-notes:has(.inline-field){background:white}#document .contract-page{box-sizing:border-box}
+
+#villa-paste-panel{width:min(520px,calc(100vw - 40px));max-height:85vh;overflow:auto}#villa-paste-panel .field input,#villa-paste-panel .field textarea{box-sizing:border-box}#villa-paste-review{margin-top:16px}

@@ -27,3 +27,30 @@ test('signature area keeps tenant and lessor in separate signing columns',()=>{
  const html=renderContract(applyFields(blankContract(),{'lessee.full_name':'Synthetic Signer'}),{company:{name:'PT The Villa Managers'}});
  assert.match(html,/<div class="signatures"><div>[^]*?THE LESSOR\/VILLA MANAGEMENT:[^]*?PT The Villa Managers[^]*?<\/div><div>[^]*?THE LESSEE\/PENYEWA:[^]*?Synthetic Signer[^]*?<\/div><\/div>/);
 });
+test('service checklist is editable but printed inclusions are explicit and consistent',()=>{
+ const data=applyFields(blankContract(),{'inclusions.pool_cleaning':'yes','inclusions.drinking_water':'yes'});
+ const editor=renderContract(data,{editable:true});
+ assert.match(editor,/data-inclusion="inclusions.pool_cleaning" checked/);
+ assert.match(editor,/data-inclusion="inclusions.electricity"(?! checked)/);
+ const print=renderContract(data);
+ assert.doesNotMatch(print,/<input/);
+ assert.match(print,/Pool cleaning[^]*?Included \/ Termasuk/);
+ assert.match(print,/Electricity[^]*?Excluded \/ Tidak termasuk/);
+ assert.doesNotMatch(print,/No services or running costs are included|Because the rental is for the villa only|Karena sewa ini hanya untuk villa/);
+ assert.match(print,/marked Included in the checklist/);
+ assert.match(print,/ditandai Termasuk pada daftar/);
+});
+test('legacy drafts keep services excluded and company information stays fixed',()=>{
+ const html=renderContract({}, {editable:true,company:{name:'Fixed Company',bank:'Fixed bank'}});
+ assert.equal((html.match(/data-inclusion=/g)||[]).length,9);
+ assert.doesNotMatch(html,/data-inclusion="[^"]+" checked/);
+ assert.match(html,/Fixed Company/);assert.match(html,/Fixed bank/);
+ assert.doesNotMatch(html,/data-field="company\./);
+});
+
+test('emergency electricity credit is charged to tenant only when electricity is excluded',()=>{
+ const html=renderContract(applyFields(blankContract(),{'inclusions.electricity':'yes'}));
+ assert.match(html,/actual cost of the electricity token purchased, only if electricity is marked Excluded/);
+ assert.match(html,/Biaya aktual pembelian token listrik tersebut, hanya jika listrik ditandai Tidak termasuk/);
+ assert.match(html,/administrative penalty fee of IDR 200,000/);
+});

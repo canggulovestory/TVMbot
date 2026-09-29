@@ -95,7 +95,7 @@ function createHandler({store,resolveActor,origin}){
 }
 function createPageHandler({resolveActor}){
  const path=require('node:path'),fs=require('node:fs/promises');
- const assets={'/contract':['../admin/contract.html','text/html'],'/contract/':['../admin/contract.html','text/html'],'/contract/editor.js':['../admin/contract.js','application/javascript'],'/contract/editor.css':['../admin/contract.css','text/css'],'/contract/document.css':['document.css','text/css']};
+ const assets={'/contract/villa-paste.js':['../admin/contract-villa-paste.js','application/javascript'],'/contract':['../admin/contract.html','text/html'],'/contract/':['../admin/contract.html','text/html'],'/contract/editor.js':['../admin/contract.js','application/javascript'],'/contract/editor.css':['../admin/contract.css','text/css'],'/contract/document.css':['document.css','text/css']};
  return async(req,res)=>{try{
   const actor=await resolveActor(req);if(!actor){res.writeHead(302,{Location:'/login?next=/contract','Cache-Control':'no-store'});return res.end();}
   if(!['staff','admin'].includes(actor.role))return json(res,403,{error:'Staff access required'});

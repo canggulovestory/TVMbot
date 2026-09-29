@@ -56,3 +56,8 @@ test('new agreement date uses Bali calendar day across the UTC date boundary',()
  assert.equal(blankContract(new Date('2026-09-29T15:59:59Z'))['lease.agreement_date'],'2026-09-29');
  assert.equal(blankContract(new Date('2026-09-29T16:00:00Z'))['lease.agreement_date'],'2026-09-30');
 });
+test('service inclusions accept only explicit checklist values',()=>{
+ for(const value of ['yes','no',''])assert.equal(applyFields(blankContract(),{'inclusions.pool_cleaning':value})['inclusions.pool_cleaning'],value);
+ for(const value of ['true','included',true,' yes '])assert.throws(()=>applyFields(blankContract(),{'inclusions.pool_cleaning':value}));
+ assert.throws(()=>applyFields(blankContract(),{'inclusions.unknown':'yes'}));
+});

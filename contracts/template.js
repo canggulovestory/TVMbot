@@ -1,6 +1,6 @@
 'use strict';
 const source=require('./template-v1.json');
-const {fields}=require('./schema');
+const {fields,inclusions}=require('./schema');
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const token=(key,format='')=>'{{'+key+(format?'|'+format:'')+'}}';
 function compile(text){
@@ -59,12 +59,37 @@ function fill(template,data,editable,company={}){
   return editable?`<button type="button" class="contract-field ${value?'':'empty'}" data-field="${key}" aria-label="Edit ${escape(key.replaceAll('.',' ').replaceAll('_',' '))}">${escape(value||'________________')}</button>`:escape(value||'________________');
  }).join('');
 }
+function inclusionChecklist(data,editable){
+ return '<table class="inclusions"><colgroup><col style="width:62%"><col style="width:38%"></colgroup><tr><th colspan="2">INCLUSIONS &amp; EXCLUSIONS / TERMASUK &amp; TIDAK TERMASUK</th></tr>'+
+ '<tr><td colspan="2">'+(editable?'Villa included. Check services included in rent.<br>Villa termasuk. Centang layanan yang termasuk dalam harga sewa.':'Villa included / Villa termasuk.')+'</td></tr>'+
+ Object.entries(inclusions).map(([key,[en,id]])=>{
+  const field='inclusions.'+key,checked=data[field]==='yes',label=en+' / '+id;
+  const state=checked?'Included / Termasuk':'Excluded / Tidak termasuk';
+  return '<tr><td>'+escape(label)+'</td><td>'+(editable?`<label><input type="checkbox" data-inclusion="${field}"${checked?' checked':''} aria-label="${escape(en)}"> <span>${state}</span></label>`:state)+'</td></tr>';
+ }).join('')+'</table>';
+}
+// The checklist controls only service costs; all other source clauses stay fixed.
+function serviceText(text){
+ const normalized=text.replace(/\s+/g,' ');
+ const replacements={
+  'No services or running costs are included in the rental price. The rental is for the villa only.':'The villa and services marked Included in the checklist are included in the rent and are the responsibility of the LESSOR.',
+  'Biaya-biaya berikut termasuk dalam harga sewa dan menjadi tanggung jawab PEMILIK:':'Villa dan layanan yang ditandai Termasuk pada daftar termasuk dalam harga sewa dan menjadi tanggung jawab PEMILIK.',
+  '• Villa only. No services, utilities, fees, cleaning, linen changes, pool cleaning, garbage collection, or other running costs are included.':'',
+  '• All utilities and operating costs, including electricity • Cleaning, linen change, pool cleaning, Banjar fees and garbage fees • Personal laundry and personal expenses':'Services marked Excluded, other unlisted running costs and personal expenses are the responsibility of the LESSEE unless otherwise agreed in writing. / Layanan yang ditandai Tidak termasuk, biaya operasional lain yang tidak tercantum, dan pengeluaran pribadi menjadi tanggung jawab PENYEWA kecuali disepakati lain secara tertulis.'
+ };
+ if(Object.hasOwn(replacements,normalized))return replacements[normalized];
+ return text.replace('The actual cost of the electricity token purchased; PLUS','The actual cost of the electricity token purchased, only if electricity is marked Excluded in the checklist; PLUS')
+  .replace('Biaya aktual pembelian token listrik tersebut; DITAMBAH','Biaya aktual pembelian token listrik tersebut, hanya jika listrik ditandai Tidak termasuk pada daftar; DITAMBAH')
+  .replace('Because the rental is for the villa only and no services or running costs are included,','Except for services marked Included in the checklist,')
+  .replace('Karena sewa ini hanya untuk villa dan tidak mencakup layanan maupun biaya operasional,','Kecuali layanan yang ditandai Termasuk pada daftar,');
+}
 function renderContract(data,{editable=false,company={}}={}){
  const pages=source.pages.map((blocks,i)=>{
   const content=blocks.map(b=>{
    if(i===12&&b.text?.startsWith('THE LESSOR/VILLA MANAGEMENT:'))return '<div class="signatures"><div><strong>THE LESSOR/VILLA MANAGEMENT:</strong><div class="sign-space"></div>'+escape(company.name||'________________')+'<br>Represented by: '+escape(company.representative||'________________')+'</div><div><strong>THE LESSEE/PENYEWA:</strong><div class="sign-space"></div>Name: '+fill(token('lessee.full_name'),data,editable,company)+'</div></div>';
    if(i===12&&b.text?.includes('Name: ____________________________ Represented by:'))return '';
-   if(b.kind==='text')return `<p class="${b.style}">${fill(compile(b.text),data,editable,company)}</p>`;
+   if(b.kind==='text'){const text=serviceText(b.text);return text?`<p class="${b.style}">${fill(compile(text),data,editable,company)}</p>`:'';}
+   if(b.rows[0][0].startsWith('INCLUSIONS & EXCLUSIONS'))return inclusionChecklist(data,editable);
    return '<table><colgroup><col style="width:35%"><col style="width:65%"></colgroup>'+b.rows.map(row=>{
     const cells=row.filter(c=>c!==null),label=String(cells[0]||'').replace(/\s+/g,' ');
     if(cells.length===1)return `<tr><th colspan="2">${escape(label)}</th></tr>`;
@@ -79,5 +104,5 @@ function renderContract(data,{editable=false,company={}}={}){
 function page(content,number,company){return `<section class="contract-page"><header><div><strong>${escape(company.name||'________________')}</strong><br>NIB ${escape(company.nib||'________________')}<br>${escape(company.header_address||'').replaceAll('\n','<br>')}<br>${escape(company.contact||'')}</div><h1>HOUSE RENTAL<br>AGREEMENT</h1></header><div class="contract-body">${content}</div><footer>Page ${number}</footer></section>`;}
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const templateHash=crypto.createHash('sha256');
-for(const file of ['template-v1.json','template.js','document.css','pdf.js'])templateHash.update(fs.readFileSync(path.join(__dirname,file)));
+for(const file of ['template-v1.json','template.js','schema.js','document.css','pdf.js'])templateHash.update(fs.readFileSync(path.join(__dirname,file)));
 module.exports={renderContract,sourceSha256:source.sourceSha256,templateHash:templateHash.digest('hex')};

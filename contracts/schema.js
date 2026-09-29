@@ -1,6 +1,18 @@
 'use strict';
 // Shared contract values only. Legal text and company settings are not client fields.
+const inclusions={
+ pool_cleaning:['Pool cleaning','Pembersihan kolam renang'],
+ cleaning:['House cleaning','Pembersihan rumah'],
+ laundry:['Personal laundry','Laundry pribadi'],
+ linen_changes:['Linen changes','Penggantian seprai'],
+ garbage_monthly:['Monthly garbage collection','Pengangkutan sampah bulanan'],
+ banjar_fee:['Banjar fee','Iuran banjar'],
+ drinking_water:['Drinking water','Air minum'],
+ electricity:['Electricity','Listrik'],
+ internet:['Internet / Wi-Fi','Internet / Wi-Fi']
+};
 const groups={
+ inclusions:Object.keys(inclusions),
  lessee:['full_name','place_of_birth','date_of_birth','nationality','passport_number','phone','sex','residence','passport_issue_date','passport_expiry_date'],
  property:['code','name','address','bedrooms','bathrooms','map_url'],
  lease:['agreement_date','duration_months','checkin_date','checkin_time','checkout_date','checkout_time'],
@@ -16,6 +28,7 @@ function applyFields(data,patch){
  const result={...data};
  for(const [key,value] of Object.entries(patch)){
   if(!Object.hasOwn(fields,key)||typeof value!=='string'||value.length>fields[key]||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value))throw Error('Invalid contract field: '+key);
+  if(key.startsWith('inclusions.')&&!['','yes','no'].includes(value))throw Error('Invalid inclusion: '+key);
   result[key]=value.trim();
  }
  return result;
@@ -72,4 +85,4 @@ function validate(data,today){
  if(validDate(issue)&&validDate(expiry)&&issue>=expiry)add('lessee.passport_issue_date','Issue date must precede expiry');
  return issues;
 }
-module.exports={fields,blankContract,applyFields,validate,suggestCheckout,moneyMinor};
+module.exports={inclusions,fields,blankContract,applyFields,validate,suggestCheckout,moneyMinor};

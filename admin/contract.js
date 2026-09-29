@@ -32,10 +32,41 @@ async function save(){
  try{await saving;}finally{saving=null;}
 }
 async function list(){const items=await api();$('drafts').replaceChildren(new Option('Contracts',''));for(const [index,item] of items.entries())$('drafts').add(new Option([item.propertyName,item.tenantName].filter(Boolean).join(' — ')||'Contract '+(items.length-index),item.id));if(draft)$('drafts').value=draft.id;return items;}
-async function open(id){if(Object.keys(pending).length||saving)await save();draft=await api('/'+id);blocked=false;pending={};versions();passportReview();await preview();$('generate').disabled=false;$('passport').disabled=false;$('show-passport').disabled=false;status('Saved automatically');issueList();}
+async function open(id){if(Object.keys(pending).length||saving)await save();draft=await api('/'+id);blocked=false;pending={};versions();passportReview();await preview();$('generate').disabled=false;$('passport').disabled=false;$('show-passport').disabled=false;$('show-villa-paste').disabled=false;status('Saved automatically');issueList();}
 $('new').onclick=async()=>{try{await save();const d=await api('',{method:'POST',body:'{}'});await open(d.id);await list();}catch(e){showError(e)}};
 $('drafts').onchange=async e=>{if(!e.target.value)return;try{await open(e.target.value)}catch(e){showError(e);e.target.value=draft?.id||''}};
 $('document').onclick=e=>{const field=e.target.closest('button[data-field]');if(field)focusField(field.dataset.field,field)};
+$('document').onchange=e=>{
+ const input=e.target.closest('input[data-inclusion]');if(!input||!draft||!Object.hasOwn(schema,input.dataset.inclusion))return;
+ pending[input.dataset.inclusion]=input.checked?'yes':'no';
+ input.nextElementSibling.textContent=input.checked?'Included / Termasuk':'Excluded / Tidak termasuk';
+ status('Saving…');clearTimeout(timer);timer=setTimeout(()=>save().catch(showError),300);
+};
+$('show-villa-paste').onclick=async()=>{try{await save();$('villa-paste-text').value='';$('villa-paste-review').replaceChildren();$('villa-paste-review').hidden=true;$('apply-villa-paste').disabled=true;$('villa-paste-status').textContent='';$('villa-paste-panel').showModal();$('villa-paste-text').focus();}catch(e){showError(e)}};
+$('cancel-villa-paste').onclick=()=>$('villa-paste-panel').close();
+$('villa-paste-text').oninput=()=>{$('villa-paste-review').hidden=true;$('apply-villa-paste').disabled=true;$('villa-paste-status').textContent='';};
+$('detect-villa').onclick=()=>{
+ const values=parseVillaDetails($('villa-paste-text').value),area=$('villa-paste-review');area.replaceChildren();area.hidden=false;
+ for(const key of ['property.name','property.code','property.address','property.bedrooms','property.bathrooms','property.map_url']){
+  const label=document.createElement('label'),input=document.createElement(key==='property.address'?'textarea':'input');
+  label.className='field';label.textContent=title(key);input.dataset.villaField=key;input.value=values[key]||'';input.maxLength=schema[key];
+  if(['property.bedrooms','property.bathrooms'].includes(key)){input.type='number';input.min='1';input.max='100';input.step='1';}
+  if(key==='property.map_url')input.type='url';
+  label.append(input);
+  if(draft.data[key]){const current=document.createElement('small');current.textContent='Currently: '+draft.data[key];label.append(current);}
+  area.append(label);
+ }
+ $('villa-paste-status').textContent=(Object.keys(values).length?'Check the details below.':'No details detected. Use the example labels above, or enter details below.')+' Blank fields keep existing values.';
+ $('apply-villa-paste').disabled=false;
+};
+$('apply-villa-paste').onclick=async()=>{
+ const inputs=[...$('villa-paste-review').querySelectorAll('[data-villa-field]')];
+ for(const input of inputs)if(!input.reportValidity())return;
+ const patch=Object.fromEntries(inputs.filter(input=>input.value.trim()).map(input=>[input.dataset.villaField,input.value.trim()]));
+ if(!Object.keys(patch).length){$('villa-paste-status').textContent='Add at least one villa detail.';return;}
+ $('apply-villa-paste').disabled=true;
+ try{pending={...pending,...patch};await save();await list();$('villa-paste-panel').close();}catch(e){showError(e);$('villa-paste-status').textContent=e.message;}finally{$('apply-villa-paste').disabled=false;}
+};
 $('show-passport').onclick=()=>$('passport-panel').showModal();
 $('close-passport').onclick=()=>$('passport-panel').close();
 $('appendix').dataset.field='appendix.additional_agreements';
