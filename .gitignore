@@ -4,3 +4,4 @@ wa-session/
 data/
 *.log
 .worktrees/
+tmp/

@@ -1,0 +1,19 @@
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+.contract-page{background:white;color:#111;font:11pt/1.17 Arial,"Liberation Sans",sans-serif;width:210mm;height:297mm;padding:5mm 25mm 10mm;display:flex;flex-direction:column;break-after:page;margin:0 auto 24px;box-shadow:0 2px 12px #0001}
+.contract-page:last-child{break-after:auto}
+.contract-page header{display:flex;justify-content:space-between;align-items:flex-start;min-height:31mm;border-bottom:1px solid #315c20;margin-bottom:4mm;font-size:9pt;line-height:1.2;flex-shrink:0}
+.contract-page header strong{font-size:12pt}
+.contract-page h1{font-size:18pt;line-height:1.1;text-align:right;margin:0}
+.contract-body{flex:1;min-height:0}
+.contract-body p{margin:0 0 5pt;overflow-wrap:anywhere}
+.contract-body p.bold{font-weight:bold}.contract-body p.italic{font-style:italic}
+.contract-body table{border-collapse:collapse;width:100%;margin:0 0 7pt;table-layout:fixed;font-size:10pt;line-height:1.15}
+.contract-body td,.contract-body th{border:1px solid #111;padding:2pt 3pt;vertical-align:top;overflow-wrap:anywhere}
+.contract-body td:first-child{width:35%;font-weight:bold}.contract-body th{text-align:left;background:#315c20;color:white;font-weight:bold}
+.contract-page footer{font-size:9pt;text-align:center;flex-shrink:0;padding-top:4mm;height:10mm}
+.contract-field{font:inherit;color:#165f53;background:#eff8ef;border:0;border-bottom:1px dashed #5d8f79;padding:0 2px;cursor:pointer;display:inline;text-align:left;overflow-wrap:anywhere}
+.contract-field.empty{color:#8b650d;background:#fff6da}.contract-field:focus-visible{outline:2px solid #176253;outline-offset:2px}.contract-field.selected{background:#d1eee2}
+.appendix{white-space:pre-wrap}
+.signatures{display:grid;grid-template-columns:1fr 1fr;gap:12mm;margin-top:8mm;font-size:10pt;break-inside:avoid}.sign-space{height:24mm}
+@media print{.contract-page{margin:0;box-shadow:none}}

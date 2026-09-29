@@ -40,6 +40,9 @@ const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data
 const ENQUIRIES_FILE = path.join(DATA_DIR, 'enquiries.json');
 const ADMIN_DIR = path.join(__dirname, 'admin');
 const PERSONAL_DIR = path.join(__dirname, 'personal');
+const contractStore = require('./contracts/store').createStore(path.join(DATA_DIR, 'contracts'));
+const contractApi = require('./contracts/routes').createHandler({store: contractStore, resolveActor: contractActor, origin: 'https://thevillamanagers.cloud'});
+const contractPage = require('./contracts/routes').createPageHandler({resolveActor: contractActor});
 const loginAttempts = new Map();
 const zuzuRequests = new Map();
 let enquiryWriteQueue = Promise.resolve();
@@ -825,6 +828,12 @@ async function handlePersonalApp(req, res, url) {
   return sendJson(res, 404, { error: 'Not found.' });
 }
 
+async function contractActor(req) {
+  const session = await getSession(req);
+  if (!session) return null;
+  const current = (await authUsers.listUsers()).find(user => user.username === session.user);
+  return current ? { user: current.username, role: current.role } : null;
+}
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
@@ -833,6 +842,8 @@ const server = http.createServer(async (req, res) => {
       return res.end(await fs.readFile(path.join(ADMIN_DIR, path.basename(url.pathname))));
     }
     if (isPersonalHost(req)) return await handlePersonalApp(req, res, url);
+    if (url.pathname === '/contract' || url.pathname.startsWith('/contract/')) return await contractPage(req, res);
+    if (url.pathname === '/api/admin/contracts' || url.pathname.startsWith('/api/admin/contracts/')) return await contractApi(req, res);
     if (url.pathname === '/health' && req.method === 'GET') {
       return sendJson(res, 200, {
         status: 'ok', version: require('./package.json').version,
@@ -903,7 +914,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
     if ((url.pathname === '/login' || url.pathname === '/login/' || url.pathname === '/admin/login' || url.pathname === '/admin/login/') && req.method === 'GET') {
-      if (await isAuthenticated(req)) return redirect(res, '/admin/');
+      if (await isAuthenticated(req)) return redirect(res, url.searchParams.get('next') === '/contract' ? '/contract' : '/admin/');
       return await sendHtml(res, 'login.html');
     }
     if ((url.pathname === '/admin' || url.pathname === '/admin/') && req.method === 'GET') {

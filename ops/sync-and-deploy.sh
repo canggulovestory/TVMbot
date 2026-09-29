@@ -31,6 +31,7 @@ tar -czf "$BACKUP_DIR/website-$(date +%Y%m%d-%H%M%S).tar.gz" -C "$PUBLIC_DIR" .
 
 git -C "$REPO_DIR" merge --ff-only origin/main
 npm ci --omit=dev --prefix "$REPO_DIR"
+bash "$REPO_DIR/ops/prepare-contract-renderer.sh"
 rsync -a --delete "$REPO_DIR/website/" "$PUBLIC_DIR/"
 
 if [ -f /etc/zuzu-runtime/operations-chat.json ]; then

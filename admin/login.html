@@ -55,7 +55,7 @@
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || 'Sign in failed.');
-        location.href = '/admin/'; // owners are routed to /owner automatically
+        location.href = new URLSearchParams(location.search).get('next') === '/contract' ? '/contract' : '/admin/'; // only an allowlisted local destination
       } catch (err) { m.textContent = err.message; b.disabled = false; }
     });
   </script>

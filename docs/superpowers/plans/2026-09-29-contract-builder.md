@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-29-contract-builder-design.md`
 
+**29 September implementation checkpoint:** editor, private OCR/review and versioned PDF generation now run end-to-end with synthetic data. See `docs/contract-builder-release.md` for verified behavior and remaining privacy/configuration/runtime release gates. Not deployed.
+
 ## Global constraints
 
 - No passport, extraction, contract instance or credential committed to Git or placed in the public web root.

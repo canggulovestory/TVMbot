@@ -1,0 +1,1296 @@
+{
+  "sourceSha256": "40e160582e462eb54f123a0814253ecace2a8802767bfc851082364471eadc60",
+  "pages": [
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "normal",
+        "text": "This Lease Agreement is made in Bali on 29 September 2026 between {{company.name}} and ____________________________:"
+      },
+      {
+        "kind": "text",
+        "y": 142.371763779528,
+        "lastY": 155.0217637795281,
+        "style": "italic",
+        "text": "Perjanjian Sewa Menyewa ini dibuat di Bali, 29 September 2026 antara {{company.name}} dan ____________________________:"
+      },
+      {
+        "y": 176.1840971128614,
+        "kind": "table",
+        "rows": [
+          [
+            "THE LESSOR / PEMBERI SEWA (Villa Management)",
+            null
+          ],
+          [
+            "Company Name",
+            "{{company.name}}"
+          ],
+          [
+            "Registered Address",
+            "{{company.registered_address}}"
+          ],
+          [
+            "Country of Incorporation",
+            "{{company.country}}"
+          ],
+          [
+            "Business Registration (NIB)",
+            "{{company.nib}}"
+          ],
+          [
+            "Represented By / Diwakili\nOleh",
+            "{{company.representative}}"
+          ]
+        ]
+      },
+      {
+        "kind": "text",
+        "y": 290.010763779528,
+        "lastY": 301.510763779528,
+        "style": "italic",
+        "text": "(Hereinafter referred to as the villa management or \"LESSOR\" / Selanjutnya disebut sebagai villa manajemen atau \"PEMILIK\")"
+      },
+      {
+        "kind": "text",
+        "y": 319.121763779528,
+        "lastY": 319.121763779528,
+        "style": "normal",
+        "text": "And"
+      },
+      {
+        "y": 334.2840971128614,
+        "kind": "table",
+        "rows": [
+          [
+            "THE LESSEE / PENYEWA (Tenant)",
+            null
+          ],
+          [
+            "Full Name / Nama Lengkap",
+            "____________________________"
+          ],
+          [
+            "Place & Date of Birth",
+            "____________________________"
+          ],
+          [
+            "Nationality / Kewarganegaraan",
+            "____________________________"
+          ],
+          [
+            "ID Number (KTP/Passport)",
+            "____________________________"
+          ],
+          [
+            "Phone Number / No. Telepon",
+            "____________________________"
+          ],
+          [
+            "Sex / Jenis Kelamin",
+            "____________________________"
+          ],
+          [
+            "Residence / Tempat Tinggal",
+            "____________________________"
+          ],
+          [
+            "Passport Issue Date / Tanggal\nTerbit",
+            "____________________________"
+          ],
+          [
+            "Passport Expiry Date / Berlaku\nSampai",
+            "____________________________"
+          ]
+        ]
+      },
+      {
+        "kind": "text",
+        "y": 532.2107637795281,
+        "lastY": 532.2107637795281,
+        "style": "italic",
+        "text": "(Hereinafter referred to as the \"LESSEE\" / Selanjutnya disebut sebagai \"PENYEWA\")"
+      },
+      {
+        "y": 548.2840971128613,
+        "kind": "table",
+        "rows": [
+          [
+            "PROPERTY & RENTAL DETAILS / DETAIL PROPERTI & SEWA",
+            null
+          ],
+          [
+            "Property Code",
+            "2PD8"
+          ],
+          [
+            "Property Name",
+            "Hidden Padi"
+          ],
+          [
+            "Property Address",
+            "Hidden Padi, Jl. Raya Padonan, Tibubeneng, Kec. Kuta Utara,\nKabupaten Badung, Bali 80361"
+          ],
+          [
+            "Bedrooms / Bathrooms",
+            "2 bedrooms / 2 bathrooms"
+          ],
+          [
+            "Lease Duration",
+            "12 months"
+          ],
+          [
+            "Check-In Date & Time",
+            "1 November 2026, 15.00"
+          ],
+          [
+            "Check-Out Date & Time",
+            "31 October 2027, 12.00"
+          ]
+        ]
+      },
+      {
+        "y": 708.0840971128614,
+        "kind": "table",
+        "rows": [
+          [
+            "PAYMENT DETAILS / DETAIL PEMBAYARAN",
+            null
+          ],
+          [
+            "Yearly Rent",
+            "IDR 150,000,000 / year"
+          ],
+          [
+            "Total Rent Amount",
+            "IDR 150,000,000"
+          ]
+        ]
+      }
+    ],
+    [
+      {
+        "y": 112.75076377952803,
+        "kind": "table",
+        "rows": [
+          [
+            "Payment Currency",
+            "IDR"
+          ],
+          [
+            "Security Deposit",
+            "IDR 30,000,000 (20% of annual rent; refundable security\ndeposit)"
+          ],
+          [
+            "First Payment Amount",
+            "IDR 150,000,000"
+          ],
+          [
+            "First Payment Due Date",
+            "1 November 2026"
+          ],
+          [
+            "Following Payments",
+            "None - annual rent paid fully upfront"
+          ],
+          [
+            "Payment Method",
+            "Bank Transfer"
+          ]
+        ]
+      },
+      {
+        "kind": "text",
+        "y": 240.72176377952803,
+        "lastY": 240.72176377952803,
+        "style": "bold",
+        "text": "AGENCY BANK ACCOUNT (Optional) / REKENING BANK AGEN:"
+      },
+      {
+        "kind": "text",
+        "y": 261.760763779528,
+        "lastY": 296.260763779528,
+        "style": "normal",
+        "text": "{{company.bank}}"
+      },
+      {
+        "y": 328.4840971128613,
+        "kind": "table",
+        "rows": [
+          [
+            "INCLUSIONS & EXCLUSIONS / TERMASUK & TIDAK TERMASUK",
+            null
+          ],
+          [
+            "INCLUDED / Termasuk:",
+            "EXCLUDED / Tidak Termasuk:"
+          ],
+          [
+            "Villa only / Properti villa saja. No services or\nrunning costs are included.",
+            "All services, utilities, fees, cleaning, linen\nchanges, pool cleaning, garbage collection,\nelectricity, personal laundry and personal\nexpenses are excluded unless separately\nagreed in writing."
+          ]
+        ]
+      },
+      {
+        "kind": "text",
+        "y": 457.57176377952806,
+        "lastY": 470.2217637795281,
+        "style": "normal",
+        "text": "Whereas, LESSOR does hereby declare to have let and surrendered in lease to LESSEE, and LESSEE does hereby declare to have rented and accepted in lease from LESSOR, a unit of"
+      },
+      {
+        "kind": "text",
+        "y": 482.87176377952807,
+        "lastY": 495.52176377952804,
+        "style": "bold",
+        "text": "Villa made of 2 bedrooms FULLY FURNISHED, known as Hidden Padi, Hidden Padi, Jl. Raya  Padonan,  Tibubeneng,  Kec.  Kuta  Utara,  Kabupaten  Badung,  Bali  80361"
+      },
+      {
+        "kind": "text",
+        "y": 508.1717637795281,
+        "lastY": 508.1717637795281,
+        "style": "normal",
+        "text": "(Hereinafter referred to as the \"Premises\")"
+      },
+      {
+        "kind": "text",
+        "y": 523.821763779528,
+        "lastY": 587.071763779528,
+        "style": "italic",
+        "text": "Dimana  pemilik  dengan  ini  menyatakan  telah  menyerahkan  kepada  PENYEWA  untuk disewakan, dan PENYEWA dengan ini menyatakan telah menerima dari PEMILIK untuk disewa,  sebuah villa dengan 2 kamar tidur DILENGKAPI FURNITURE yang dikenal dengan nama Hidden Padi, Hidden Padi, Jl. Raya Padonan, Tibubeneng, Kec. Kuta Utara,  Kabupaten  Badung,  Bali  80361 yang  seluruhnya  merupakan  milik  PEMILIK. (Selanjutnya disebut sebagai \"Rumah Dimaksud\")"
+      },
+      {
+        "kind": "text",
+        "y": 607.221763779528,
+        "lastY": 607.221763779528,
+        "style": "italic",
+        "text": "Property location map / Peta lokasi properti: https://maps.app.goo.gl/v5UmhXcG2HxUaU3c6"
+      },
+      {
+        "kind": "text",
+        "y": 619.871763779528,
+        "lastY": 632.5217637795281,
+        "style": "normal",
+        "text": "This Lease Agreement has been affected and accepted on the following terms and conditions:"
+      },
+      {
+        "kind": "text",
+        "y": 648.1717637795281,
+        "lastY": 648.1717637795281,
+        "style": "italic",
+        "text": "Perjanjian Sewa-Menyewa ini telah disetujui dengan ketentuan-ketentuan sebagai berikut:"
+      },
+      {
+        "kind": "text",
+        "y": 670.9827637795281,
+        "lastY": 670.9827637795281,
+        "style": "bold",
+        "text": "Article 1 – DURATION"
+      },
+      {
+        "kind": "text",
+        "y": 687.621763779528,
+        "lastY": 687.621763779528,
+        "style": "normal",
+        "text": "Pasal 1 – MASA SEWA"
+      },
+      {
+        "kind": "text",
+        "y": 706.2717637795281,
+        "lastY": 718.9217637795281,
+        "style": "normal",
+        "text": "• The LESSEE will lease the villa for a period of 12 months, which will be effective as of 1 November 2026 - 31 October 2027."
+      },
+      {
+        "kind": "text",
+        "y": 734.571763779528,
+        "lastY": 747.221763779528,
+        "style": "italic",
+        "text": "PENYEWA menyewa rumah yang dimaksud 12 months, masa sewa berlaku mulai dari tanggal 1 November 2026 - 31 October 2027."
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 164.67176377952808,
+        "style": "normal",
+        "text": "• No later than 1 (one) month prior to the expiration date of this Lease, the LESSEE must notify the LESSOR in writing if they wish to extend the lease beyond the initial term. Failure to provide this notification within the specified timeframe will be considered an indication that the LESSEE does not intend to extend the lease, allowing the LESSOR to begin marketing the property to new potential tenants."
+      },
+      {
+        "kind": "text",
+        "y": 180.32176377952806,
+        "lastY": 243.57176377952806,
+        "style": "italic",
+        "text": "Selambat-lambatnya 1 (satu) bulan sebelum berakhirnya masa sewa, PENYEWA harus memberitahukan PEMILIK secara tertulis jika mereka ingin memperpanjang masa  sewa  setelah  periode  awal  berakhir.  Kegagalan  dalam  memberikan pemberitahuan dalam jangka waktu yang ditentukan akan dianggap sebagai indikasi bahwa  PENYEWA  tidak  berniat  untuk  memperpanjang  sewa,  memungkinkan PEMILIK untuk mulai memasarkan properti kepada penyewa potensial baru."
+      },
+      {
+        "kind": "text",
+        "y": 262.22176377952803,
+        "lastY": 274.871763779528,
+        "style": "normal",
+        "text": "• On the expiry date of this Lease Agreement, the LESSEE is obligated to return the Premises in the same condition as it has been given to the LESSEE upon check-in."
+      },
+      {
+        "kind": "text",
+        "y": 290.5217637795281,
+        "lastY": 315.82176377952806,
+        "style": "italic",
+        "text": "Pada tanggal berakhirnya Perjanjian Sewa ini, Penyewa wajib mengembalikan tempat dalam kondisi yang sama seperti yang telah diberikan kepada Penyewa pada saat check-in."
+      },
+      {
+        "kind": "text",
+        "y": 338.63276377952803,
+        "lastY": 338.63276377952803,
+        "style": "bold",
+        "text": "Article 2 – RENTAL RATE"
+      },
+      {
+        "kind": "text",
+        "y": 355.27176377952804,
+        "lastY": 355.27176377952804,
+        "style": "normal",
+        "text": "Pasal 2 – HARGA SEWA"
+      },
+      {
+        "kind": "text",
+        "y": 373.9217637795281,
+        "lastY": 386.57176377952806,
+        "style": "bold",
+        "text": "The price of rent for the premises is IDR 150,000,000 per year, payable fully upfront for the 12-month lease period."
+      },
+      {
+        "kind": "text",
+        "y": 402.2217637795281,
+        "lastY": 414.87176377952807,
+        "style": "italic",
+        "text": "Harga sewa rumah dimaksud adalah  IDR 150.000.000 per tahun, dibayarkan penuh di muka untuk masa sewa 12 bulan."
+      },
+      {
+        "kind": "text",
+        "y": 433.52176377952804,
+        "lastY": 446.1717637795281,
+        "style": "bold",
+        "text": "CHECK IN: 1 November 2026, start from 15.00 CHECK OUT: 31 October 2027, max at 12.00"
+      },
+      {
+        "kind": "text",
+        "y": 464.82176377952806,
+        "lastY": 464.82176377952806,
+        "style": "bold",
+        "text": "Late check-out without prior approval will incur a fee of IDR 100,000 per hour."
+      },
+      {
+        "kind": "text",
+        "y": 477.4717637795281,
+        "lastY": 490.12176377952807,
+        "style": "italic",
+        "text": "Check-out terlambat tanpa persetujuan sebelumnya akan dikenakan biaya IDR 100.000 per jam."
+      },
+      {
+        "kind": "text",
+        "y": 512.932763779528,
+        "lastY": 512.932763779528,
+        "style": "bold",
+        "text": "Article 3 – PAYMENT"
+      },
+      {
+        "kind": "text",
+        "y": 529.571763779528,
+        "lastY": 529.571763779528,
+        "style": "normal",
+        "text": "Pasal 3 – PEMBAYARAN"
+      },
+      {
+        "kind": "text",
+        "y": 548.2217637795281,
+        "lastY": 586.1717637795281,
+        "style": "normal",
+        "text": "• Total rent of IDR 150,000,000 must be fully paid upfront on 1 November 2026. Payment must arrive in the LESSOR's bank account no later than 12:00 PM (local time) on 1 November 2026. Failure to receive full payment by this time grants the LESSOR the right to deny entry to the Premises."
+      },
+      {
+        "kind": "text",
+        "y": 601.821763779528,
+        "lastY": 639.7717637795281,
+        "style": "italic",
+        "text": "Pembayaran total sewa sebesar IDR 150.000.000 wajib dibayarkan secara penuh pada tanggal 1 November 2026. Dana wajib diterima dalam rekening bank PEMILIK selambat-lambatnya pukul 12:00 siang (waktu setempat) pada tanggal 1 November 2026."
+      },
+      {
+        "kind": "text",
+        "y": 658.4217637795281,
+        "lastY": 683.721763779528,
+        "style": "normal",
+        "text": "• The LESSEE will pay a security deposit equal to 20% of the annual rent, amounting to IDR 30,000,000. Any 20% downpayment paid to secure the villa will be converted into this refundable security deposit and is separate from the annual rent payment."
+      },
+      {
+        "kind": "text",
+        "y": 699.371763779528,
+        "lastY": 737.321763779528,
+        "style": "italic",
+        "text": "PENYEWA akan membayar uang jaminan sebesar 20% dari harga sewa tahunan, yaitu IDR 30.000.000. Setiap uang muka 20% yang dibayarkan untuk mengamankan villa akan dialihkan menjadi uang jaminan yang dapat dikembalikan dan terpisah dari pembayaran sewa tahunan."
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "normal",
+        "text": "• In case of late payment, a penalty of Rp. 500.000 per day will be deducted from the security deposit."
+      },
+      {
+        "kind": "text",
+        "y": 142.371763779528,
+        "lastY": 155.0217637795281,
+        "style": "italic",
+        "text": "Dalam hal terjadi keterlambatan pembayaran, denda sebesar Rp. 500.000 per hari akan dipotong dari uang jaminan."
+      },
+      {
+        "kind": "text",
+        "y": 173.67176377952808,
+        "lastY": 236.92176377952808,
+        "style": "normal",
+        "text": "• The Security Deposit will be refunded within fourteen (14) days after check-out, provided  all  outstanding  bills  have  been  paid,  the  final  condition  and  damage assessment has been completed, and the Premises are returned in the same condition as received, fair wear and tear excepted. The LESSOR may deduct any unpaid amounts, repair costs, replacement costs, penalties, or other sums properly due under this Agreement from the Security Deposit."
+      },
+      {
+        "kind": "text",
+        "y": 252.57176377952806,
+        "lastY": 328.47176377952803,
+        "style": "italic",
+        "text": "Uang Jaminan akan dikembalikan dalam waktu empat belas (14) hari setelah check- out,  dengan  ketentuan  seluruh  tagihan  yang  masih  terutang  telah  dilunasi, pemeriksaan  akhir  kondisi  dan  kerusakan  telah  selesai,  dan  Rumah  Dimaksud dikembalikan dalam kondisi yang sama seperti saat diterima, dengan pengecualian keausan wajar. PEMILIK berhak memotong dari Uang Jaminan setiap jumlah yang belum dibayar, biaya perbaikan, biaya penggantian, denda, atau jumlah lain yang secara sah terutang berdasarkan Perjanjian ini."
+      },
+      {
+        "kind": "text",
+        "y": 347.12176377952807,
+        "lastY": 423.02176377952804,
+        "style": "normal",
+        "text": "• If the LESSEE terminates or vacates the Premises before the end of the agreed rental period, all rent paid in advance shall remain non-refundable and the Security Deposit shall be forfeited, unless the LESSOR expressly agrees otherwise in writing. The LESSOR has no obligation to find, accept, review, or coordinate a replacement tenant and is under no obligation to refund any unused portion of the rent. Any exception, replacement arrangement, rent credit, or refund shall be solely at the LESSOR's discretion and must be agreed in writing."
+      },
+      {
+        "kind": "text",
+        "y": 438.6717637795281,
+        "lastY": 527.2217637795281,
+        "style": "italic",
+        "text": "Jika PENYEWA mengakhiri sewa atau meninggalkan Rumah Dimaksud sebelum berakhirnya masa sewa yang telah disepakati, seluruh uang sewa yang telah dibayar di muka tetap tidak dapat dikembalikan dan Uang Jaminan akan hangus, kecuali PEMILIK secara tegas menyetujui lain secara tertulis. PEMILIK tidak berkewajiban untuk mencari, menerima, menilai, atau mengoordinasikan penyewa pengganti dan tidak berkewajiban mengembalikan bagian uang sewa yang belum terpakai. Setiap pengecualian, pengaturan penyewa pengganti, kredit sewa, atau pengembalian dana sepenuhnya berada atas kebijaksanaan PEMILIK dan harus disepakati secara tertulis."
+      },
+      {
+        "kind": "text",
+        "y": 550.0327637795281,
+        "lastY": 550.0327637795281,
+        "style": "bold",
+        "text": "Article 4 – RESPONSIBILITIES"
+      },
+      {
+        "kind": "text",
+        "y": 566.6717637795281,
+        "lastY": 566.6717637795281,
+        "style": "normal",
+        "text": "Pasal 4 – TANGGUNG JAWAB"
+      },
+      {
+        "kind": "text",
+        "y": 585.321763779528,
+        "lastY": 585.321763779528,
+        "style": "normal",
+        "text": "No services or running costs are included in the rental price. The rental is for the villa only."
+      },
+      {
+        "kind": "text",
+        "y": 600.971763779528,
+        "lastY": 600.971763779528,
+        "style": "italic",
+        "text": "Biaya-biaya berikut termasuk dalam harga sewa dan menjadi tanggung jawab PEMILIK:"
+      },
+      {
+        "kind": "text",
+        "y": 617.621763779528,
+        "lastY": 630.2717637795281,
+        "style": "normal",
+        "text": "• Villa only. No services, utilities, fees, cleaning, linen changes, pool cleaning, garbage collection, or other running costs are included."
+      },
+      {
+        "kind": "text",
+        "y": 647.9217637795281,
+        "lastY": 647.9217637795281,
+        "style": "bold",
+        "text": "NOT included / Tidak termasuk:"
+      },
+      {
+        "kind": "text",
+        "y": 663.571763779528,
+        "lastY": 688.871763779528,
+        "style": "normal",
+        "text": "• All utilities and operating costs, including electricity • Cleaning, linen change, pool cleaning, Banjar fees and garbage fees • Personal laundry and personal expenses"
+      },
+      {
+        "kind": "text",
+        "y": 709.0217637795281,
+        "lastY": 709.0217637795281,
+        "style": "bold",
+        "text": "ELECTRICITY & OUTDOOR LIGHTING"
+      },
+      {
+        "kind": "text",
+        "y": 721.6717637795281,
+        "lastY": 721.6717637795281,
+        "style": "italic",
+        "text": "KELANGSUNGAN LISTRIK & PENCAHAYAAN LUAR RUANGAN"
+      },
+      {
+        "kind": "text",
+        "y": 740.321763779528,
+        "lastY": 752.971763779528,
+        "style": "normal",
+        "text": "1. Obligation to Maintain Power: The LESSEE is strictly required to ensure the electricity meter (token/pulsa) always has sufficient credit. The LESSEE understands that a lack"
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "normal",
+        "text": "of  electricity  prevents  the  swimming  pool  pump  and  refrigerator  from  operating, causing immediate and expensive damage."
+      },
+      {
+        "kind": "text",
+        "y": 142.371763779528,
+        "lastY": 180.32176377952806,
+        "style": "italic",
+        "text": "Kewajiban Menjaga Listrik: PENYEWA wajib memastikan meteran listrik (token/pulsa) selalu memiliki saldo yang cukup. PENYEWA mengerti bahwa ketiadaan listrik akan menghentikan  operasional  pompa  kolam  renang  dan  kulkas,  yang  dapat menyebabkan kerusakan seketika dan mahal."
+      },
+      {
+        "kind": "text",
+        "y": 198.97176377952803,
+        "lastY": 236.92176377952808,
+        "style": "normal",
+        "text": "2. Pool  &  Appliance  Damage:  If  the  swimming  pool  water  turns  green,  cloudy,  or chemically unbalanced due to a lack of electricity (pump failure), or if appliances are damaged, the LESSEE shall bear the full cost of chemical recovery, shock treatment, or water replacement as deemed necessary by the LESSOR."
+      },
+      {
+        "kind": "text",
+        "y": 252.57176377952806,
+        "lastY": 303.1717637795281,
+        "style": "italic",
+        "text": "Kerusakan Kolam & Peralatan: Jika air kolam renang menjadi hijau, keruh, atau tidak seimbang  secara  kimiawi  akibat  ketiadaan  listrik  (kegagalan  pompa),  atau  jika peralatan elektronik rusak, PENYEWA wajib menanggung biaya pemulihan kimia, perawatan kejut (shock treatment), atau penggantian air sepenuhnya sebagaimana dianggap perlu oleh PEMILIK."
+      },
+      {
+        "kind": "text",
+        "y": 321.82176377952806,
+        "lastY": 372.4217637795281,
+        "style": "normal",
+        "text": "3. Outdoor Lighting (Security & Custom): In accordance with local Balinese community standards and for security purposes, the LESSEE must ensure all outdoor perimeter lights, garden lights, and gate lights are switched ON from sunset (approx. 6:30 PM) to sunrise (approx. 6:00 AM). This is mandatory to ensure the safety of the neighborhood and respect local customs."
+      },
+      {
+        "kind": "text",
+        "y": 388.07176377952806,
+        "lastY": 438.6717637795281,
+        "style": "italic",
+        "text": "Pencahayaan  Luar  (Keamanan  &  Adat):  Sesuai  dengan  standar  lingkungan masyarakat Bali dan demi tujuan keamanan, PENYEWA wajib memastikan semua lampu perimeter luar, lampu taman, dan lampu gerbang DINYALAKAN mulai matahari terbenam (sekitar 18:30) hingga matahari terbit (sekitar 06:00). Hal ini wajib dilakukan untuk menjaga keamanan lingkungan dan menghormati adat setempat."
+      },
+      {
+        "kind": "text",
+        "y": 457.32176377952806,
+        "lastY": 523.571763779528,
+        "style": "normal",
+        "text": "4. Emergency Top-Up & Penalty: If the electricity credit runs out and the power remains off, the LESSOR reserves the right to immediately top up the electricity token remotely to prevent damage to the property. In this event, the LESSEE will be charged: • The actual cost of the electricity token purchased; PLUS • An administrative penalty fee of IDR 200,000 (Two Hundred Thousand Rupiah) per incident."
+      },
+      {
+        "kind": "text",
+        "y": 539.2217637795281,
+        "lastY": 589.821763779528,
+        "style": "italic",
+        "text": "Pengisian Darurat & Denda: Jika kredit listrik habis dan listrik tetap mati, PEMILIK berhak untuk segera mengisi ulang token listrik dari jarak jauh guna mencegah kerusakan properti. Dalam hal ini, PENYEWA akan dikenakan biaya: Biaya aktual pembelian token listrik tersebut; DITAMBAH Biaya denda administrasi sebesar Rp 200.000 (Dua Ratus Ribu Rupiah) per kejadian."
+      },
+      {
+        "kind": "text",
+        "y": 608.471763779528,
+        "lastY": 621.121763779528,
+        "style": "normal",
+        "text": "5. Deduction: The LESSOR is authorized to deduct these costs and penalties directly from the Security Deposit if not paid immediately by the LESSEE."
+      },
+      {
+        "kind": "text",
+        "y": 636.7717637795281,
+        "lastY": 649.4217637795281,
+        "style": "italic",
+        "text": "Pemotongan: PEMILIK berwenang untuk memotong biaya dan denda ini secara langsung dari Deposit Keamanan jika tidak segera dibayarkan oleh PENYEWA."
+      },
+      {
+        "kind": "text",
+        "y": 672.2327637795281,
+        "lastY": 672.2327637795281,
+        "style": "bold",
+        "text": "Article 5 – GUARANTEE"
+      },
+      {
+        "kind": "text",
+        "y": 688.871763779528,
+        "lastY": 688.871763779528,
+        "style": "normal",
+        "text": "Pasal 5 – JAMINAN"
+      },
+      {
+        "kind": "text",
+        "y": 707.5217637795281,
+        "lastY": 758.121763779528,
+        "style": "normal",
+        "text": "• The LESSOR guarantees the LESSEE that as long as the Lease Agreement remains in force, the LESSEE can legally occupy the Premises. The LESSEE is permitted to use the premises as a private residence for themselves, their family and friends. However, the LESSEE is strictly prohibited from renting out the villa (subletting) to third parties. Any instance of subleasing will be considered a breach of contract, and the"
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "normal",
+        "text": "contract will be terminated immediately without any refund of monies already paid by the LESSEE."
+      },
+      {
+        "kind": "text",
+        "y": 142.371763779528,
+        "lastY": 230.92176377952808,
+        "style": "italic",
+        "text": "PEMILIK juga menjamin PENYEWA bahwa selama masa berlakunya Perjanjian Sewa Menyewa ini, PENYEWA berhak menghuni rumah dimaksud secara sah. PENYEWA hanya diizinkan  untuk  menggunakan rumah  sebagai tempat  tinggal pribadi  bagi dirinya, keluarga, dan teman-teman. Namun, PENYEWA dilarang keras menyewakan villa  (subletting)  kepada  pihak  ketiga.  Jika  PENYEWA  ditemukan  melakukan subletting, hal tersebut akan dianggap sebagai pelanggaran kontrak, kontrak akan segera  diakhiri,  dan  PENYEWA  tidak  akan  menerima  pengembalian  uang  atas pembayaran yang telah dilakukan."
+      },
+      {
+        "kind": "text",
+        "y": 249.57176377952806,
+        "lastY": 274.871763779528,
+        "style": "normal",
+        "text": "• This Lease Agreement shall not be made void by LESSOR'S or LESSEE'S death and/or change of ownership in any form whatsoever of the property to another party during the term of this Lease Agreement."
+      },
+      {
+        "kind": "text",
+        "y": 290.5217637795281,
+        "lastY": 328.47176377952803,
+        "style": "italic",
+        "text": "Perjanjian Sewa-Menyewa ini tidak akan menjadi batal oleh karena meninggalnya PEMILIK atau PENYEWA rumah dimaksud dan/atau beralihnya kepemilikan dalam bentuk apapun atas rumah dimaksud kepada pihak lain selama masa berlakunya Perjanjian Sewa Menyewa ini."
+      },
+      {
+        "kind": "text",
+        "y": 347.12176377952807,
+        "lastY": 372.4217637795281,
+        "style": "normal",
+        "text": "• The LESSOR has the right to terminate this agreement and remove all tenants from the premises  immediately,  if  they  are  found  to  be  in  possession  of  any  prohibited substances within villa premises. (ie. Drugs)."
+      },
+      {
+        "kind": "text",
+        "y": 388.07176377952806,
+        "lastY": 413.37176377952807,
+        "style": "italic",
+        "text": "PEMILIK memiliki hak untuk mengakhiri perjanjian ini dan mengeluarkan semua PENYEWA dari rumah dimaksud segera, jika ditemukan kepemilikan zat-zat terlarang di dalam rumah dimaksud tersebut. (contoh. Narkoba)."
+      },
+      {
+        "kind": "text",
+        "y": 432.02176377952804,
+        "lastY": 583.821763779528,
+        "style": "normal",
+        "text": "• The LESSEE is responsible for all damage, loss, repair, or replacement costs caused by the negligence, misuse, failure to maintain, or intentional acts of the LESSEE or their guests. The LESSOR is responsible for structural defects and failures arising from normal wear and tear or matters reasonably within the LESSOR's control, provided such matters were not caused or worsened by the LESSEE or their guests. The LESSOR shall not be liable for damage or loss resulting from force majeure events, natural disasters (including earthquake, volcanic activity, severe storm, or external flooding), acts of government, utility failures outside the property, criminal acts of third parties, or other events beyond the LESSOR's reasonable control, except to the extent directly caused or materially worsened by the LESSOR's negligence or failure to perform an obligation under this Agreement. The LESSOR is not responsible for loss, damage, or theft of personal belongings of the LESSEE or their guests. The LESSEE is encouraged to arrange personal insurance for valuables and personal property."
+      },
+      {
+        "kind": "text",
+        "y": 599.471763779528,
+        "lastY": 751.2717637795281,
+        "style": "italic",
+        "text": "PENYEWA bertanggung jawab atas seluruh kerusakan, kehilangan, biaya perbaikan, atau biaya penggantian yang disebabkan oleh kelalaian, penyalahgunaan, kegagalan melakukan perawatan, atau tindakan sengaja dari PENYEWA atau tamunya. PEMILIK bertanggung jawab atas cacat struktural dan kerusakan yang timbul akibat keausan wajar atau hal-hal yang secara wajar berada dalam kendali PEMILIK, sepanjang hal tersebut tidak disebabkan atau diperburuk oleh PENYEWA atau tamunya. PEMILIK tidak bertanggung jawab atas kerusakan atau kerugian akibat keadaan kahar (force majeure), bencana alam (termasuk gempa bumi, aktivitas vulkanik, badai berat, atau banjir dari luar properti), tindakan pemerintah, gangguan utilitas di luar properti, tindakan kriminal pihak ketiga, atau kejadian lain di luar kendali wajar PEMILIK, kecuali sejauh  kerusakan  tersebut  secara  langsung  disebabkan  atau  secara  material diperburuk oleh kelalaian PEMILIK atau kegagalan PEMILIK menjalankan kewajiban berdasarkan  Perjanjian  ini.  PEMILIK  tidak  bertanggung  jawab  atas  kehilangan,"
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "italic",
+        "text": "kerusakan, atau pencurian barang pribadi milik PENYEWA atau tamunya. PENYEWA dianjurkan memiliki asuransi pribadi untuk barang berharga dan barang pribadi."
+      },
+      {
+        "kind": "text",
+        "y": 149.53276377952807,
+        "lastY": 149.53276377952807,
+        "style": "bold",
+        "text": "Article 6 – MAINTENANCE"
+      },
+      {
+        "kind": "text",
+        "y": 166.17176377952808,
+        "lastY": 166.17176377952808,
+        "style": "normal",
+        "text": "Pasal 6 – PEMELIHARAAN"
+      },
+      {
+        "kind": "text",
+        "y": 184.82176377952806,
+        "lastY": 273.371763779528,
+        "style": "normal",
+        "text": "• The LESSEE must keep the Premises clean and in good condition. Minor repairs arising from normal day-to-day use with a cost up to IDR 500,000 are the responsibility of the LESSEE. Repairs exceeding IDR 500,000 that arise from normal wear and tear, structural defects, or matters not caused by the LESSEE or their guests shall be the responsibility  of  the  LESSOR.  However,  any  repair,  replacement,  cleaning,  or restoration required because of negligence, misuse, failure to maintain, or intentional acts of the LESSEE or their guests shall be fully paid by the LESSEE, regardless of the amount."
+      },
+      {
+        "kind": "text",
+        "y": 289.0217637795281,
+        "lastY": 390.2217637795281,
+        "style": "italic",
+        "text": "PENYEWA wajib menjaga kebersihan dan kondisi Rumah Dimaksud dengan baik. Perbaikan kecil yang timbul dari penggunaan sehari-hari secara normal dengan biaya sampai dengan IDR 500.000 menjadi tanggung jawab PENYEWA. Perbaikan yang melebihi IDR 500.000 yang timbul karena keausan wajar, cacat struktural, atau hal yang  tidak  disebabkan  oleh  PENYEWA  atau  tamunya  menjadi  tanggung  jawab PEMILIK. Namun, setiap perbaikan, penggantian, pembersihan, atau pemulihan yang diperlukan akibat kelalaian, penyalahgunaan, kegagalan melakukan perawatan, atau tindakan  sengaja  dari  PENYEWA  atau  tamunya  wajib  dibayar  sepenuhnya  oleh PENYEWA tanpa memandang jumlah biayanya."
+      },
+      {
+        "kind": "text",
+        "y": 408.87176377952807,
+        "lastY": 472.12176377952807,
+        "style": "normal",
+        "text": "• Lessee Responsibility Clause: The Lessee shall be held accountable for all costs incurred as a result of smoking within the premises. This includes, but is not limited to, cleaning fees, repair or replacement of damaged property, and any associated costs necessary to restore the premises to its original condition prior to the commencement of the lease. The Lessee agrees to compensate the Lessor for such costs upon demand."
+      },
+      {
+        "kind": "text",
+        "y": 487.77176377952804,
+        "lastY": 538.371763779528,
+        "style": "italic",
+        "text": "Penyewa bertanggung jawab atas semua biaya yang timbul akibat merokok di dalam properti. Hal ini mencakup, namun tidak terbatas pada, biaya pembersihan, perbaikan atau  penggantian  properti  yang  rusak,  serta  biaya  lain  yang  diperlukan  untuk mengembalikan properti ke kondisi semula sebelum dimulainya masa sewa. Penyewa setuju untuk mengganti biaya tersebut kepada Pemilik atas permintaan."
+      },
+      {
+        "kind": "text",
+        "y": 557.0217637795281,
+        "lastY": 632.9217637795281,
+        "style": "normal",
+        "text": "• The LESSOR is responsible for repair expenses resulting from structural failure of the Premises, including roofing, main plumbing, main walls, floors, and other structural components, where such failure results from normal wear and tear, latent defects, or matters within the LESSOR's responsibility. The LESSOR shall not be responsible for any such repair where the damage was caused or materially worsened by negligence, misuse, failure to maintain, or intentional acts of the LESSEE or their guests; in such case the LESSEE shall bear the full cost."
+      },
+      {
+        "kind": "text",
+        "y": 648.571763779528,
+        "lastY": 737.121763779528,
+        "style": "italic",
+        "text": "PEMILIK bertanggung jawab atas biaya perbaikan yang timbul dari kegagalan struktur Rumah Dimaksud, termasuk atap, instalasi pipa utama, dinding utama, lantai, dan komponen struktural lainnya, apabila kegagalan tersebut disebabkan oleh keausan wajar, cacat tersembunyi, atau hal yang menjadi tanggung jawab PEMILIK. PEMILIK tidak bertanggung jawab atas perbaikan tersebut apabila kerusakan disebabkan atau secara material diperburuk oleh kelalaian, penyalahgunaan, kegagalan melakukan perawatan, atau tindakan sengaja dari PENYEWA atau tamunya; dalam hal demikian seluruh biaya menjadi tanggung jawab PENYEWA."
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 164.67176377952808,
+        "style": "normal",
+        "text": "• LESSEE must NOT throw anything down the toilet, including toilet paper. Toilet paper must be disposed of in the bin provided. If any sanitary products, toilet paper, or other products are found to have blocked, damaged, or prevented the normal function of the toilet or drainage system, the LESSEE will be responsible for all costs associated with fixing the toilet/drainage/plumbing systems."
+      },
+      {
+        "kind": "text",
+        "y": 180.32176377952806,
+        "lastY": 230.92176377952808,
+        "style": "italic",
+        "text": "PENYEWA tidak boleh membuang apa pun di toilet, termasuk kertas toilet. Kertas toilet harus dibuang di tempat sampah yang disediakan. Jika ada produk sanitasi, kertas toilet, atau produk lain yang ditemukan telah menyumbat/merusak/menghalangi fungsi normal toilet atau sistem drainase, PENYEWA akan bertanggung jawab atas semua biaya yang terkait dengan perbaikan toilet/drainase/sistem pipa ledeng."
+      },
+      {
+        "kind": "text",
+        "y": 249.57176377952806,
+        "lastY": 300.1717637795281,
+        "style": "normal",
+        "text": "• LESSEE is not entitled to make any major, permanent, or structural alteration to the Premises without the LESSOR's prior written approval. The LESSOR may grant or refuse such approval at its discretion. Any approved alteration must be carried out at the LESSEE's cost and, if required by the LESSOR, restored to the original condition at the end of the lease."
+      },
+      {
+        "kind": "text",
+        "y": 315.82176377952806,
+        "lastY": 379.07176377952806,
+        "style": "italic",
+        "text": "PENYEWA  tidak  diperkenankan  melakukan  perubahan  besar,  permanen,  atau struktural  pada  Rumah  Dimaksud  tanpa  persetujuan  tertulis  terlebih  dahulu  dari PEMILIK.  PEMILIK  dapat  memberikan  atau  menolak  persetujuan  tersebut  atas kebijaksanaannya. Setiap perubahan yang disetujui dilakukan atas biaya PENYEWA dan, apabila diminta oleh PEMILIK, harus dikembalikan ke kondisi semula pada akhir masa sewa."
+      },
+      {
+        "kind": "text",
+        "y": 397.7217637795281,
+        "lastY": 460.9717637795281,
+        "style": "normal",
+        "text": "a. LESSEE is not allowed to change the paint, and redecorate, change and install locks, install all kinds of antenna and other similar equipment, screws, fastening devices, large nails or adhesive materials, display or other exhibits, on or any portion of the premises on the full accountability of the LESSEE, unless such changes are approved by the LESSOR in writing, and LESSEE is willing to return the initial condition of the PREMISES at the end of lease period."
+      },
+      {
+        "kind": "text",
+        "y": 476.62176377952807,
+        "lastY": 552.5217637795281,
+        "style": "italic",
+        "text": "PENYEWA tidak diijinkan untuk mengecat, merubah, dan mendekorasi, mengganti dan  memasang  kunci,  memasang  antena  dan  peralatan  sejenis,  menyekrup, memasang paku besar atau zat adhesif, atau tanda lainnya di bagian manapun dari rumah yang dimaksud dengan pertanggungjawaban penuh dari PENYEWA, kecuali perubahan tersebut disetujui oleh PEMILIK secara tertulis, dan PENYEWA harus mengembalikan  ke  kondisi  awal  Rumah  yang  dimaksud  pada  saat  masa  sewa berakhir."
+      },
+      {
+        "kind": "text",
+        "y": 571.1717637795281,
+        "lastY": 596.471763779528,
+        "style": "normal",
+        "text": "b. Any furniture, fixture or fittings installed by LESSEE to improve living conditions on the premises as deemed suitable by LESSEE, shall remain the property of LESSEE and may be removed at the expiration of this Lease Agreement."
+      },
+      {
+        "kind": "text",
+        "y": 612.121763779528,
+        "lastY": 650.071763779528,
+        "style": "italic",
+        "text": "Semua furniture, perlengkapan tetap atau barang-barang lain yang dipasang oleh PENYEWA untuk menjadikan rumah dimaksud sebagai tempat tinggal yang memadai, akan tetapi menjadi milik PENYEWA dan dapat diambil kembali setelah berakhirnya Perjanjian Sewa-Menyewa ini."
+      },
+      {
+        "kind": "text",
+        "y": 668.721763779528,
+        "lastY": 694.0217637795281,
+        "style": "normal",
+        "text": "c. LESSEE can bring his own furniture or fixtures into property but LESSEE is not allowed to change or add or install anything permanently (as this may damage floors/walls/ceilings)."
+      },
+      {
+        "kind": "text",
+        "y": 709.6717637795281,
+        "lastY": 747.621763779528,
+        "style": "italic",
+        "text": "PENYEWA dapat membawa furnitur atau perlengkapannya sendiri ke dalam properti tetapi  PENYEWA  tidak  diperbolehkan  untuk  mengubah  atau  menambah  atau mengubah  PERBAIKAN  apa  pun  (karena  ini  akan  merusak  lantai/dinding/langit- langit)."
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 189.97176377952803,
+        "style": "normal",
+        "text": "d. The LESSOR has the right to enter the Premises to carry out necessary inspections, alterations, repairs, maintenance, or works. For non-emergency access, the LESSOR will  provide  at  least  72  hours'  prior  notice  where  reasonably  practicable.  In  an emergency, urgent safety matter, suspected serious damage, water leak, electrical hazard, security issue, or where immediate access is reasonably necessary to prevent further  damage,  the  LESSOR  may  enter  immediately  or  with  such  notice  as  is reasonably practicable in the circumstances."
+      },
+      {
+        "kind": "text",
+        "y": 205.621763779528,
+        "lastY": 294.1717637795281,
+        "style": "italic",
+        "text": "d. PEMILIK berhak memasuki Rumah Dimaksud untuk melakukan pemeriksaan, perubahan, perbaikan, pemeliharaan, atau pekerjaan yang diperlukan. Untuk akses yang bukan keadaan darurat, PEMILIK akan memberikan pemberitahuan sekurang- kurangnya 72 jam sebelumnya apabila secara wajar memungkinkan. Dalam keadaan darurat, masalah keselamatan mendesak, dugaan kerusakan serius, kebocoran air, bahaya listrik, masalah keamanan, atau apabila akses segera secara wajar diperlukan untuk mencegah kerusakan lebih lanjut, PEMILIK dapat masuk segera atau dengan pemberitahuan yang secara wajar memungkinkan sesuai keadaan."
+      },
+      {
+        "kind": "text",
+        "y": 312.82176377952806,
+        "lastY": 312.82176377952806,
+        "style": "normal",
+        "text": "In matters of conditions as mentioned underneath, The LESSOR is obliged:"
+      },
+      {
+        "kind": "text",
+        "y": 328.47176377952803,
+        "lastY": 328.47176377952803,
+        "style": "italic",
+        "text": "Dalam hal-hal keadaan sebagaimana diterangkan dibawah ini PEMILIK bertanggung jawab:"
+      },
+      {
+        "kind": "text",
+        "y": 347.12176377952807,
+        "lastY": 423.02176377952804,
+        "style": "normal",
+        "text": "6. For  the  integrity  of  structures  including  roofs,  walls,  floors,  and  swimming  pool structure,  the  LESSOR  shall  arrange  repair  of  major  construction  or  structural problems as soon as reasonably practicable, provided the problem was not caused or worsened by the LESSEE or their guests. At least one (1) day's notice will normally be given before entry for inspection or repair; however, no minimum notice is required in an emergency or where immediate access is reasonably necessary to protect persons or prevent further damage."
+      },
+      {
+        "kind": "text",
+        "y": 438.6717637795281,
+        "lastY": 527.2217637795281,
+        "style": "italic",
+        "text": "Untuk integritas struktur termasuk atap, dinding, lantai, dan struktur kolam renang, PEMILIK akan mengatur perbaikan atas masalah konstruksi atau struktural yang besar sesegera mungkin secara wajar, sepanjang masalah tersebut tidak disebabkan atau diperburuk oleh PENYEWA atau tamunya. Pemberitahuan sekurang-kurangnya satu (1) hari pada umumnya akan diberikan sebelum masuk untuk pemeriksaan atau perbaikan; namun, tidak diperlukan pemberitahuan minimum dalam keadaan darurat atau apabila akses segera secara wajar diperlukan untuk melindungi orang atau mencegah kerusakan lebih lanjut."
+      },
+      {
+        "kind": "text",
+        "y": 545.871763779528,
+        "lastY": 596.471763779528,
+        "style": "normal",
+        "text": "7. If the swimming pool equipment suffers a major or total failure due to normal wear and tear or a defect not caused by the LESSEE, the LESSOR shall arrange repair as soon as reasonably practicable. If the failure or damage results from lack of electricity, misuse, negligence, failure to maintain, or any act or omission of the LESSEE or their guests, the LESSEE shall bear the full repair or replacement cost."
+      },
+      {
+        "kind": "text",
+        "y": 612.121763779528,
+        "lastY": 675.371763779528,
+        "style": "italic",
+        "text": "Apabila  peralatan  kolam  renang  mengalami  kerusakan  besar  atau  total  akibat keausan wajar atau cacat yang tidak disebabkan oleh PENYEWA, PEMILIK akan mengatur  perbaikan  sesegera  mungkin  secara  wajar.  Apabila  kerusakan  atau kegagalan timbul karena tidak adanya listrik, penyalahgunaan, kelalaian, kegagalan melakukan perawatan, atau tindakan maupun kelalaian PENYEWA atau tamunya, seluruh biaya perbaikan atau penggantian menjadi tanggung jawab PENYEWA."
+      },
+      {
+        "kind": "text",
+        "y": 694.0217637795281,
+        "lastY": 694.0217637795281,
+        "style": "normal",
+        "text": "8. Mechanical, Electrical and Plumbing issues:"
+      },
+      {
+        "kind": "text",
+        "y": 709.6717637795281,
+        "lastY": 709.6717637795281,
+        "style": "italic",
+        "text": "Masalah Mekanikal, Electrical dan Plumbing sebagai berikut:"
+      },
+      {
+        "kind": "text",
+        "y": 727.321763779528,
+        "lastY": 752.621763779528,
+        "style": "normal",
+        "text": "• The LESSEE is responsible for keeping all inventory, mechanical equipment, and electronic items in good condition and for proper day-to-day use and routine upkeep. Because the rental is for the villa only and no services or running costs are included,"
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 189.97176377952803,
+        "style": "normal",
+        "text": "routine cleaning and periodic servicing of air-conditioning units and other equipment during the lease term are the responsibility and cost of the LESSEE, unless otherwise agreed in writing. Repairs or replacement required solely because of normal wear and tear, latent defect, or structural/mechanical failure not caused by the LESSEE remain the responsibility of the LESSOR. Any damage caused or worsened by negligence, misuse, smoking, lack of electricity, failure to maintain, or intentional acts by the LESSEE or their guests shall be repaired or replaced at the LESSEE's full expense."
+      },
+      {
+        "kind": "text",
+        "y": 205.621763779528,
+        "lastY": 344.77176377952804,
+        "style": "italic",
+        "text": "PENYEWA bertanggung jawab menjaga seluruh inventaris, peralatan mekanikal, dan barang elektronik dalam kondisi baik serta menggunakannya dengan benar dan melakukan perawatan rutin sehari-hari. Karena sewa ini hanya untuk villa dan tidak mencakup layanan maupun biaya operasional, pembersihan rutin dan servis berkala unit AC serta peralatan lainnya selama masa sewa menjadi tanggung jawab dan biaya PENYEWA, kecuali disepakati lain secara tertulis. Perbaikan atau penggantian yang semata-mata diperlukan akibat keausan wajar, cacat tersembunyi, atau kegagalan struktural/mekanikal yang tidak disebabkan oleh PENYEWA tetap menjadi tanggung jawab PEMILIK. Setiap kerusakan yang disebabkan atau diperburuk oleh kelalaian, penyalahgunaan, merokok, ketiadaan listrik, kegagalan melakukan perawatan, atau tindakan sengaja PENYEWA atau tamunya wajib diperbaiki atau diganti sepenuhnya atas biaya PENYEWA."
+      },
+      {
+        "kind": "text",
+        "y": 363.4217637795281,
+        "lastY": 401.37176377952807,
+        "style": "normal",
+        "text": "• Electrical faults that create an immediate safety risk and are not caused by the LESSEE shall be addressed by the LESSOR as soon as reasonably practicable. If the fault or damage was caused or worsened by the LESSEE or their guests, the LESSEE shall bear the related repair costs."
+      },
+      {
+        "kind": "text",
+        "y": 417.02176377952804,
+        "lastY": 467.62176377952807,
+        "style": "italic",
+        "text": "Gangguan  listrik  yang  menimbulkan  risiko  keselamatan  langsung  dan  tidak disebabkan oleh PENYEWA akan ditangani oleh PEMILIK sesegera mungkin secara wajar. Apabila gangguan atau kerusakan tersebut disebabkan atau diperburuk oleh PENYEWA  atau  tamunya,  biaya  perbaikan  terkait  menjadi  tanggung  jawab PENYEWA."
+      },
+      {
+        "kind": "text",
+        "y": 486.27176377952804,
+        "lastY": 524.2217637795281,
+        "style": "normal",
+        "text": "• Any personal belongings left in the villa after check-out, and not claimed or arranged for pick-up within two (2) weeks, without any prior notice or communication from the LESSEE, will be considered under the LESSOR's custody. The LESSOR reserves the right to dispose of, donate, or retain the items at their sole discretion."
+      },
+      {
+        "kind": "text",
+        "y": 539.871763779528,
+        "lastY": 590.471763779528,
+        "style": "italic",
+        "text": "Barang-barang pribadi yang tertinggal di villa setelah waktu check-out, dan tidak diambil  atau  diatur  pengambilannya  dalam  waktu  dua  (2)  minggu  tanpa pemberitahuan  atau  komunikasi  dari  PENYEWA,  akan  dianggap  berada  dalam penguasaan PEMILIK. PEMILIK berhak untuk membuang, menyumbangkan, atau menyimpan barang-barang tersebut sesuai kebijakannya sendiri."
+      },
+      {
+        "kind": "text",
+        "y": 609.121763779528,
+        "lastY": 621.7717637795281,
+        "style": "normal",
+        "text": "Also see Appendix at end of contract for additional agreements between LESSOR and LESSEE."
+      },
+      {
+        "kind": "text",
+        "y": 637.4217637795281,
+        "lastY": 650.071763779528,
+        "style": "italic",
+        "text": "Lihat juga Lampiran di akhir kontrak untuk perjanjian tambahan antara PEMILIK dan PENYEWA."
+      },
+      {
+        "kind": "text",
+        "y": 672.8827637795281,
+        "lastY": 672.8827637795281,
+        "style": "bold",
+        "text": "Article 7 – SECURITY"
+      },
+      {
+        "kind": "text",
+        "y": 689.5217637795281,
+        "lastY": 689.5217637795281,
+        "style": "normal",
+        "text": "Pasal 7 – KEAMANAN"
+      },
+      {
+        "kind": "text",
+        "y": 708.1717637795281,
+        "lastY": 720.821763779528,
+        "style": "normal",
+        "text": "The LESSEE is responsible for the full duration of the contract duration for ensuring the property is kept properly secure. This includes:"
+      },
+      {
+        "kind": "text",
+        "y": 736.471763779528,
+        "lastY": 749.121763779528,
+        "style": "italic",
+        "text": "Penyewa bertanggung jawab atas durasi penuh dari durasi kontrak untuk memastikan properti disimpan dengan aman. Ini termasuk:"
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "normal",
+        "text": "a. Keeping all doors, windows and gates of the property locked all the times, especially at night time and when the property is vacated."
+      },
+      {
+        "kind": "text",
+        "y": 142.371763779528,
+        "lastY": 155.0217637795281,
+        "style": "italic",
+        "text": "Menjaga semua pintu, jendela, dan gerbang properti terkunci setiap saat, terutama pada malam hari dan saat properti dikosongkan."
+      },
+      {
+        "kind": "text",
+        "y": 173.67176377952808,
+        "lastY": 211.621763779528,
+        "style": "normal",
+        "text": "b. The LESSEE shall ensure that the existing external security system is not tampered with or adjusted. This is in place for the protection of the property, the LESSOR's provided effects (as per the provided itinerary of effects) and the LESSEE's personal effects."
+      },
+      {
+        "kind": "text",
+        "y": 227.2717637795281,
+        "lastY": 265.22176377952803,
+        "style": "italic",
+        "text": "PENYEWA harus memastikan bahwa sistem keamanan eksternal yang ada tidak dirusak  atau  disesuaikan.  Ini  dilakukan  untuk  perlindungan  properti,  efek  yang disediakan oleh Lessor (sesuai rencana perjalanan efek yang disediakan) dan efek pribadi LESSEE."
+      },
+      {
+        "kind": "text",
+        "y": 283.871763779528,
+        "lastY": 296.5217637795281,
+        "style": "normal",
+        "text": "c. All sets of keys to the property should be correctly handled and only remain on the person of the LESSEE's stated in this agreement."
+      },
+      {
+        "kind": "text",
+        "y": 312.1717637795281,
+        "lastY": 324.82176377952806,
+        "style": "italic",
+        "text": "Semua set kunci properti harus ditangani dengan benar dan hanya berada di tangan orang PENYEWA yang tercantum dalam perjanjian ini."
+      },
+      {
+        "kind": "text",
+        "y": 343.4717637795281,
+        "lastY": 356.12176377952807,
+        "style": "normal",
+        "text": "d. All sets of keys shall be returned to the LESSOR at the end of the tenancy agreement."
+      },
+      {
+        "kind": "text",
+        "y": 371.77176377952804,
+        "lastY": 371.77176377952804,
+        "style": "italic",
+        "text": "Semua set kunci harus dikembalikan kepada LESSOR pada akhir perjanjian sewa."
+      },
+      {
+        "kind": "text",
+        "y": 394.582763779528,
+        "lastY": 394.582763779528,
+        "style": "bold",
+        "text": "Article 8 – ARBITRATION"
+      },
+      {
+        "kind": "text",
+        "y": 411.2217637795281,
+        "lastY": 411.2217637795281,
+        "style": "normal",
+        "text": "Pasal 8 – ARBITRASI"
+      },
+      {
+        "kind": "text",
+        "y": 429.87176377952807,
+        "lastY": 455.1717637795281,
+        "style": "normal",
+        "text": "• Any unresolved issues or questions of interpretation arising in connection with this lease agreement shall be settled by arbitration in accordance with the rules of the Indonesian National Board of Arbitration (BANI)."
+      },
+      {
+        "kind": "text",
+        "y": 470.82176377952806,
+        "lastY": 496.12176377952807,
+        "style": "italic",
+        "text": "Segala perselisihan atau perbedaan penafsiran yang timbul sehubungan dengan perjanjian sewa ini akan diselesaikan melalui arbitrase sesuai dengan peraturan Badan Arbitrase Nasional Indonesia (BANI)."
+      },
+      {
+        "kind": "text",
+        "y": 514.7717637795281,
+        "lastY": 514.7717637795281,
+        "style": "normal",
+        "text": "• The Law of the Republic of Indonesia shall govern the Lease Agreement."
+      },
+      {
+        "kind": "text",
+        "y": 530.4217637795281,
+        "lastY": 543.071763779528,
+        "style": "italic",
+        "text": "Perjanjian Sewa Menyewa ini tunduk kepada perundang-undangan yang berlaku di wilayah Indonesia."
+      },
+      {
+        "kind": "text",
+        "y": 565.882763779528,
+        "lastY": 565.882763779528,
+        "style": "bold",
+        "text": "Article 9 – FORCE MAJEURE"
+      },
+      {
+        "kind": "text",
+        "y": 582.5217637795281,
+        "lastY": 582.5217637795281,
+        "style": "normal",
+        "text": "Pasal 9 – KEADAAN TERPAKSA"
+      },
+      {
+        "kind": "text",
+        "y": 601.1717637795281,
+        "lastY": 689.721763779528,
+        "style": "normal",
+        "text": "• Neither party shall be held liable for failure to perform their obligations under this agreement due to events beyond their control, including natural disasters, war, strikes, government actions, or other unforeseen circumstances. If such events occur, both parties agree to communicate promptly and work together to resolve the situation as fairly as possible. Any payments already made will not be refunded, and both parties will work to adjust terms or reschedule obligations where applicable. The Lessee is encouraged to have appropriate insurance to cover potential losses or damages during the lease period caused by force majeure events."
+      },
+      {
+        "kind": "text",
+        "y": 705.371763779528,
+        "lastY": 755.971763779528,
+        "style": "italic",
+        "text": "Kedua belah pihak tidak akan bertanggung jawab atas kegagalan melaksanakan kewajiban dalam perjanjian ini akibat kejadian di luar kendali mereka, termasuk bencana alam, perang, pemogokan, tindakan pemerintah, atau keadaan tak terduga lainnya. Jika kejadian seperti itu terjadi, kedua belah pihak sepakat untuk segera berkomunikasi  dan  bekerja  sama  untuk  menyelesaikan  situasi  seadil  mungkin."
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 164.67176377952808,
+        "style": "italic",
+        "text": "Pembayaran yang telah dilakukan tidak akan dikembalikan, dan kedua belah pihak akan  bekerja  sama  untuk  menyesuaikan  ketentuan  atau  menjadwalkan  ulang kewajiban jika memungkinkan. Penyewa disarankan untuk memiliki asuransi yang sesuai untuk menanggung potensi kerugian atau kerusakan selama masa sewa yang disebabkan oleh kejadian force majeure."
+      },
+      {
+        "kind": "text",
+        "y": 183.32176377952806,
+        "lastY": 246.57176377952806,
+        "style": "normal",
+        "text": "• If the Premises become temporarily uninhabitable due to damage not caused by the LESSEE, the parties will discuss in good faith any reasonable temporary arrangement, rent credit, or extension. No automatic refund, free extension, or compensation shall arise unless expressly agreed in writing by the LESSOR, and force majeure events remain  subject  to  the  preceding  Force  Majeure  clause.  This  does  not  limit  any mandatory rights that cannot legally be excluded."
+      },
+      {
+        "kind": "text",
+        "y": 262.22176377952803,
+        "lastY": 338.12176377952807,
+        "style": "italic",
+        "text": "Apabila Rumah Dimaksud untuk sementara tidak dapat dihuni akibat kerusakan yang tidak disebabkan oleh PENYEWA, para pihak akan membahas dengan itikad baik pengaturan  sementara,  kredit  sewa,  atau  perpanjangan  yang  wajar.  Tidak  ada pengembalian dana, perpanjangan gratis, atau kompensasi otomatis kecuali secara tegas disetujui secara tertulis oleh PEMILIK, dan kejadian force majeure tetap tunduk pada ketentuan Keadaan Terpaksa di atas. Ketentuan ini tidak membatasi hak yang berdasarkan hukum tidak dapat dikesampingkan."
+      },
+      {
+        "kind": "text",
+        "y": 360.93276377952805,
+        "lastY": 360.93276377952805,
+        "style": "bold",
+        "text": "Article 10 – DOMICILE"
+      },
+      {
+        "kind": "text",
+        "y": 377.57176377952806,
+        "lastY": 377.57176377952806,
+        "style": "normal",
+        "text": "Pasal 10 – DOMISILI HUKUM"
+      },
+      {
+        "kind": "text",
+        "y": 396.2217637795281,
+        "lastY": 421.52176377952804,
+        "style": "normal",
+        "text": "For purposes of enforcement of any arbitration award issued pursuant to Article 8, or for any matters that are not arbitrable under applicable law, both parties choose at law full and unalterable domicile at the Court of Justice of Denpasar-Bali."
+      },
+      {
+        "kind": "text",
+        "y": 437.1717637795281,
+        "lastY": 475.12176377952807,
+        "style": "italic",
+        "text": "Untuk keperluan pelaksanaan putusan arbitrase yang dikeluarkan berdasarkan Pasal 8, atau untuk hal-hal yang tidak dapat diselesaikan melalui arbitrase berdasarkan hukum yang berlaku, kedua belah pihak setuju memilih domisili hukum di Pengadilan Negeri Denpasar- Bali."
+      },
+      {
+        "kind": "text",
+        "y": 497.93276377952805,
+        "lastY": 497.93276377952805,
+        "style": "bold",
+        "text": "Article 11 – LEGAL INTERPRETATION"
+      },
+      {
+        "kind": "text",
+        "y": 514.571763779528,
+        "lastY": 514.571763779528,
+        "style": "normal",
+        "text": "Pasal 11 – PENGERTIAN HUKUM"
+      },
+      {
+        "kind": "text",
+        "y": 533.2217637795281,
+        "lastY": 545.871763779528,
+        "style": "normal",
+        "text": "In case of dispute as to the interpretation of this Lease Agreement, the Bahasa Indonesia version shall prevail."
+      },
+      {
+        "kind": "text",
+        "y": 561.5217637795281,
+        "lastY": 574.1717637795281,
+        "style": "italic",
+        "text": "Apabila ada pertikaian yang timbul dari Penafsiran Perjanjian ini, maka yang mempunyai kekuatan hukum adalah teks bahasa Indonesia dalam perjanjian ini."
+      },
+      {
+        "kind": "text",
+        "y": 596.9827637795281,
+        "lastY": 596.9827637795281,
+        "style": "bold",
+        "text": "Article 12 – ENTIRE LEASE AGREEMENT"
+      },
+      {
+        "kind": "text",
+        "y": 613.621763779528,
+        "lastY": 613.621763779528,
+        "style": "normal",
+        "text": "Pasal 12 – KESELURUHAN PERJANJIAN"
+      },
+      {
+        "kind": "text",
+        "y": 632.2717637795281,
+        "lastY": 657.571763779528,
+        "style": "normal",
+        "text": "• This Lease Agreement constitutes the entire agreement between the parties hereto and shall supersede verbal or written communication heretofore made between the parties relating to the subject matter hereof."
+      },
+      {
+        "kind": "text",
+        "y": 673.221763779528,
+        "lastY": 723.821763779528,
+        "style": "italic",
+        "text": "Perjanjian Sewa Menyewa ini merupakan keseluruhan kesepakatan diantara kedua belah  pihak  yang  berkepentingan  dan  perjanjian  ini  akan  menggantikan  semua komunikasi lisan maupun tertulis yang diadakan sebelumnya hingga perjanjian ini dibuat antara kedua belah pihak yang berkepentingan sehubungan dengan hal-hal di dalam perjanjian ini."
+      },
+      {
+        "kind": "text",
+        "y": 742.471763779528,
+        "lastY": 755.121763779528,
+        "style": "normal",
+        "text": "• Any amendments to these agreements shall be made in writing and signed by the parties hereto."
+      }
+    ],
+    [
+      {
+        "kind": "text",
+        "y": 114.07176377952806,
+        "lastY": 126.72176377952803,
+        "style": "italic",
+        "text": "Setiap perubahan atas Perjanjian Sewa Menyewa ini harus dilaksanakan dalam bentuk tertulis dan ditandatangani oleh kedua belah pihak yang berkepentingan."
+      },
+      {
+        "kind": "text",
+        "y": 145.371763779528,
+        "lastY": 158.0217637795281,
+        "style": "normal",
+        "text": "• All matters not provided for or not adequately provided for in this Lease Agreement shall be settled upon mutual agreement by both parties."
+      },
+      {
+        "kind": "text",
+        "y": 173.67176377952808,
+        "lastY": 186.32176377952806,
+        "style": "italic",
+        "text": "Hal-hal lain yang tidak tercakup atau tidak tercakup secara memadai dalam Perjanjian Sewa Menyewa ini akan diselesaikan secara musyawarah oleh dua belah pihak."
+      },
+      {
+        "kind": "text",
+        "y": 204.97176377952803,
+        "lastY": 217.621763779528,
+        "style": "normal",
+        "text": "IN WITNESS WHEREOF, the parties hereto have executed this agreement by affixing their signature hereto as of the date first mentioned above."
+      },
+      {
+        "kind": "text",
+        "y": 233.2717637795281,
+        "lastY": 245.92176377952808,
+        "style": "italic",
+        "text": "Sebagai  bukti,  Para  pihak  dalam  perjanjian  ini  melaksanakan  perjanjian  ini  dengan membubuhkan tanda tangan masing-masing sesuai dengan tanggal tersebut di atas."
+      },
+      {
+        "kind": "text",
+        "y": 273.57176377952806,
+        "lastY": 273.57176377952806,
+        "style": "bold",
+        "text": "THE LESSOR/VILLA MANAGEMENT: THE LESSEE/PENYEWA:"
+      },
+      {
+        "kind": "text",
+        "y": 324.1717637795281,
+        "lastY": 336.82176377952806,
+        "style": "bold",
+        "text": "{{company.name}} Name: ____________________________ Represented by: {{company.representative}}"
+      }
+    ]
+  ]
+}

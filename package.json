@@ -11,11 +11,14 @@
   "dependencies": {
     "@firecrawl/pdf-inspector": "1.17.0",
     "@notionhq/client": "^2.2.15",
+    "@tesseract.js-data/eng": "1.0.0",
     "baileys": "^7.0.0-rc13",
     "dotenv": "^16.4.7",
     "node-cron": "^4.6.0",
     "node-telegram-bot-api": "^1.2.0",
     "pino": "^9.6.0",
-    "qrcode": "^1.5.4"
+    "puppeteer-core": "25.12.0",
+    "qrcode": "^1.5.4",
+    "tesseract.js": "6.0.1"
   }
 }
