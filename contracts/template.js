@@ -121,5 +121,5 @@ function renderContract(data,{editable=false,company={}}={}){
 function page(content,number,company){return `<section class="contract-page"><header><div><strong>${escape(company.name||'________________')}</strong><br>NIB ${escape(company.nib||'________________')}<br>${escape(company.header_address||'').replaceAll('\n','<br>')}<br>${escape(company.contact||'')}</div><h1>HOUSE RENTAL<br>AGREEMENT</h1></header><div class="contract-body">${content}</div><footer>Page ${number}</footer></section>`;}
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const templateHash=crypto.createHash('sha256');
-for(const file of ['template-v1.json','template.js','schema.js','document.css','pdf.js'])templateHash.update(fs.readFileSync(path.join(__dirname,file)));
+for(const file of ['template-v1.json','template.js','schema.js','document.css','pdf.js','master-pdf.js'])templateHash.update(fs.readFileSync(path.join(__dirname,file)));
 module.exports={renderContract,sourceSha256:source.sourceSha256,templateHash:templateHash.digest('hex')};
