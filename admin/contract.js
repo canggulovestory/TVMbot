@@ -8,38 +8,61 @@ async function api(suffix='',options={}){
  const data=await response.json();if(!response.ok){const e=Error(data.error||'Request failed');e.status=response.status;e.issues=data.issues;throw e;}return data;
 }
 function issueList(issues=[]){$('review-section').hidden=!issues.length;$('issues').replaceChildren();for(const issue of issues){const li=document.createElement('li'),a=document.createElement('a');a.href='#';a.textContent=title(issue.field)+': '+issue.message;a.onclick=e=>{e.preventDefault();focusField(issue.field)};li.className=issue.level;li.append(a);$('issues').append(li);}}
-function focusField(key,button){
- if(!Object.hasOwn(schema,key)||!draft)return;
- if($('passport-panel').open)$('passport-panel').close();
- button=button||document.querySelector('button[data-field="'+key+'"]');
- if(!button)return;
- const input=document.createElement(/address|residence|additional_agreements/.test(key)?'textarea':key==='payment.currency'?'select':'input');
- input.className='inline-field';input.setAttribute('aria-label',title(key));input.maxLength=schema[key];
- if(input.tagName==='SELECT')for(const currency of ['IDR','USD','EUR','AUD','GBP','SGD'])input.add(new Option(currency,currency));
- else if(input.tagName==='INPUT')input.type=key.endsWith('_date')||key.endsWith('date_of_birth')?'date':key.endsWith('_time')?'time':'text';
- input.value=pending[key]??draft.data[key]??'';input.autocomplete='off';
- input.oninput=()=>{pending[key]=input.value;status('Saving…');clearTimeout(timer);timer=setTimeout(()=>save().catch(showError),800);};
- input.onkeydown=e=>{if(e.key==='Enter'&&(input.tagName!=='TEXTAREA'||e.ctrlKey||e.metaKey)){e.preventDefault();input.blur();}};
- input.onblur=()=>{save().then(async()=>{if(input.isConnected)input.replaceWith(button);await preview();}).catch(showError);};
- button.replaceWith(input);input.focus();input.scrollIntoView({block:'nearest'});
+function focusField(key){
+ const input=document.querySelector('[data-contract-field="'+key+'"]');if(!input)return;
+ if($('passport-panel').open)$('passport-panel').close();$('details-panel').open=true;input.focus();input.scrollIntoView({block:'center'});
 }
-async function preview(){const id=draft.id;const r=await fetch(base+'/'+id+'/preview',{cache:'no-store'});if(!r.ok)throw Error('Document preview unavailable');const html=await r.text();if(draft.id===id&&!document.querySelector('.inline-field:focus'))$('document').innerHTML=html;}
+const choices={'payment.rent_period':[['yearly','Yearly'],['monthly','Monthly']],'payment.payment_schedule':[['upfront','Whole stay upfront'],['monthly','Pay monthly']],'payment.currency':['IDR','USD','EUR','AUD','GBP','SGD'].map(v=>[v,v])};
+const fieldLabels={'property.name':'Villa name','property.code':'Villa code','property.address':'Villa address','property.map_url':'Map link','lease.checkin_date':'Check-in date','lease.checkout_date':'Check-out date','lease.checkin_time':'Check-in time','lease.checkout_time':'Check-out time','inclusions.cleaning':'House cleaning','inclusions.laundry':'Personal laundry','inclusions.garbage_monthly':'Monthly garbage collection','inclusions.internet':'Internet / Wi-Fi','lease.agreement_date':'Document date (automatic)','lease.duration_months':'Length of stay (months)','payment.rent_period':'Rent quoted per','payment.payment_schedule':'Payment arrangement','payment.monthly_rent':'Monthly rent','payment.yearly_rent':'Yearly rent','payment.installment_amount':'Following monthly payment','payment.deposit_percentage':'Deposit percentage of rent rate','payment.first_payment':'First payment amount','appendix.additional_agreements':'Additional agreements (optional)'};
+function buildFields(){
+ const area=$('all-fields');area.replaceChildren();
+ for(const [group,name] of [['property','Villa'],['lessee','Tenant'],['lease','Dates'],['payment','Rent & payments'],['inclusions','Included services'],['appendix','Additional agreements']]){
+  const set=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=name;set.append(legend);const grid=document.createElement('div');grid.className='fields-grid';
+  for(const key of Object.keys(schema).filter(k=>k.startsWith(group+'.'))){
+   const label=document.createElement('label'),input=document.createElement(choices[key]?'select':/address|residence|additional_agreements/.test(key)?'textarea':'input');label.className='field';input.dataset.contractField=key;input.maxLength=schema[key];
+   const text=fieldLabels[key]||title(key);label.append(document.createTextNode(text));input.setAttribute('aria-label',text);
+   if(choices[key])for(const [value,name] of choices[key])input.add(new Option(name,value));
+   else if(group==='inclusions'){input.type='checkbox';label.className='inclusion-field';}
+   else if(input.tagName==='INPUT'){
+    input.type=key.endsWith('_date')||key.endsWith('date_of_birth')?'date':key.endsWith('_time')?'time':/bedrooms|bathrooms|duration_months|rent$|deposit$|percentage$|first_payment$|installment_amount$/.test(key)?'number':'text';
+    if(input.type==='number'){input.min='0';input.step=/bedrooms|bathrooms|duration_months/.test(key)?'1':'0.01';}
+   }
+   if(key==='lease.agreement_date')input.readOnly=true;
+   input.oninput=()=>{pending[key]=group==='inclusions'?(input.checked?'yes':'no'):input.value;status('Saving…');syncFields();clearTimeout(timer);timer=setTimeout(()=>save().catch(showError),800);};label.append(input);grid.append(label);
+  }
+  set.append(grid);area.append(set);
+ }
+ syncFields();
+}
+function syncFields(){
+ if(!draft)return;const data={...draft.data,...pending};
+ for(const input of document.querySelectorAll('[data-contract-field]')){
+  const key=input.dataset.contractField;
+  if(input!==document.activeElement){if(input.type==='checkbox')input.checked=data[key]==='yes';else input.value=data[key]||(key==='payment.rent_period'?'yearly':key==='payment.payment_schedule'?'upfront':'');}
+  input.closest('label').hidden=(key==='payment.yearly_rent'&&data['payment.rent_period']==='monthly')||(key==='payment.monthly_rent'&&data['payment.rent_period']!=='monthly')||(key==='payment.installment_amount'&&(data['payment.payment_schedule']!=='monthly'||data['lease.duration_months']==='1'));
+ }
+}
+async function preview(){const id=draft.id;const r=await fetch(base+'/'+id+'/preview',{cache:'no-store'});if(!r.ok)throw Error('Document preview unavailable');const html=await r.text();if(draft.id===id&&!document.querySelector('.inline-field:focus')){$('document').innerHTML=html;syncFields();}}
 function versions(){ $('versions-section').hidden=!draft.versions?.length;$('versions').replaceChildren();for(const v of draft.versions||[]){const a=document.createElement('a');a.href=base+'/'+draft.id+'/versions/'+v.id;a.textContent='Download revision '+v.revision+' · '+new Date(v.createdAt).toLocaleString('en-GB');$('versions').append(a);}}
 function showError(e){status(e.message,true);if(e.issues)issueList(e.issues);if(e.status===409||e.status===401||e.status===403){blocked=true;status(e.message+' Your unsaved entries remain here. Copy them before reloading.',true);}}
 async function save(){
  clearTimeout(timer);if(saving)return saving;if(!draft||!Object.keys(pending).length)return;if(blocked)throw Error('Saving is paused. Copy unsaved entries, then reload the draft.');
- saving=(async()=>{do{while(Object.keys(pending).length){const patch=pending;pending={};status('Saving…');try{draft=await api('/'+draft.id,{method:'PATCH',body:JSON.stringify({revision:draft.revision,fields:patch})});issueList(draft.issues);}catch(e){pending={...patch,...pending};throw e;}}await preview();}while(Object.keys(pending).length);status('Saved automatically');})();
+ saving=(async()=>{do{while(Object.keys(pending).length){const patch=pending;pending={};status('Saving…');try{draft=await api('/'+draft.id,{method:'PATCH',body:JSON.stringify({revision:draft.revision,fields:patch})});if(!$('review-section').hidden)issueList(draft.issues);}catch(e){pending={...patch,...pending};throw e;}}await preview();}while(Object.keys(pending).length);status('Saved automatically');})();
  try{await saving;}finally{saving=null;}
 }
 async function list(){const items=await api();$('drafts').replaceChildren(new Option('Contracts',''));for(const [index,item] of items.entries())$('drafts').add(new Option([item.propertyName,item.tenantName].filter(Boolean).join(' — ')||'Contract '+(items.length-index),item.id));if(draft)$('drafts').value=draft.id;return items;}
-async function open(id){if(Object.keys(pending).length||saving)await save();draft=await api('/'+id);blocked=false;pending={};versions();passportReview();await preview();$('generate').disabled=false;$('passport').disabled=false;$('show-passport').disabled=false;$('show-villa-paste').disabled=false;status('Saved automatically');issueList();}
+async function open(id){if(Object.keys(pending).length||saving)await save();draft=await api('/'+id);blocked=false;pending={};versions();passportReview();buildFields();await preview();$('generate').disabled=false;$('passport').disabled=false;$('show-passport').disabled=false;$('show-villa-paste').disabled=false;status('Saved automatically');issueList();}
+$('show-fields').onclick=()=>{$('details-panel').open=true;$('details-panel').scrollIntoView({block:'start'});};
+$('details-form').onsubmit=async e=>{e.preventDefault();try{await save();await list();$('details-panel').open=false;$('document').scrollIntoView({block:'start'});status('Details saved');}catch(e){showError(e)}};
+$('show-saved').onclick=async()=>{try{await save();await list();$('saved-panel').showModal();}catch(e){showError(e)}};
+$('close-saved').onclick=()=>$('saved-panel').close();
 $('sign-out').onclick=async()=>{try{await save();const r=await fetch('/contract/logout',{method:'POST'});if(!r.ok)throw Error('Could not sign out. Try again.');location.replace('/contract');}catch(e){showError(e)}};
-$('new').onclick=async()=>{try{await save();const d=await api('',{method:'POST',body:'{}'});await open(d.id);await list();}catch(e){showError(e)}};
-$('drafts').onchange=async e=>{if(!e.target.value)return;try{await open(e.target.value)}catch(e){showError(e);e.target.value=draft?.id||''}};
+$('new').onclick=async()=>{try{await save();const d=await api('',{method:'POST',body:'{}'});await open(d.id);await list();$('saved-panel').close();$('details-panel').open=true;}catch(e){showError(e)}};
+$('drafts').onchange=async e=>{if(!e.target.value)return;try{await open(e.target.value);$('saved-panel').close()}catch(e){showError(e);e.target.value=draft?.id||''}};
 $('document').onclick=e=>{const field=e.target.closest('button[data-field]');if(field)focusField(field.dataset.field,field)};
 $('document').onchange=e=>{
  const input=e.target.closest('input[data-inclusion]');if(!input||!draft||!Object.hasOwn(schema,input.dataset.inclusion))return;
- pending[input.dataset.inclusion]=input.checked?'yes':'no';
+ pending[input.dataset.inclusion]=input.checked?'yes':'no';syncFields();
  input.nextElementSibling.textContent=input.checked?'Included / Termasuk':'Excluded / Tidak termasuk';
  status('Saving…');clearTimeout(timer);timer=setTimeout(()=>save().catch(showError),300);
 };
@@ -89,9 +112,9 @@ function passportReview(){
 }
 async function upload(file){
  if(!draft||!file)return;if(file.size>10*1024*1024)return showError(Error('Maximum passport size is 10 MB.'));
- $('passport').disabled=true;$('document').inert=true;$('new').disabled=true;$('drafts').disabled=true;$('generate').disabled=true;
+ $('passport').disabled=true;$('document').inert=true;$('details-form').inert=true;$('new').disabled=true;$('drafts').disabled=true;$('generate').disabled=true;
  try{await save();status('Reading passport privately…');const r=await fetch(base+'/'+draft.id+'/passport',{method:'POST',headers:{'Content-Type':file.type,'X-Contract-Revision':String(draft.revision)},body:file});const data=await r.json();if(!r.ok)throw Error(data.error||'Passport upload failed');draft=data;passportReview();status('Passport read. Review and check each field before applying.');}
- catch(e){showError(e)}finally{$('passport').disabled=false;$('document').inert=false;$('new').disabled=false;$('drafts').disabled=false;$('generate').disabled=false;$('passport').value='';}
+ catch(e){showError(e)}finally{$('passport').disabled=false;$('document').inert=false;$('details-form').inert=false;$('new').disabled=false;$('drafts').disabled=false;$('generate').disabled=false;$('passport').value='';}
 }
 $('passport').onchange=e=>upload(e.target.files[0]);
 $('dropzone').ondragover=e=>e.preventDefault();$('dropzone').ondrop=e=>{e.preventDefault();if(!$('passport').disabled)upload(e.dataTransfer.files[0]);};

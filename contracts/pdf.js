@@ -36,9 +36,10 @@ async function generatePdf(data,options={}){
       const continuation=last.cloneNode(false);last.textContent=text.slice(0,cut);continuation.textContent=text.slice(cut);body.append(continuation);continue;
      }
      if(body.children.length<2)throw Error('A document block is too long for one page; shorten the additional agreement or address.');
-     if(!next){next=section.cloneNode(true);next.querySelector('.contract-body').replaceChildren();section.after(next);sections.splice(i+1,0,next);}
+     if(!next){next=sections[i+1];if(!next){next=section.cloneNode(true);next.querySelector('.contract-body').replaceChildren();section.after(next);sections.splice(i+1,0,next);}}
      next.querySelector('.contract-body').prepend(body.lastElementChild);
     }
+    if(next&&body.lastElementChild?.classList.contains('article-heading'))next.querySelector('.contract-body').prepend(body.lastElementChild);
     if(sections.length>40)throw Error('Document exceeds 40 pages');
    }
    if(sections.map(s=>s.querySelector('.contract-body').textContent).join('')!==original)throw Error('Document pagination changed the contract text');

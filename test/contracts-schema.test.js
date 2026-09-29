@@ -61,3 +61,20 @@ test('service inclusions accept only explicit checklist values',()=>{
  for(const value of ['true','included',true,' yes '])assert.throws(()=>applyFields(blankContract(),{'inclusions.pool_cleaning':value}));
  assert.throws(()=>applyFields(blankContract(),{'inclusions.unknown':'yes'}));
 });
+test('monthly rent and payment schedule are independent and validate the selected deal',()=>{
+ const data=applyFields(complete(),{'payment.rent_period':'monthly','payment.monthly_rent':'10000000','payment.yearly_rent':'','payment.total_rent':'120000000','payment.deposit':'2000000','payment.payment_schedule':'monthly','payment.installment_amount':'10000000','payment.first_payment':'10000000'});
+ assert.equal(validate(data,'2026-09-29').filter(x=>x.level==='error').length,0);
+ assert.ok(validate({...data,'payment.installment_amount':'1'},'2026-09-29').some(x=>x.field==='payment.installment_amount'));
+ assert.equal(validate({...data,'payment.payment_schedule':'upfront','payment.first_payment':'120000000'},'2026-09-29').filter(x=>x.level==='error').length,0);
+ assert.throws(()=>applyFields(data,{'payment.rent_period':'weekly'}));
+ assert.throws(()=>applyFields(data,{'payment.payment_schedule':'anything'}));
+});
+
+test('a single month requires no following installment',()=>{
+ const d=applyFields(complete(),{'lease.duration_months':'1','payment.rent_period':'monthly','payment.monthly_rent':'10000000','payment.payment_schedule':'monthly','payment.total_rent':'10000000','payment.first_payment':'10000000','payment.deposit':'2000000','payment.installment_amount':''});
+ assert.equal(validate(d,'2026-09-29').filter(i=>i.level==='error').length,0);
+});
+test('a yearly quoted rent can also be paid in monthly installments',()=>{
+ const d=applyFields(complete(),{'payment.payment_schedule':'monthly','payment.installment_amount':'12500000','payment.first_payment':'12500000'});
+ assert.equal(validate(d,'2026-09-29').filter(i=>i.level==='error').length,0);
+});

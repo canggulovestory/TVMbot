@@ -54,3 +54,29 @@ test('emergency electricity credit is charged to tenant only when electricity is
  assert.match(html,/Biaya aktual pembelian token listrik tersebut, hanya jika listrik ditandai Tidak termasuk/);
  assert.match(html,/administrative penalty fee of IDR 200,000/);
 });
+test('article headings stay centered and room-count blanks stay short',()=>{
+ const html=renderContract(blankContract(),{editable:true});
+ assert.match(html,/<div class="article-heading"><h2>Article 1/);
+ assert.match(html,/data-field="property.bedrooms"[^>]*>___<\/button>/);
+ assert.doesNotMatch(html,/data-field="property.bedrooms"[^>]*>_{4}/);
+});
+test('monthly agreements use consistent rate, deposit and installment wording in both languages',()=>{
+ const html=renderContract(applyFields(blankContract(),{'payment.rent_period':'monthly','payment.monthly_rent':'10000000','payment.payment_schedule':'monthly','payment.installment_amount':'10000000','payment.first_payment':'10000000','lease.duration_months':'3'}));
+ assert.match(html,/Monthly Rent/);assert.match(html,/per month/);assert.match(html,/per bulan/);
+ assert.match(html,/remaining 2 monthly payments/);assert.match(html,/2 pembayaran bulanan berikutnya/);
+ assert.doesNotMatch(html,/per year|per tahun|annual rent|sewa tahunan|fully upfront|dibayarkan penuh di muka/);
+ assert.match(html,/monthly rent/);assert.match(html,/sewa bulanan/);
+ const upfront=renderContract(applyFields(blankContract(),{'payment.rent_period':'monthly','payment.monthly_rent':'10000000'}));
+ assert.match(upfront,/fully upfront/);assert.match(upfront,/Monthly Rent/);
+});
+
+test('single-month payments do not print zero remaining installments',()=>{
+ const html=renderContract({...blankContract(),'lease.duration_months':'1','payment.payment_schedule':'monthly'});
+ assert.match(html,/No further rent payments are due/);assert.match(html,/Tidak ada pembayaran sewa berikutnya/);
+ assert.doesNotMatch(html,/remaining 0|0 pembayaran bulanan/);
+});
+test('yearly quoted rent with monthly installments keeps its yearly basis',()=>{
+ const html=renderContract({...blankContract(),'lease.duration_months':'12','payment.payment_schedule':'monthly'});
+ assert.match(html,/Yearly Rent/);assert.match(html,/per year/);assert.match(html,/per tahun/);assert.match(html,/remaining 11 monthly payments/);
+ assert.doesNotMatch(html,/payable fully upfront/);
+});

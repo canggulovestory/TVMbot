@@ -55,8 +55,8 @@ function fill(template,data,editable,company={}){
   const match=part.match(/^\{\{([a-z_.]+)(?:\|([a-z]+))?\}\}$/);
   if(!match)return escape(part);
   const [,key,format]=match;if(key.startsWith('company.'))return escape(company[key.slice(8)]||'________________');if(!Object.hasOwn(fields,key))throw Error('Unknown template field');
-  const value=formatted(data,key,format);
-  return editable?`<button type="button" class="contract-field ${value?'':'empty'}" data-field="${key}" aria-label="Edit ${escape(key.replaceAll('.',' ').replaceAll('_',' '))}">${escape(value||'________________')}</button>`:escape(value||'________________');
+  const value=formatted(data,key,format),short=['property.bedrooms','property.bathrooms','lease.duration_months','payment.deposit_percentage'].includes(key),blank=short?'___':'________________';
+  return editable?`<button type="button" class="contract-field ${value?'':'empty'}${short?' short':''}" data-field="${key}" aria-label="Edit ${escape(key.replaceAll('.',' ').replaceAll('_',' '))}">${escape(value||blank)}</button>`:escape(value||blank);
  }).join('');
 }
 function inclusionChecklist(data,editable){
@@ -83,17 +83,34 @@ function serviceText(text){
   .replace('Because the rental is for the villa only and no services or running costs are included,','Except for services marked Included in the checklist,')
   .replace('Karena sewa ini hanya untuk villa dan tidak mencakup layanan maupun biaya operasional,','Kecuali layanan yang ditandai Termasuk pada daftar,');
 }
+function paymentText(text,data){
+ const monthly=data['payment.rent_period']==='monthly',installments=data['payment.payment_schedule']==='monthly';
+ if(monthly)text=text.replaceAll(token('payment.yearly_rent','money'),token('payment.monthly_rent','money')).replaceAll('per year','per month').replaceAll('per tahun','per bulan').replaceAll('annual rent','monthly rent').replaceAll('sewa tahunan','sewa bulanan').replaceAll(' / year',' / month');
+ if(!installments)return text;
+ const count=Number(data['lease.duration_months']),remaining=Number.isInteger(count)&&count>=1?String(count-1):'___';
+ const en=count===1?'No further rent payments are due.':`The remaining ${remaining} monthly payments of ${token('payment.installment_amount','money')} are due on the same calendar day in each following month, or the last day of a shorter month.`,id=count===1?'Tidak ada pembayaran sewa berikutnya.':`Sebanyak ${remaining} pembayaran bulanan berikutnya masing-masing ${token('payment.installment_amount','money')} jatuh tempo pada tanggal yang sama setiap bulan berikutnya, atau hari terakhir jika bulan lebih pendek.`;
+ if(text.startsWith('• Total rent of'))return `• The first rent payment of ${token('payment.first_payment','money')} must arrive in the LESSOR's bank account by 12:00 PM (local time) on ${token('payment.first_payment_due_date','date')}. ${en} Total rent is ${token('payment.total_rent','money')}. Failure to receive the first payment by this time grants the LESSOR the right to deny entry to the Premises.`;
+ if(text.startsWith('Pembayaran total sewa'))return `Pembayaran sewa pertama sebesar ${token('payment.first_payment','money')} wajib diterima dalam rekening bank PEMILIK selambat-lambatnya pukul 12:00 siang (waktu setempat) pada ${token('payment.first_payment_due_date','date')}. ${id} Total sewa adalah ${token('payment.total_rent','money')}. Jika pembayaran pertama tidak diterima tepat waktu, PEMILIK berhak menolak akses ke Rumah Dimaksud.`;
+ if(text==='None - annual rent paid fully upfront'||text==='None - monthly rent paid fully upfront')return `${en} / ${id}`;
+ return text.replace('payable fully upfront for the','payable in monthly installments under Article 3 for the').replace('dibayarkan penuh di muka untuk','dibayarkan secara bulanan sesuai Pasal 3 untuk');
+}
 function renderContract(data,{editable=false,company={}}={}){
  const pages=source.pages.map((blocks,i)=>{
-  const content=blocks.map(b=>{
+  const content=blocks.map((b,j)=>{
    if(i===12&&b.text?.startsWith('THE LESSOR/VILLA MANAGEMENT:'))return '<div class="signatures"><div><strong>THE LESSOR/VILLA MANAGEMENT:</strong><div class="sign-space"></div>'+escape(company.name||'________________')+'<br>Represented by: '+escape(company.representative||'________________')+'</div><div><strong>THE LESSEE/PENYEWA:</strong><div class="sign-space"></div>Name: '+fill(token('lessee.full_name'),data,editable,company)+'</div></div>';
    if(i===12&&b.text?.includes('Name: ____________________________ Represented by:'))return '';
-   if(b.kind==='text'){const text=serviceText(b.text);return text?`<p class="${b.style}">${fill(compile(text),data,editable,company)}</p>`:'';}
+   if(b.kind==='text'){
+    if(/^Article \d+/.test(b.text))return `<div class="article-heading"><h2>${escape(b.text)}</h2><p>${escape(blocks[j+1]?.text||'')}</p></div>`;
+    if(/^Pasal \d+/.test(b.text))return '';
+    const text=serviceText(b.text),bullet=text.startsWith('•'),indented=bullet||blocks[j-1]?.text?.startsWith('•');
+    if(text.startsWith('{{company.bank}}'))return '<div class="bank-details">'+fill(text,data,editable,company).replaceAll('\n','<br>')+'</div>';
+    return text?`<p class="${b.style}${bullet?' bullet':indented?' indented':''}">${fill(paymentText(compile(text),data),data,editable,company)}</p>`:'';
+   }
    if(b.rows[0][0].startsWith('INCLUSIONS & EXCLUSIONS'))return inclusionChecklist(data,editable);
    return '<table><colgroup><col style="width:35%"><col style="width:65%"></colgroup>'+b.rows.map(row=>{
     const cells=row.filter(c=>c!==null),label=String(cells[0]||'').replace(/\s+/g,' ');
     if(cells.length===1)return `<tr><th colspan="2">${escape(label)}</th></tr>`;
-    return '<tr>'+cells.map((cell,n)=>`<td>${fill(n===1&&rowFields[label]?rowFields[label]:compile(cell),data,editable,company)}</td>`).join('')+'</tr>';
+    return '<tr>'+cells.map((cell,n)=>`<td>${fill(paymentText(n===1&&rowFields[label]?rowFields[label]:compile(cell),data).replace(/^Yearly Rent$/,data['payment.rent_period']==='monthly'?'Monthly Rent':'Yearly Rent'),data,editable,company)}</td>`).join('')+'</tr>';
    }).join('')+'</table>';
   }).join('');
   return page(content,i+1,company);
