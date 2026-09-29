@@ -33,6 +33,7 @@ async function save(){
 }
 async function list(){const items=await api();$('drafts').replaceChildren(new Option('Contracts',''));for(const [index,item] of items.entries())$('drafts').add(new Option([item.propertyName,item.tenantName].filter(Boolean).join(' — ')||'Contract '+(items.length-index),item.id));if(draft)$('drafts').value=draft.id;return items;}
 async function open(id){if(Object.keys(pending).length||saving)await save();draft=await api('/'+id);blocked=false;pending={};versions();passportReview();await preview();$('generate').disabled=false;$('passport').disabled=false;$('show-passport').disabled=false;$('show-villa-paste').disabled=false;status('Saved automatically');issueList();}
+$('sign-out').onclick=async()=>{try{await save();const r=await fetch('/contract/logout',{method:'POST'});if(!r.ok)throw Error('Could not sign out. Try again.');location.replace('/contract');}catch(e){showError(e)}};
 $('new').onclick=async()=>{try{await save();const d=await api('',{method:'POST',body:'{}'});await open(d.id);await list();}catch(e){showError(e)}};
 $('drafts').onchange=async e=>{if(!e.target.value)return;try{await open(e.target.value)}catch(e){showError(e);e.target.value=draft?.id||''}};
 $('document').onclick=e=>{const field=e.target.closest('button[data-field]');if(field)focusField(field.dataset.field,field)};

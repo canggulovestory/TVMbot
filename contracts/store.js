@@ -8,7 +8,7 @@ function createStore(root){
  root=path.resolve(root);let queue=Promise.resolve();
  function actorAllowed(actor){if(!actor||!['admin','staff'].includes(actor.role)||typeof actor.user!=='string'||!actor.user.trim())throw Error('Access denied');}
  function file(id){if(typeof id!=='string'||!ID.test(id))throw Error('Invalid contract ID');return path.join(root,id+'.json');}
- function authorize(actor,record){actorAllowed(actor);if(actor.role!=='admin'&&record.createdBy!==actor.user)throw Error('Not found');}
+ function authorize(actor,record){actorAllowed(actor);if(actor.role!=='admin'&&actor.scope!=='contracts'&&record.createdBy!==actor.user)throw Error('Not found');}
  async function read(id){
   let handle;
   try{handle=await fs.open(file(id),constants.O_RDONLY|constants.O_NOFOLLOW);const r=JSON.parse(await handle.readFile('utf8'));
@@ -69,7 +69,7 @@ function createStore(root){
   async list(actor){
    actorAllowed(actor);let names;try{names=await fs.readdir(root);}catch(e){if(e.code==='ENOENT')return [];throw e;}
    const result=[];for(const name of names){if(!name.endsWith('.json')||!ID.test(name.slice(0,-5)))continue;
-    const r=await read(name.slice(0,-5));if(actor.role!=='admin'&&r.createdBy!==actor.user)continue;
+    const r=await read(name.slice(0,-5));if(actor.role!=='admin'&&actor.scope!=='contracts'&&r.createdBy!==actor.user)continue;
     result.push({id:r.id,status:r.status,revision:r.revision,createdBy:r.createdBy,updatedAt:r.updatedAt,propertyName:r.data['property.name'],tenantName:r.data['lessee.full_name']});
    }return result.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||a.id.localeCompare(b.id));
   },

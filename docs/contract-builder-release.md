@@ -49,3 +49,11 @@ Run `node --test` after any change. Do not describe this checkpoint as live or t
 Rollback: restore prior app revision and Nginx configuration, restart `tvmbot-v4`, and retain contract data. Do not overwrite new contract records with an older backup during a code-only rollback.
 
 Private company settings must be entered by the administrator or copied from the supplied template with explicit transfer approval before creating real contracts. Source-page comparison, expanded workflow markers, optional-field warnings, and oversized table continuation remain follow-up work. Preserved bilingual wording inconsistencies are disclosed before generation.
+
+## Contract-only team access — 30 September 2026
+
+`/contract` now presents a password-only login. Configure `CONTRACT_PASSWORD_HASH` in the private production environment as a 16-byte hexadecimal salt, a colon, and a 64-byte hexadecimal scrypt digest. Never put the plaintext password in source control. Restart the service after setting or rotating the hash; rotation invalidates existing contract sessions.
+
+The `__Host-tvm_contract` cookie is Secure, HttpOnly, SameSite=Strict and expires after eight hours. Its signing key is separate from admin sessions. Shared team access can edit existing contracts, passports, and PDFs, but cannot access the admin dashboard, other admin APIs, or change company settings. Actions are recorded as `contract-team`; this shared password does not identify individual staff. Existing account-based admin API access remains available.
+
+Both Nginx contract locations must append the actual remote address to `X-Forwarded-For`; the application trusts only the final address from a loopback proxy. Login failures are limited to five per 15 minutes per client IP, independently of the existing admin login limiter. Verify this through Nginx after deploying.

@@ -93,13 +93,19 @@ function createHandler({store,resolveActor,origin}){
   }
  };
 }
-function createPageHandler({resolveActor}){
+function createPageHandler({resolveActor,auth}){
  const path=require('node:path'),fs=require('node:fs/promises');
  const assets={'/contract/villa-paste.js':['../admin/contract-villa-paste.js','application/javascript'],'/contract':['../admin/contract.html','text/html'],'/contract/':['../admin/contract.html','text/html'],'/contract/editor.js':['../admin/contract.js','application/javascript'],'/contract/editor.css':['../admin/contract.css','text/css'],'/contract/document.css':['document.css','text/css']};
  return async(req,res)=>{try{
-  const actor=await resolveActor(req);if(!actor){res.writeHead(302,{Location:'/login?next=/contract','Cache-Control':'no-store'});return res.end();}
-  if(!['staff','admin'].includes(actor.role))return json(res,403,{error:'Staff access required'});
-  const asset=assets[new URL(req.url,'https://thevillamanagers.cloud').pathname];if(!asset||req.method!=='GET')return json(res,404,{error:'Not found'});
+  const pathname=new URL(req.url,'https://thevillamanagers.cloud').pathname;
+  if(auth&&['/contract/login','/contract/logout'].includes(pathname))return auth.handle(req,res);
+  const publicScript=auth&&pathname==='/contract/login.js';
+  const actor=await resolveActor(req);
+  if(!actor&&!auth){res.writeHead(302,{Location:'/login?next=/contract','Cache-Control':'no-store'});return res.end();}
+  const login=auth&&!actor&&['/contract','/contract/'].includes(pathname);
+  if(!actor&&!login&&!publicScript)return json(res,401,{error:'Authentication required'});
+  if(actor&&!['staff','admin'].includes(actor.role))return json(res,403,{error:'Staff access required'});
+  const asset=publicScript?['../admin/contract-login.js','application/javascript']:login?['../admin/contract-login.html','text/html']:assets[pathname];if(!asset||req.method!=='GET')return json(res,404,{error:'Not found'});
   res.writeHead(200,{'Content-Type':asset[1]+'; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' blob:; frame-ancestors 'self'; base-uri 'none'; form-action 'self'"});return res.end(await fs.readFile(path.join(__dirname,asset[0])));
  }catch{return json(res,500,{error:'Contract editor unavailable'});}};
 }

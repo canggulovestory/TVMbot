@@ -40,9 +40,10 @@ const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data
 const ENQUIRIES_FILE = path.join(DATA_DIR, 'enquiries.json');
 const ADMIN_DIR = path.join(__dirname, 'admin');
 const PERSONAL_DIR = path.join(__dirname, 'personal');
+const contractAuth = require('./contracts/auth').createContractAuth({passwordHash: process.env.CONTRACT_PASSWORD_HASH || '', sessionSecret: ADMIN_SESSION_SECRET, origin: 'https://thevillamanagers.cloud'});
 const contractStore = require('./contracts/store').createStore(path.join(DATA_DIR, 'contracts'));
 const contractApi = require('./contracts/routes').createHandler({store: contractStore, resolveActor: contractActor, origin: 'https://thevillamanagers.cloud'});
-const contractPage = require('./contracts/routes').createPageHandler({resolveActor: contractActor});
+const contractPage = require('./contracts/routes').createPageHandler({resolveActor: contractAuth.actor, auth: contractAuth});
 const loginAttempts = new Map();
 const zuzuRequests = new Map();
 let enquiryWriteQueue = Promise.resolve();
@@ -829,6 +830,8 @@ async function handlePersonalApp(req, res, url) {
 }
 
 async function contractActor(req) {
+  const team = contractAuth.actor(req);
+  if (team) return team;
   const session = await getSession(req);
   if (!session) return null;
   const current = (await authUsers.listUsers()).find(user => user.username === session.user);
