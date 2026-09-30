@@ -11,7 +11,7 @@ test('MRZ extraction keeps candidates separate and rejects a failed passport che
  assert.equal(result.fields['lessee.passport_issue_date'].value,null);
  assert.equal(result.fields['lessee.passport_number'].source,'MRZ');
  const bad=parsePassport(mrz.replace('L898902C36','L898902C37'));
- assert.equal(bad.fields['lessee.passport_number'].value,'L898902C3');
+ assert.equal(bad.fields['lessee.passport_number'].value,null);
  assert.ok(bad.warnings.length>0);
  assert.equal(parsePassport('unreadable').fields['lessee.full_name'].value,null);
  const noisy=parsePassport(mrz.replace('MARIA<<<<<<<<<<<<<<<<<<<','MARIA<<<<<<LLLKLLLKLKLLLLLKL').replace('C36UTO','C36UT0'));
@@ -26,7 +26,7 @@ test('visible passport labels fill dates and fields that are absent from the MRZ
  assert.equal(result.fields['lessee.passport_expiry_date'].value,'2033-02-02');
  assert.equal(result.fields['lessee.place_of_birth'].value,'WURZBURG');
  assert.equal(result.fields['lessee.nationality'].value,'German');
- assert.equal(result.fields['lessee.passport_number'].value,'C1542JC91');
+ assert.equal(result.fields['lessee.passport_number'].value,null);
 });
 test('visible passport labels tolerate OCR spaces and leading noise',()=>{
  const result=parsePassport(`Geburtstag / Date of birth\n01 10 1996 F Nationality DEUTSCH\nGeburtsort / Place of birth\nia) WURZBURG\nAusstellungsdatum / Date of issue Date of expiry\n03 02 2023 02 02 2033\nP<D<<SOLDAN<<JACQUELINE<<<<<<<<<<<<<<<<<<<<\nC1542JC911D<<9610013F33020262101<<<<<<<<<<40`);

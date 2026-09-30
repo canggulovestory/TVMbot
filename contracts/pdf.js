@@ -6,17 +6,13 @@ async function generatePdf(data,options={}){
  if(running)throw Error('PDF generation busy. Try again shortly.');
  running=true;let browser;
  try{
-  if(process.env.CONTRACT_MASTER_PDF){
-   const {generateFromMaster}=require('./master-pdf');
-   return await generateFromMaster(data,{...options,masterPath:process.env.CONTRACT_MASTER_PDF});
-  }
   if(process.env.CONTRACT_RENDERER_DIR){
    const {execFile}=require('node:child_process');
    return await new Promise((resolve,reject)=>{
     const child=execFile('/usr/sbin/runuser',['-u','tvm-renderer','--',path.join(process.env.CONTRACT_RENDERER_DIR,'node'),path.join(process.env.CONTRACT_RENDERER_DIR,'contracts/pdf-worker.js')],{cwd:process.env.CONTRACT_RENDERER_DIR,timeout:60000,maxBuffer:30*1024*1024,env:{PATH:'/usr/local/bin:/usr/bin:/bin',HOME:'/var/lib/tvm-renderer',LANG:'C.UTF-8',CONTRACT_CHROME_PATH:process.env.CONTRACT_CHROME_PATH||'/usr/bin/google-chrome'}},(error,stdout)=>{
      if(error)return reject(Error('PDF renderer unavailable'));
      try{const result=JSON.parse(stdout);resolve({pdf:Buffer.from(result.pdf,'base64'),pages:result.pages});}catch{reject(Error('Invalid PDF renderer output'));}
-    });child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify({data,options:{...options,masterPath:path.join(process.env.CONTRACT_RENDERER_DIR,'master.pdf')}}));
+    });child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify({data,options}));
    });
   }
   const {default:puppeteer}=await import('puppeteer-core');

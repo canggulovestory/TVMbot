@@ -23,7 +23,7 @@ function checksum(text,digit){
 }
 function isoDate(day,month,year){
  const value=`${year}-${month}-${day}`,date=new Date(value+'T00:00:00Z');
- return date.toISOString().slice(0,10)===value?value:null;
+ return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value?value:null;
 }
 function printedDates(text){
  return [...String(text).matchAll(/\b(\d{2})[.\/ -]+(\d{2})[.\/ -]+(\d{4})\b/g)].map(match=>isoDate(match[1],match[2],match[3])).filter(Boolean);
@@ -35,32 +35,50 @@ function mrzDate(raw,type){
 }
 function parsePassport(text){
  const fields=Object.fromEntries(passportFields.map(k=>['lessee.'+k,{value:null,raw:'',confidence:null,source:null}])),warnings=[];
- const visible=String(text).toUpperCase(),printed=printedDates(visible);
+ const visible=String(text).toUpperCase();
  const lines=visible.split(/\r?\n/).map(s=>s.replace(/\s/g,'')).filter(Boolean);
  const index=lines.findIndex((s,i)=>/^P[<A-Z][A-Z<]{3}/.test(s)&&s.length>=40&&/^[A-Z0-9<]{44}$/.test(lines[i+1]||''));
- if(index<0)return {fields,warnings:['No readable passport MRZ found. Enter details manually and check the original.']};
+ const put=(key,raw,value,source='MRZ')=>{fields['lessee.'+key]={value,raw,confidence:null,source};};
+ if(index>=0){
  const first=lines[index],second=lines[index+1];
- const put=(key,raw,value)=>{fields['lessee.'+key]={value,raw,confidence:null,source:'MRZ'};};
  const names=first.slice(5).split('<<'),surname=names.shift().replaceAll('<',' ').trim(),given=(names[0]||'').replaceAll('<',' ').replace(/\s+/g,' ').trim();
  put('full_name',first.slice(5),[given,surname].filter(Boolean).join(' '));
- const nationality=second.slice(10,13);put('nationality',nationality,/^[A-Z]{3}$/.test(nationality)?nationality:null);
- const passport=second.slice(0,9);put('passport_number',passport,passport.replaceAll('<',''));
+ const nationality=second.slice(10,13);put('nationality',nationality,nationality==='D<<'?'German':/^[A-Z]{3}$/.test(nationality)?nationality:null);
+ const passport=second.slice(0,9);put('passport_number',passport,checksum(passport,second[9])?passport.replaceAll('<',''):null);
  if(!checksum(passport,second[9]))warnings.push('Passport number checksum failed. Check it against the passport before applying.');
  for(const [key,start,digit,type] of [['date_of_birth',13,19,'birth'],['passport_expiry_date',21,27,'expiry']]){
   const raw=second.slice(start,start+6),valid=checksum(raw,second[digit]);put(key,raw,valid?mrzDate(raw,type):null);
   if(!valid)warnings.push(`${key.replaceAll('_',' ')} checksum failed. Check it against the passport.`);
  }
  put('sex',second[20],({M:'Male',F:'Female',X:'Unspecified'})[second[20]]||null);
- if(/DATE OF BIRTH|GEBURTSTAG/.test(visible)&&printed[0])fields['lessee.date_of_birth'].value=printed[0];
- if(/DATE OF ISSUE|AUSSTELLUNGSDATUM/.test(visible)&&printed.length>=3)put('passport_issue_date',printed[1],printed[1]);
- if(/DATE OF EXPIRY|G[ÜU]LTIG BIS/.test(visible)&&printed.length>=2)fields['lessee.passport_expiry_date'].value=printed.at(-1);
+ }
+ // Limit printed date candidates to the nearby label block. Never use global date order.
+ const rows=visible.split(/\r?\n/),labels={date_of_birth:/DATE OF BI(?:RTH|TH)|GEBURTSTAG|DATE DE NAISSANCE/,passport_issue_date:/DATE OF ISSUE|AUSSTELLUNGSDATUM|DATE DE D[ÉE]LIVRANCE/,passport_expiry_date:/DATE OF EXPIRY|G[ÜU]LTIG BIS|DATE D[’']EXPIRATION/};
+ const dates={};let active=[],lastLabel=-10;
+ for(let i=0;i<rows.length;i++){
+  const row=rows[i],found=Object.entries(labels).filter(([,re])=>re.test(row)).sort((a,b)=>row.search(a[1])-row.search(b[1]));
+  if(i-lastLabel>3)active=[];
+  if(found.length){active=[...new Set([...active,...found.map(([key])=>key)])];lastLabel=i;}
+  const candidates=printedDates(row);
+  if(candidates.length&&active.length){
+   if(candidates.length===active.length)active.forEach((key,j)=>(dates[key]||=new Set()).add(candidates[j]));
+   active=[];
+  }else if(!found.length&&active.length&&(i===rows.length-1||/PLACE OF BIRTH|GEBURTSORT|^P[<A-Z]/.test(row))){active=[];}
+ }
+ for(const [key,candidates] of Object.entries(dates)){
+  const field=fields['lessee.'+key],candidate=candidates.size===1?[...candidates][0]:null;
+  if(candidate&&(!field.value||field.value===candidate||(field.source==='MRZ'&&field.raw===candidate.slice(2).replaceAll('-',''))))put(key,candidate,candidate,'Printed label');
+  else{put(key,[...candidates].join(' / '),null,'Conflicting readings');warnings.push(titleField(key)+' has conflicting readings. Enter it from the passport.');}
+ }
  const birthplace=visible.match(/(?:PLACE OF BIRTH|GEBURTSORT)[^\n]*\n([^\n]+)/i)?.[1]?.trim().replace(/^[A-Z]{1,2}\W+\s*/,'').match(/[A-ZÀ-ÖØ-Þ][A-ZÀ-ÖØ-Þ '\-]{2,}/)?.[0]?.trim();
- if(birthplace)put('place_of_birth',birthplace,birthplace);
+ if(birthplace)put('place_of_birth',birthplace,birthplace,'Printed label');
  const printedNationality=/(?:NATIONALITY|STAATSANGEH[ÖO]RIGKEIT)/i.test(visible)?visible.match(/\b(DEUTSCH|GERMAN)\b/i)?.[1]:null;
- if(printedNationality)put('nationality',printedNationality,'German');
+ if(printedNationality&&!fields['lessee.nationality'].value)put('nationality',printedNationality,'German','Printed label');
+ if(index<0)warnings.push('The machine-readable lines could not be read. Check the detected fields and enter any missing details.');
  warnings.push('Check the detected details against the passport before applying them.');
  return {fields,warnings};
 }
+function titleField(key){return key.replaceAll('_',' ');}
 let running=false;
 async function extractPassport(bytes,mime){
  const type=uploadType(bytes,mime);if(running)throw Error('Passport processing busy. Try again shortly.');
