@@ -32,6 +32,11 @@ function taskTools(invoke,beforeWrite){
   }
  }]));
 }
+// A short follow-up has meaning only within its preceding user request.
+function deliveryHash(text,history){
+ const context=history.filter(item=>item.role==='user'&&normalized(item.content)!==normalized(text)).at(-1)?.content||'';
+ return crypto.createHash('sha256').update(JSON.stringify([text,context])).digest('hex');
+}
 function createOperationsChat({chat,channels,turns,finance,reminders}){
  async function respond(id,text,history,invoke,signal,financeTools={},reminderTools={}){
   if(keyQuestion(text)){
@@ -44,14 +49,14 @@ function createOperationsChat({chat,channels,turns,finance,reminders}){
   authenticateTelegram:channels.telegramIdentity,
   async telegram({message,text,history=[],signal}){
    const user=channels.telegramIdentity(message),day=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Makassar'});
-   const id=`telegram:${user}:${day}:${crypto.createHash('sha256').update(text).digest('hex')}`;
+   const id=`telegram:${user}:${day}:${deliveryHash(text,history)}`;
    return respond(id,text,history,(tool,options)=>channels.fromTelegram(message,tool,options),signal,finance?.telegram(message)||{},reminders?.(message)||{});
   },
   async web({req,text,history=[],signal}){
    const user=await channels.webIdentity(req);
-   // Server-derived daily delivery protects a repeated send after a lost reply.
+   // Server-derived delivery protects a repeated send within the same conversation context.
    const day=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Makassar'});
-   const id=`admin:${user}:${day}:${crypto.createHash('sha256').update(text).digest('hex')}`;
+   const id=`admin:${user}:${day}:${deliveryHash(text,history)}`;
    return respond(id,text,history,(tool,options)=>channels.fromWeb(req,tool,{...options,deliveryId:id}),signal);
   },
  };

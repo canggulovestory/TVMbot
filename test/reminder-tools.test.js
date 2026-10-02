@@ -14,3 +14,14 @@ test('Telegram reminder writes use the durable guard and are never offered to Ad
  await runner.telegram({message:{from:{id:100}},text:'Remind me'});assert.equal(guarded,1);assert.equal(saved,1);
  await runner.web({req:{},text:'Remind me'});assert.equal(saved,1);
 });
+test('identical time replies for different reminder requests do not replay the wrong reminder',async t=>{
+ const fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'reminder-context-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ const {createOperationsChat}=require('../operations-chat');let count=0;
+ const runner=createOperationsChat({channels:{telegramIdentity:()=> '100'},turns:require('../protected-turns').createTurns(dir),chat:{respond:async({history,tools})=>{const result=await tools.personal_add_reminder({text:history.filter(x=>x.role==='user'&&x.content!=='9 AM').at(-1).content});return {response:result.text};}},reminders:()=>({personal_add_reminder:async(input,{beforeWrite})=>{await beforeWrite();count++;return input;}})});
+ const message={from:{id:100}},first=[{role:'user',content:'Remind me to call the dentist'}],second=[{role:'user',content:'Remind me to call the vet'}];
+ assert.match(await runner.telegram({message,text:'9 AM',history:first}),/dentist/);
+ assert.match(await runner.telegram({message,text:'9 AM',history:second}),/vet/);
+ assert.match(await runner.telegram({message,text:'9 AM',history:[...second,{role:'user',content:'9 AM'}]}),/vet/);
+ assert.equal(count,2);
+});

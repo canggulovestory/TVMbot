@@ -30,3 +30,7 @@ host reminder store, bound to the authenticated user. Missing/invalid/past times
 are rejected before a write. Creation uses the existing durable write guard.
 Voice/audio transcription remains unavailable; these messages now receive an
 explicit request to type the question instead of being silently ignored.
+
+Conversation deduplication includes the preceding distinct user request, so a
+short reply such as “9 AM” is not reused for a different reminder. An immediate
+repeat within the same context still replays the existing write receipt.
