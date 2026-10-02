@@ -18,3 +18,15 @@ The Financial Telegram connection remains inactive until the dedicated bridge is
 provisioned as described in FINANCE-CHANNEL.md. Signing into the Financial website
 does not activate this server connection. Calculation from user-provided figures
 works independently; it must not be presented as a verified live financial record.
+
+Additional checks: `node integration/check-everyday-quality.cjs` exercises task
+and villa retrieval with synthetic records, corrections and multi-step amounts.
+`node integration/check-reminder-quality.cjs` checks the real model asks for a
+missing time, then uses exactly one synthetic reminder receipt. Neither probe
+creates real reminders or sends Telegram messages.
+
+Telegram now exposes personal reminder creation/listing through the existing
+host reminder store, bound to the authenticated user. Missing/invalid/past times
+are rejected before a write. Creation uses the existing durable write guard.
+Voice/audio transcription remains unavailable; these messages now receive an
+explicit request to type the question instead of being silently ignored.

@@ -20,6 +20,7 @@ function init({authenticateWeb}={}) {
   const finance=require('./vendor/finance/finance-host.cjs').loadFinanceHost('/etc/zuzu-finance/telegram.json');
   protectedChat=require('./operations-chat').createOperationsChat({
     chat:require('./isolated-chat').createChat({...config.hermes,financeDefinitions:finance?.definitions||{}}),channels,finance,
+    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?require('./reminder-tools').createReminderTools(assistant,user.key):{};},
     turns:require('./protected-turns').createTurns('/var/lib/zuzu-operations/chat-runs'),
   });
 }
@@ -161,7 +162,7 @@ async function processMessage({ text, phone, telegramId, telegramMessage, attach
     try{protectedChat.authenticateTelegram(telegramMessage);}catch(_){return null;}
     return withDialogue(scope,text,async history=>{
       // Existing explicit memory/reminder commands stay host-side; no /ops finance path.
-      if(/^\/(help|remember|memory|remind|reminders)\b/i.test(text)){
+      if(/^\/(help|remember|memory|remind|reminders|cancel|ingatkan|ingat)\b/i.test(text)){
         const reply=await assistant.tryCommand(text,user.key);if(reply)return reply;
       }
       if(!attachment){const reply=await tryVillaLink(text,user.key);if(reply)return reply;}

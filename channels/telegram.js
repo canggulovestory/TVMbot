@@ -107,6 +107,7 @@ async function start() {
         return;
       }
 
+      if(msg.voice||msg.audio){await sendReply(msg.chat.id,'I received your voice message, but voice transcription is not connected yet. Please type your request so I can help.');return;}
       const meta = attachmentMeta(msg);
       const caption = String(msg.text || msg.caption || '').trim();
       if (!caption && !meta) return;

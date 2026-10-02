@@ -32,12 +32,12 @@ function taskTools(invoke,beforeWrite){
   }
  }]));
 }
-function createOperationsChat({chat,channels,turns,finance}){
- async function respond(id,text,history,invoke,signal,financeTools={}){
+function createOperationsChat({chat,channels,turns,finance,reminders}){
+ async function respond(id,text,history,invoke,signal,financeTools={},reminderTools={}){
   if(keyQuestion(text)){
    const answer=await keyAnswer(text,invoke,signal);if(answer)return answer;
   }
-  const result=await turns(id,text,async({beforeWrite})=>chat.respond({scope:id,message:text,history,signal,tools:{...taskTools(invoke,beforeWrite),...financeTools}}));
+  const result=await turns(id,text,async({beforeWrite})=>chat.respond({scope:id,message:text,history,signal,tools:{...taskTools(invoke,beforeWrite),...financeTools,...Object.fromEntries(Object.entries(reminderTools).map(([name,fn])=>[name,(input,options)=>fn(input,{...options,beforeWrite})]))}}));
   return result.response;
  }
  return {
@@ -45,7 +45,7 @@ function createOperationsChat({chat,channels,turns,finance}){
   async telegram({message,text,history=[],signal}){
    const user=channels.telegramIdentity(message),day=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Makassar'});
    const id=`telegram:${user}:${day}:${crypto.createHash('sha256').update(text).digest('hex')}`;
-   return respond(id,text,history,(tool,options)=>channels.fromTelegram(message,tool,options),signal,finance?.telegram(message)||{});
+   return respond(id,text,history,(tool,options)=>channels.fromTelegram(message,tool,options),signal,finance?.telegram(message)||{},reminders?.(message)||{});
   },
   async web({req,text,history=[],signal}){
    const user=await channels.webIdentity(req);

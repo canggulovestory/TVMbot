@@ -1,6 +1,8 @@
 'use strict';
 const crypto = require('node:crypto');
 const DEFINITIONS = {
+ personal_list_reminders: 'Read the authenticated user’s scheduled personal reminders. Input: {}.',
+ personal_add_reminder: 'Create a personal reminder only when the user requests it. Ask for the time if missing; never choose one silently. Input: {text:string,when:string}. Time is Bali (Asia/Makassar); use YYYY-MM-DD HH:mm, tomorrow HH:mm, daily HH:mm, or +2h. A successful receipt confirms the reminder. Never use a TVM task for this.',
  personal_search: 'Read personal tasks, notes, habits and goals. Input: {q?:string,kind?:string,offset?:integer,limit?:integer}. This is not TVM tasks or credential storage.',
  personal_challenge: 'Read the saved personal 90-day challenge. Input: {day?:integer}.',
  tvm_list_tasks: 'Read TVM business tasks. Input: {search?:string,offset?:integer,limit?:integer}.',
@@ -56,7 +58,7 @@ Available operations: ${JSON.stringify(Object.fromEntries(Object.keys(tools).map
    if(!turn||Array.isArray(turn)||typeof turn!=='object')throw failure('invalid_model_reply');
    if(Object.keys(turn).length===1&&typeof turn.reply==='string'&&turn.reply.trim())return {response:turn.reply.trim(),actions,backend:'Isolated Hermes',model};
    if(Object.keys(turn).some(k=>!['tool','input'].includes(k))||typeof turn.tool!=='string'||!turn.input||Array.isArray(turn.input)||typeof turn.input!=='object')throw failure('invalid_model_reply');
-   if(repaired&&actions.some(a=>a.type==='tvm_create_task'||a.type==='tvm_complete_task'||a.type==='finance_prepare'))throw failure('invalid_model_reply');
+   if(repaired&&actions.some(a=>a.type==='tvm_create_task'||a.type==='tvm_complete_task'||a.type==='finance_prepare'||a.type==='personal_add_reminder'))throw failure('invalid_model_reply');
    if(!Object.hasOwn(tools,turn.tool))throw failure('tool_not_allowed');
    if(index===8)throw failure('tool_limit');
    const result=await tools[turn.tool](turn.input,{toolIndex:index,signal:abort});

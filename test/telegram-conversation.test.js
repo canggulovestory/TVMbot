@@ -38,6 +38,9 @@ test('Telegram keeps a second message queued and carries the authenticated appro
     assert.equal(calls[1].telegramMessage.text, 'Get water heater');
     assert.equal(calls[1].telegramMessage.from.id, 1);
     assert.equal(typeof calls[1].onApproval, 'function');
+    await handlers.message({...msg(''),voice:{file_id:'synthetic-voice'}});
+    assert.match(sent.at(-1).text,/voice.*type|type.*voice/i);
+    assert.equal(calls.length,2);
     assert.equal(sent[0].options.reply_markup,undefined);
     assert.deepEqual(sent[1].options.reply_markup.inline_keyboard,[[{text:'Review on Financial website',url:'https://financial-ten-inky.vercel.app/?financeProposal=22222222-2222-4222-8222-222222222222'}]]);
   } finally {
