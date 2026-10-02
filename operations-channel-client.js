@@ -33,6 +33,7 @@ function createOperationsChannels({ enabled = false, url, telegramBindings = [],
     }
     const raw = JSON.stringify(body);
     if (Buffer.byteLength(raw) > 8192) throw error('invalid_arguments');
+    for(let attempt=0;attempt<2;attempt++){
     try {
       const timeout = AbortSignal.timeout(15000);
       const response = await fetch(endpoint, { method: 'POST', redirect: 'error', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: raw, signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
@@ -42,9 +43,13 @@ function createOperationsChannels({ enabled = false, url, telegramBindings = [],
       if (!response.ok || parsed.ok !== true) throw error(SAFE_ERRORS.has(parsed.error) ? parsed.error : 'service_unavailable');
       return parsed;
     } catch (failure) {
+      if(!write&&attempt===0&&!signal?.aborted&&(!failure.code||failure.code==='service_unavailable')){
+        await require('node:timers/promises').setTimeout(250,undefined,{signal});continue;
+      }
       if (SAFE_ERRORS.has(failure.code)) throw failure;
       // A lost write reply is not permission to submit another task.
       throw error(write ? 'outcome_uncertain' : 'service_unavailable');
+    }
     }
   }
   function telegramIdentity(message) {

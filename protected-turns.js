@@ -21,7 +21,7 @@ function createTurns(dir){
   try{
    const result=await work({beforeWrite:async()=>{state.mayWrite=true;await save(state);}});
    await save({...state,state:'done',result});return result;
-  }catch(e){if(!state.mayWrite)await save({...state,state:'failed'});throw e;}
+  }catch(e){e.mayWrite=state.mayWrite;if(!state.mayWrite)await save({...state,state:'failed'});throw e;}
  }
  return async(id,fingerprint,work)=>{
   if(typeof id!=='string'||!id||typeof fingerprint!=='string')throw Error('invalid_delivery');

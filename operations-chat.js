@@ -2,7 +2,6 @@
 const crypto=require('node:crypto');
 const normalized=value=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const keyQuestion=text=>/\b(key\s*(?:box|code)|kode\s*kunci|sleutelcode)\b/i.test(text)&&! /\b(save|set|change|update|delete|remove|task|todo|remind|reminder|tugas|herinner|simpan|ubah|ganti|verander|wijzig)\b/i.test(text);
-const financeQuestion=text=>/\b(finance|deposit|quotation|invoice|payment|rekening|saldo|aanbetaling|offerte|factuur)\b/i.test(text)&&! /\b(task|todo|remind|reminder|tugas|herinner)\b/i.test(text);
 async function keyAnswer(text,invoke,signal){
  const records=[];let offset=0;
  do{
@@ -27,7 +26,10 @@ async function keyAnswer(text,invoke,signal){
 function taskTools(invoke,beforeWrite){
  return Object.fromEntries(['list_tasks','list_villas','create_task','complete_task'].map(action=>['tvm_'+action,async(input,options={})=>{
   if(!action.startsWith('list_'))await beforeWrite();
-  return invoke({action,input},options);
+  try{return await invoke({action,input},options);}catch(error){
+   if(action.startsWith('list_')&&error.code==='service_unavailable')return {ok:false,error:'service_unavailable',message:'The records could not be read. This does not mean there are no matching records.'};
+   throw error;
+  }
  }]));
 }
 function createOperationsChat({chat,channels,turns,finance}){
@@ -35,8 +37,6 @@ function createOperationsChat({chat,channels,turns,finance}){
   if(keyQuestion(text)){
    const answer=await keyAnswer(text,invoke,signal);if(answer)return answer;
   }
-  const previous=history.filter(item=>item.role==='user').at(-1)?.content||'';
-  if(!financeTools.finance_read&&(financeQuestion(text)||(/^villa\s+\S+(?:\s+\S+)?[?.!]?$/i.test(text.trim())&&financeQuestion(previous))))return 'The Financial connection is not configured in this chat, so I cannot look up that amount yet. This does not mean the saved record is missing. Please check Financial: https://financial-ten-inky.vercel.app/';
   const result=await turns(id,text,async({beforeWrite})=>chat.respond({scope:id,message:text,history,signal,tools:{...taskTools(invoke,beforeWrite),...financeTools}}));
   return result.response;
  }

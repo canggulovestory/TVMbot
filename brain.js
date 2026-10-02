@@ -141,7 +141,7 @@ function withDialogue(scope, text, work) {
     const previous = recentDialogue.get(scope);
     const history = previous && Date.now() - previous.at < 4 * 60 * 60 * 1000 ? previous.turns : [];
     const reply = await work(history);
-    if (reply && !/temporarily unavailable|couldn.t answer|Operation interrupted/i.test(reply)) recentDialogue.set(scope, { at: Date.now(), turns: [...history,
+    if (reply && !/temporarily unavailable|couldn.t answer|Operation interrupted|I could not finish that reply|I could not reach the saved records|I lost confirmation/i.test(reply)) recentDialogue.set(scope, { at: Date.now(), turns: [...history,
       { role: 'user', content: String(text || '').slice(0, 2000) },
       { role: 'assistant', content: String(reply).slice(0, 4000) },
     ].slice(-12) });
@@ -166,7 +166,7 @@ async function processMessage({ text, phone, telegramId, telegramMessage, attach
       }
       if(!attachment){const reply=await tryVillaLink(text,user.key);if(reply)return reply;}
       try{return await protectedChat.telegram({message:telegramMessage,text,history});}
-      catch(_){return 'The record lookup or AI response is temporarily unavailable. I cannot confirm an answer right now. If this was a save or task-completion request, check the records before resending; it may already have succeeded.';}
+      catch(error){return require('./chat-errors').reportFailure(error);}
     });
   }
   return withDialogue(scope, text, conversationHistory => processForUser({ text, user, attachment, onApproval, conversationHistory }));
@@ -178,7 +178,7 @@ async function processInternalMessage({ text, userKey, req, onApproval, signal }
   if (!user) return null;
   if(protectedChat)return withDialogue(`admin:${userKey}`,text,async history=>{
     try{return await protectedChat.web({req,text,history,signal});}
-    catch(_){return 'I could not finish that request. Check the task list before retrying a task change. Finance is not enabled in this chat.';}
+    catch(error){return require('./chat-errors').reportFailure(error);}
   });
   return withDialogue(`admin:${userKey}`, text, conversationHistory => {signal?.throwIfAborted();return processForUser({ text, user: { ...user, key: userKey }, conversationHistory, onApproval, signal })});
 }
