@@ -70,6 +70,17 @@
     .stat .value{font-size:1.65rem;font-weight:700;margin-top:5px;letter-spacing:-.02em}
     .stat .sub{color:var(--muted);font-size:.74rem;margin-top:2px}
     .stat .sub.warn{color:var(--red);font-weight:600}
+    .portfolio-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:23px 26px;border-radius:20px;background:#133d34;color:#fff;overflow:hidden;position:relative}
+    .portfolio-intro::after{content:'✦';position:absolute;right:23%;top:-55px;font-size:190px;color:rgba(255,255,255,.045);pointer-events:none}
+    .portfolio-intro h2{margin:0;font-size:1.55rem;letter-spacing:-.03em}.portfolio-intro p{margin:4px 0 0;color:#c6ded5;font-size:.84rem}.portfolio-intro .btn{background:#fff;color:#133d34;white-space:nowrap}
+    .portfolio-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.portfolio-stats .stat{border-color:#dce8df}.portfolio-stats .value{font-size:1.42rem}.portfolio-stats .stat:nth-child(2){background:#f3f8f1}.portfolio-stats .stat:nth-child(6){background:#fff7ee}
+    .portfolio-toolbar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}.portfolio-toolbar input,.portfolio-toolbar select{padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;font:inherit}.portfolio-toolbar input{min-width:210px;flex:1}.portfolio-note{padding:0 16px 14px;color:var(--muted);font-size:.74rem}
+    .portfolio-table th,.portfolio-table td{padding:9px 11px;white-space:nowrap}.portfolio-table th button{border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer}.portfolio-table td:first-child{min-width:150px}.portfolio-table .money-out{color:var(--red)}.portfolio-table .money-in{color:var(--green)}
+    .portfolio-table .progress{height:5px;margin-top:5px;border-radius:9px;background:#e9eee9;overflow:hidden}.portfolio-table .progress span{display:block;height:100%;background:var(--green)}
+    .lease-summary{padding:18px 20px}.lease-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.lease-summary-grid>div{padding:12px;border-radius:11px;background:#f3f8f1}.lease-summary-grid span{display:block;color:var(--muted);font-size:.7rem}.lease-summary-grid strong{display:block;margin-top:3px;font-size:.95rem}.lease-progress{height:9px;border-radius:10px;background:#e8eee8;overflow:hidden;margin-top:15px}.lease-progress span{display:block;height:100%;background:#4e9a69}
+    .portfolio-action{width:100%;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;cursor:pointer}.portfolio-action:hover{background:var(--cream)}.portfolio-action b{font-size:1rem}.money-out{color:var(--red)}
+    .glance-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:17px}.glance-stats>div{padding:13px;border-radius:12px;background:#f3f8f1}.glance-stats span{display:block;color:var(--muted);font-size:.72rem}.glance-stats strong{display:block;margin-top:5px;font-size:1rem}.portfolio-legacy{margin-top:14px}.portfolio-legacy>summary{cursor:pointer;padding:12px 16px;color:var(--muted);font-weight:600}.portfolio-legacy[open]>summary{margin-bottom:12px}
+    @media(max-width:760px){.portfolio-stats,.lease-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.portfolio-intro{padding:19px;align-items:flex-start;flex-direction:column}.portfolio-intro h2{font-size:1.3rem}.glance-stats{grid-template-columns:1fr}}
     /* ── Cards / panels ── */
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
     .grid-3{display:grid;grid-template-columns:2fr 1fr;gap:14px}
@@ -343,6 +354,14 @@
 
         <!-- OVERVIEW -->
         <section class="view active" id="view-overview">
+          <div class="portfolio-intro"><div><h2>Your villa portfolio ✦</h2><p>Occupancy, rent and the next decisions in one place.</p></div><button class="btn" data-goto="villas">Explore villas ↗</button></div>
+          <div class="stats portfolio-stats" id="portfolio-stats"></div>
+          <div class="grid-2 section-gap">
+            <div class="card"><div class="card-head"><h3>Needs attention</h3><button class="link" data-goto="payments">Open payments</button></div><div id="portfolio-attention"></div></div>
+            <div class="card"><div class="card-head"><h3>Portfolio at a glance</h3></div><div id="portfolio-glance"></div></div>
+          </div>
+          <div class="card section-gap"><div class="card-head"><h3>Every villa</h3><button class="link" data-goto="villas">View cards</button></div><div class="portfolio-toolbar"><input id="portfolio-search" type="search" placeholder="Search villa, tenant or location" aria-label="Search villa portfolio"><select id="portfolio-filter" aria-label="Filter portfolio"><option value="">All villas</option><option value="occupied">Occupied</option><option value="available">No current tenant</option><option value="overdue">Overdue</option><option value="expiring">Expiring in 90 days</option></select></div><div class="table-wrap"><table class="portfolio-table"><thead><tr><th><button data-portfolio-sort="villa">Villa</button></th><th>Tenant</th><th><button data-portfolio-sort="monthly">Monthly rent</button></th><th><button data-portfolio-sort="contract">Scheduled rent</button></th><th><button data-portfolio-sort="received">Received</button></th><th><button data-portfolio-sort="remaining">Remaining</button></th><th><button data-portfolio-sort="next">Next due</button></th><th>Lease ends</th></tr></thead><tbody id="portfolio-rows"></tbody></table></div><p class="portfolio-note" id="portfolio-note"></p></div>
+          <details class="portfolio-legacy"><summary>More operations · leads, tasks and deposits</summary>
           <div class="stats">
             <div class="stat"><div class="s-ico">🏝</div><div class="label">Villas</div><div class="value" id="m-villas">—</div><div class="sub" id="m-villas-sub"></div></div>
             <div class="stat"><div class="s-ico">🧳</div><div class="label">Active stays</div><div class="value" id="m-stays">—</div><div class="sub" id="m-checkouts"></div></div>
@@ -359,6 +378,7 @@
             <div class="card"><div class="card-head"><h3>Check-outs & deposit refunds</h3><button class="link" data-goto="deposits">View all</button></div><div id="ov-refunds"></div></div>
             <div class="card"><div class="card-head"><h3>Recent enquiries</h3><button class="link" data-goto="enquiries">View all</button></div><div id="ov-enquiries"></div></div>
           </div>
+          </details>
         </section>
 
         <!-- VILLAS (clickable cards) -->
@@ -371,6 +391,7 @@
             <button class="chip" data-vfilter="Maintenance">Maintenance</button>
             <button class="chip" data-vfilter="Off-market">Off-market</button>
           </div>
+          <div class="card section-gap"><div class="card-head"><h3>Portfolio table</h3><span class="sub">Select a row for lease, payments and documents</span></div><div class="table-wrap"><table class="portfolio-table"><thead><tr><th><button data-portfolio-sort="villa">Villa</button></th><th>Tenant</th><th>Monthly rent</th><th>Scheduled rent</th><th>Received</th><th>Remaining</th><th>Next due</th><th>Lease ends</th></tr></thead><tbody id="villas-table-rows"></tbody></table></div></div>
           <div class="villa-grid" id="villa-cards"></div>
         </section>
 
@@ -378,6 +399,7 @@
         <section class="view" id="view-villa-detail">
           <button class="back" id="villa-back">← All villas</button>
           <div class="vd-head" id="vd-head"></div>
+          <div class="card section-gap lease-summary" id="vd-lease-summary"></div>
           <div class="stats" id="vd-stats"></div>
           <div class="card section-gap"><div class="card-head"><h3>Guest stays</h3><button class="btn sm" id="vd-add-stay">+ Add stay</button></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Stay</th><th>Length</th><th>Rent</th><th>Status</th><th></th></tr></thead><tbody id="vd-stays"></tbody></table></div></div>
           <div class="card section-gap"><div class="card-head"><h3>Payments</h3></div><div class="table-wrap"><table><thead><tr><th>Installment</th><th>Amount</th><th>Follow-up</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="vd-payments"></tbody></table></div></div>
@@ -660,13 +682,17 @@
       <div class="f"><label>Follow-up date</label><input name="followUpDate" type="date"></div>
       <div class="f"><label>Due date</label><input name="dueDate" type="date"></div>
       <div class="f"><label>Grace (days)</label><input name="gracePeriodDays" type="number" min="0"></div>
-      <div class="f"><label>Status</label><select name="status"><option>Scheduled</option><option>Reminded</option><option>Due</option><option>Paid</option><option>Overdue</option><option>Late</option></select></div>
+      <div class="f"><label>Status</label><select name="status"><option>Scheduled</option><option>Reminded</option><option>Due</option><option>Partially paid</option><option>Paid</option><option>Overdue</option><option>Late</option></select></div>
       <div class="f"><label>Paid date</label><input name="paidDate" type="date"></div>
       <div class="f"><label>Method</label><select name="paymentMethod"><option value="">Choose</option><option>Bank transfer</option><option>Cash</option><option>Wise</option><option>Card</option></select></div>
       <div class="f"><label>Late fee</label><input name="lateFee" type="number" min="0"></div>
       <div class="f"><label>Owner payout</label><select name="ownerPayoutStatus"><option>Pending</option><option>Sent</option><option>Not applicable</option></select></div>
       <div class="f full"><label>Payment proof (Drive link)</label><input name="proofUrl" type="url"></div>
     </div></div><div class="modal-foot"><button type="button" class="btn secondary" data-close="installments">Cancel</button><button class="btn" type="submit">Save payment</button></div></form>
+  </dialog>
+
+  <dialog id="dlg-receipt"><div class="modal-head"><h3>Record tenant payment</h3><button class="modal-close" type="button" id="receipt-close">✕</button></div>
+    <form id="form-receipt"><div class="modal-body"><p id="receipt-context" class="sub"></p><input type="hidden" name="id"><div class="form-grid"><div class="f"><label>Amount received *</label><input name="amount" type="number" min="0.01" step="0.01" required></div><div class="f"><label>Date received *</label><input name="date" type="date" required></div><div class="f"><label>Method</label><select name="paymentMethod"><option>Bank transfer</option><option>Cash</option><option>Wise</option><option>Card</option><option>Other</option></select></div><div class="f full"><label>Receipt / transfer proof URL</label><input name="proofUrl" type="url" placeholder="https://…"></div></div></div><div class="modal-foot"><button type="button" class="btn secondary" id="receipt-cancel">Cancel</button><button type="submit" class="btn">Record payment</button></div></form>
   </dialog>
 
   <dialog id="dlg-deposits"><div class="modal-head"><h3 id="ttl-deposits">Edit deposit</h3><button class="modal-close" data-close="deposits">✕</button></div>
@@ -822,6 +848,7 @@
   </nav>
 
   <script src="/api/ui/currency.js"></script>
+  <script src="/api/ui/portfolio.js"></script>
   <script src="/api/ui/web-chat.js"></script>
   <script>
     const state={tasks:[],projects:[],payments:[],enquiries:[],bots:{},zuzuIntake:[],zuzuCockpit:{},villaData:{villas:[],tenancies:[],installments:[],deposits:[],documents:[],transactions:[],invoices:[],payables:[],villaTasks:[]}};
@@ -840,7 +867,7 @@
     const leadStage=v=>({new:'New',replied:'Contacted',won:'Won',lost:'Lost'}[String(v||'').toLowerCase()]||v||'New');
     const paymentPurpose=p=>{if(p?.purpose)return p.purpose;const text=`${p?.code||''} ${p?.period||''}`;if(/(?:^|[-_ ])RES(?:[-_ ]|$)|reservation/i.test(text))return 'Reservation deposit (non-refundable)';if(/(?:^|[-_ ])BAL(?:[-_ ]|$)|balance/i.test(text))return 'Rent balance';return 'Rent installment'};
     const depositPurpose=x=>x?.purpose||'Security deposit (refundable)';
-    const transactionPurpose=x=>{const p=state.villaData.installments.find(item=>item.id===x?.sourceId);return p?paymentPurpose(p):''};
+    const transactionPurpose=x=>{const source=String(x?.sourceId||''),id=source.startsWith('receipt:')?source.split(':')[1]:source;const p=state.villaData.installments.find(item=>item.id===id);return p?paymentPurpose(p):''};
     const leadAttention=lead=>{const stage=leadStage(lead.status);if(['Won','Lost'].includes(stage))return'';
       const age=(Date.now()-Date.parse(lead.createdAt||Date.now()))/36e5;
       if(stage==='New'&&age>=48)return '<span class="badge red">Contact overdue</span>';
@@ -852,6 +879,44 @@
     const vMap=()=>Object.fromEntries(state.villaData.villas.map(v=>[v.id,v]));
     const sMap=()=>Object.fromEntries(state.villaData.tenancies.map(t=>[t.id,t]));
     const initials=n=>String(n||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    function renderPortfolio(){
+      const today=TVMPortfolio.baliToday(),summary=TVMPortfolio.summarize(state.villaData,today);
+      const card=(label,value,sub)=>`<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`;
+      $('#portfolio-stats').innerHTML=[
+        card('Villas',summary.villas,`${summary.occupied} occupied · ${summary.villas-summary.occupied} without current tenant`),
+        card('Monthly rent · IDR',money(summary.monthly), 'Contractual rate from current stays'),
+        card('Scheduled rent · IDR',money(summary.contract),'All recorded rental installments'),
+        card('Occupied',summary.occupied,`${summary.villas?Math.round(summary.occupied/summary.villas*100):0}% of portfolio`),
+        card('Cash received · IDR',money(summary.received),'Linked, recorded rental payments'),
+        card('Still to collect · IDR',money(summary.outstanding),'Unpaid scheduled installments')
+      ].join('');
+      const alerts=[
+        {label:'Overdue rent',value:money(summary.overdue),view:'payments',warn:summary.overdue>0},
+        {label:'Due in 30 days',value:money(summary.upcoming),view:'payments'},
+        {label:'Contracts ending in 90 days',value:`${summary.expiring}`,view:'stays'}
+      ];
+      $('#portfolio-attention').innerHTML=alerts.map(a=>`<button class="list-row portfolio-action" data-goto="${a.view}"><span><strong>${a.label}</strong><small>See records ↗</small></span><b class="${a.warn?'money-out':''}">${a.value}</b></button>`).join('');
+      $('#portfolio-glance').innerHTML=`<div class="glance-stats"><div><span>Available / no current tenant</span><strong>${summary.villas-summary.occupied}</strong></div><div><span>Occupancy</span><strong>${summary.villas?Math.round(summary.occupied/summary.villas*100):0}%</strong></div><div><span>Annualized current rent</span><strong>${money(summary.monthly*12)}</strong></div></div><p class="portfolio-note">Annualized rent is a run-rate, not cash collected. ${summary.otherCurrencies.length?`Figures above show IDR only; ${esc(summary.otherCurrencies.join(', '))} agreements remain in their original currency.`:''}</p>`;
+      const q=$('#portfolio-search').value.trim().toLowerCase(),filter=$('#portfolio-filter').value;
+      let rows=summary.rows.map(r=>{
+        const displayCurrency=r.current?.currency||r.villa.currency||'IDR';
+        return displayCurrency==='IDR'?{...r,displayCurrency}:{...TVMPortfolio.summarize(state.villaData,today,displayCurrency).rows.find(item=>item.villa.id===r.villa.id),displayCurrency};
+      }).filter(r=>{
+        if(q&&!`${r.villa.name||''} ${r.villa.location||''} ${r.current?.guestName||''}`.toLowerCase().includes(q))return false;
+        return !filter||(filter==='occupied'&&r.current)||(filter==='available'&&!r.current)||(filter==='overdue'&&r.overdue>0)||(filter==='expiring'&&r.expiring);
+      });
+      const sort=state._portfolioSort||'villa',dir=state._portfolioSortDesc?-1:1;
+      rows.sort((a,b)=>{const x=sort==='villa'?a.villa.name||'':sort==='next'?a.next?.dueDate||'9999':a[sort]||0;const y=sort==='villa'?b.villa.name||'':sort==='next'?b.next?.dueDate||'9999':b[sort]||0;return(typeof x==='number'?x-y:String(x).localeCompare(String(y)))*dir});
+      $('#portfolio-rows').innerHTML=rows.map(r=>`<tr class="click" data-villa-open="${esc(r.villa.id)}" tabindex="0" aria-label="Open ${esc(r.villa.name)}"><td><strong>${esc(r.villa.name)}</strong><span class="sub">${esc(r.villa.location||'Location not set')}</span></td><td>${esc(r.current?.guestName||'—')}<span class="sub">${r.current?badge('Checked-in'):badge(r.villa.status||'Available')}</span></td><td>${r.current?money(r.monthly,r.displayCurrency):'—'}</td><td>${r.contract?money(r.contract,r.displayCurrency):'—'}</td><td class="money-in">${r.received?money(r.received,r.displayCurrency):'—'}</td><td class="${r.overdue?'money-out':''}">${r.remaining?money(r.remaining,r.displayCurrency):'—'}${r.contract?`<div class="progress" title="${Math.round(r.received/r.contract*100)}% received"><span style="width:${Math.min(100,Math.round(r.received/r.contract*100))}%"></span></div>`:''}</td><td>${r.next?fdate(r.next.dueDate):'—'}</td><td>${r.current?fdate(r.current.checkOut):'—'}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">No villas match this search.</td></tr>';
+      $('#villas-table-rows').innerHTML=$('#portfolio-rows').innerHTML;
+      const villaStatusFilter=state._villaFilter||'';
+      if(villaStatusFilter)$('#villas-table-rows').querySelectorAll('[data-villa-open]').forEach(row=>{if(state.villaData.villas.find(v=>v.id===row.dataset.villaOpen)?.status!==villaStatusFilter)row.remove()});
+      $('#portfolio-note').textContent=`${rows.length} of ${summary.villas} villas · Scheduled rent is based on recorded installments. Refundable deposits and non-rental charges are excluded. Cash received counts linked rental transactions only.`;
+    }
+    $('#portfolio-search').addEventListener('input',renderPortfolio);
+    $('#portfolio-filter').addEventListener('change',renderPortfolio);
+    document.addEventListener('click',e=>{const sort=e.target.closest('[data-portfolio-sort]');if(!sort)return;const key=sort.dataset.portfolioSort;state._portfolioSortDesc=state._portfolioSort===key?!state._portfolioSortDesc:false;state._portfolioSort=key;renderPortfolio()});
+    document.addEventListener('keydown',e=>{const row=e.target.closest('#portfolio-rows [data-villa-open],#villas-table-rows [data-villa-open]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openVilla(row.dataset.villaOpen)}});
     function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3500)}
     function toastAction(m,label,fn,ms=6000){const el=$('#toast');el.textContent=m;const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{el.classList.remove('show');try{await fn()}catch(e){toast(e.message)}};el.appendChild(b);el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms)}
     async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});if(r.status===401){location.href='/login';throw new Error('Session expired')}const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{}}catch(_){throw new Error(r.status>=500?'The service took too long. Please try again.':'The service returned an unexpected response.')}if(!r.ok)throw new Error(d.error||'Request failed');return d}
@@ -1031,6 +1096,20 @@
     // ── Save / actions ──
     function formData(f){const d=Object.fromEntries([...new FormData(f).entries()].filter(([k,v])=>!(v instanceof File)));f.querySelectorAll('input[type=checkbox]').forEach(i=>d[i.name]=i.checked);return d}
     async function save(coll,rec){await api('/api/admin/records',{method:'POST',body:JSON.stringify({collection:coll,record:rec})});await load()}
+    function openReceipt(id){
+      const payment=state.villaData.installments.find(p=>p.id===id);if(!payment||payment.status==='Paid')return;
+      const form=$('#form-receipt');form.reset();form.elements.id.value=id;form.elements.amount.value=payment.remainingAmount??payment.amount;form.elements.date.value=TVMPortfolio.baliToday();
+      form.dataset.key=crypto.randomUUID();
+      $('#receipt-context').textContent=`${payment.code||payment.period||'Installment'} · ${money(payment.remainingAmount??payment.amount,payment.currency)} remaining`;
+      $('#dlg-receipt').showModal();
+    }
+    $('#receipt-close').addEventListener('click',()=>$('#dlg-receipt').close());
+    $('#receipt-cancel').addEventListener('click',()=>$('#dlg-receipt').close());
+    $('#form-receipt').addEventListener('submit',async event=>{
+      event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type=submit]');button.disabled=true;
+      try{const result=await api('/api/admin/installments/receipt',{method:'POST',body:JSON.stringify({...formData(form),key:form.dataset.key})});await load();$('#dlg-receipt').close();toast(result.duplicate?'Payment already recorded.':'Payment recorded. Remaining balance updated.')}
+      catch(error){toast(error.message)}finally{button.disabled=false}
+    });
     function resizeImage(file,maxW=1600){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,maxW/img.width);const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};img.onerror=reject;img.src=URL.createObjectURL(file)})}
     ['villas','tenancies','installments','deposits','documents','transactions','invoices','payables','villaTasks'].forEach(coll=>{
       $(`#form-${coll}`).addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
@@ -1056,7 +1135,7 @@
           if(backup){const{id:_,createdAt:__,updatedAt:___,...rest}=backup;
             toastAction('Deleted.','Undo',async()=>{await save(c,rest);toast('Restored.')})}
           return}
-        if(t.dataset.pay){const r=state.villaData.installments.find(x=>x.id===t.dataset.pay);await save('installments',{...r,status:'Paid',paidDate:new Date().toISOString().slice(0,10)});toast('Marked paid.');return}
+        if(t.dataset.pay){openReceipt(t.dataset.pay);return}
         if(t.dataset.invoicePaid){const r=await api('/api/admin/invoices/paid',{method:'POST',body:JSON.stringify({id:t.dataset.invoicePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdIncome?'Invoice paid — income recorded.':'Invoice was already paid; no duplicate income created.');return}
         if(t.dataset.payablePaid){const r=await api('/api/admin/payables/paid',{method:'POST',body:JSON.stringify({id:t.dataset.payablePaid,paidDate:new Date().toISOString().slice(0,10)})});await load();toast(r.createdExpense?'Payable paid — expense recorded.':'Payable was already paid; no duplicate expense created.');return}
         if(t.dataset.refund){const r=state.villaData.deposits.find(x=>x.id===t.dataset.refund);if(!r||!(r.refundableAmount>0))throw Error('Only collected, refundable money can be refunded.');if(!confirm('Record the remaining '+money(r.refundableAmount,r.currency)+' as refunded? Only confirm after returning the money.'))return;await save('deposits',{...r,status:'Refunded',refundDate:new Date().toISOString().slice(0,10)});toast('Marked refunded.');return}
@@ -1068,7 +1147,7 @@
     });
 
     // ── Villa detail page ──
-    function transactionActions(x){if(x.sourceId){const source=String(x.sourceId),collection=source.startsWith('payable:')?'payables':source.startsWith('invoice:')?'invoices':'installments',id=source.replace(/^(payable|invoice):/,'');return `<button class="btn secondary sm" data-edit="${collection}:${esc(id)}">Edit source</button>`}return `<button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button>`}
+    function transactionActions(x){if(x.sourceId){const source=String(x.sourceId),collection=source.startsWith('payable:')?'payables':source.startsWith('invoice:')?'invoices':'installments',id=source.startsWith('receipt:')?source.split(':')[1]:source.replace(/^(payable|invoice):/,'');return `<button class="btn secondary sm" data-edit="${collection}:${esc(id)}">Edit source</button>`}return `<button class="btn secondary sm" data-edit="transactions:${esc(x.id)}">Edit</button><button class="btn danger sm" data-del="transactions:${esc(x.id)}">Delete</button>`}
     function rentDisplay(t){const payments=state.villaData.installments.filter(p=>p.tenancyId===t.id&&(p.currency||'IDR')===(t.currency||'IDR'));const total=payments.reduce((sum,p)=>sum+Number(p.amount||0),0);return /upfront|yearly|annual/i.test(t.paymentFrequency||'')?`${payments.length?money(total,t.currency):'Schedule not set'}<span class="sub">Upfront schedule total · ${money(t.rentAmount,t.currency)} monthly equivalent</span>`:`${money(t.rentAmount,t.currency)}<span class="sub">Monthly rate · ${esc(t.paymentFrequency||'billing not set')}</span>`}
     function openVilla(id){currentVillaId=id;show('villa-detail');renderVilla()}
     async function saveVillaGallery(v,gallery){
@@ -1090,6 +1169,10 @@
     }
     function renderVilla(){const v=vMap()[currentVillaId];if(!v)return;const d=state.villaData,S=sMap();
       $('#page-title').textContent=v.name;
+      const leaseCurrency=d.tenancies.find(t=>t.villaId===v.id&&t.checkIn<=TVMPortfolio.baliToday()&&t.checkOut>TVMPortfolio.baliToday()&&!['Cancelled','Enquiry','Checked-out'].includes(t.bookingStatus))?.currency||'IDR';
+      const lease=TVMPortfolio.summarize(d,TVMPortfolio.baliToday(),leaseCurrency).rows.find(row=>row.villa.id===v.id);
+      const leaseBox=$('#vd-lease-summary');
+      leaseBox.innerHTML=lease?.current?`<div class="card-head" style="padding:0 0 12px"><h3>Current rental agreement</h3><button class="link" data-goto="payments">Payment schedule ↗</button></div><div class="lease-summary-grid"><div><span>Tenant</span><strong>${esc(lease.current.guestName||'—')}</strong><span>${esc(lease.current.guestPhone||lease.current.guestEmail||'Contact not recorded')}</span></div><div><span>Rental period</span><strong>${fdate(lease.current.checkIn)} → ${fdate(lease.current.checkOut)}</strong></div><div><span>Scheduled rent · ${esc(leaseCurrency)}</span><strong>${money(lease.contract,leaseCurrency)}</strong></div><div><span>Received / remaining · ${esc(leaseCurrency)}</span><strong>${money(lease.received,leaseCurrency)} / ${money(lease.remaining,leaseCurrency)}</strong></div></div><div class="lease-progress" role="progressbar" aria-label="Rent received" aria-valuenow="${lease.contract?Math.min(100,Math.round(lease.received/lease.contract*100)):0}" aria-valuemin="0" aria-valuemax="100"><span style="width:${lease.contract?Math.min(100,Math.round(lease.received/lease.contract*100)):0}%"></span></div><p class="sub">${lease.contract?Math.round(lease.received/lease.contract*100):0}% of scheduled ${esc(leaseCurrency)} rent received${lease.next?` · Next due ${fdate(lease.next.dueDate)} (${money(lease.next.amount,leaseCurrency)})`:''}. Security deposits are separate.</p>`:'<h3 style="margin:0">No current rental agreement</h3><p class="sub">Past stays remain below. Add or update a stay to show its contract and payments here.</p>';
       const stays=d.tenancies.filter(t=>t.villaId===v.id);
       const pays=d.installments.filter(p=>p.villaId===v.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
       const deps=d.deposits.filter(x=>x.villaId===v.id);
@@ -1141,7 +1224,7 @@
         <div class="stat"><div class="label">Deposits held</div><div class="value" style="font-size:1.1rem">${deps.filter(x=>['Held','Partially refunded'].includes(x.status)).length}</div><div class="sub">${deps.length} total</div></div>
         <div class="stat"><div class="label">Documents</div><div class="value" style="font-size:1.1rem">${docs.length}</div><div class="sub">private Drive files</div></div>`;
       $('#vd-stays').innerHTML=stays.map(t=>`<tr><td><strong>${esc(t.guestName||'—')}</strong><span class="sub">${esc(t.code||'')}</span></td><td>${fdate(t.checkIn)} → ${fdate(t.checkOut)}</td><td>${esc(t.lengthOfStay||'—')}</td><td>${rentDisplay(t)}</td><td>${badge(t.bookingStatus)}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="tenancies:${esc(t.id)}">Edit</button><button class="btn danger sm" data-del="tenancies:${esc(t.id)}">Delete</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No stays for this villa yet.</td></tr>';
-      $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(paymentPurpose(p))}</strong><span class="sub">${esc(p.code||p.period||'—')} · ${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}</td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
+      $('#vd-payments').innerHTML=pays.map(p=>{const t=S[p.tenancyId]||{};return`<tr><td><strong>${esc(paymentPurpose(p))}</strong><span class="sub">${esc(p.code||p.period||'—')} · ${esc(t.guestName||'')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td><td>${money(p.amount,p.currency)}<span class="sub">${money(p.receivedAmount||0,p.currency)} received · ${money(p.remainingAmount??p.amount,p.currency)} left</span></td><td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}</td><td>${badge(p.status)}</td><td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Record payment</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No payments yet.</td></tr>';
       $('#vd-deposits').innerHTML=deps.map(x=>{const t=S[x.tenancyId]||{};return`<tr><td>${money(x.amount,x.currency)}<span class="sub">${esc(depositPurpose(x))} · ${esc(t.guestName||'')}</span></td><td>${fdate(x.refundDueDate)}</td><td><strong>${money(x.refundableAmount,x.currency)}</strong></td><td>${badge(x.status)}</td><td><div class="row-actions">${x.refundableAmount>0?`<button class="btn sm" data-refund="${esc(x.id)}">Refund</button>`:''}<button class="btn secondary sm" data-edit="deposits:${esc(x.id)}">Edit</button></div></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No security deposits.</td></tr>';
       $('#vd-documents').innerHTML=docs.map(x=>`<tr><td><strong>${esc(x.title)}</strong></td><td>${esc(x.type||'—')}</td><td>${flink(x.driveUrl,'Open')}</td><td><div class="row-actions"><button class="btn secondary sm" data-edit="documents:${esc(x.id)}">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No documents.</td></tr>';
       // availability calendar (next 6 months)
@@ -1177,8 +1260,9 @@
 
     // ── Render everything ──
     function render(){const d=state.villaData,V=vMap(),S=sMap(),today=new Date().toISOString().slice(0,10);fillSelects();
+      renderPortfolio();
       const active=d.tenancies.filter(t=>['Confirmed','Checked-in'].includes(t.bookingStatus)&&t.checkIn<=new Date().toISOString().slice(0,10)&&t.checkOut>new Date().toISOString().slice(0,10));
-      const act=d.installments.filter(p=>['Reminded','Due','Overdue','Late'].includes(p.status));
+      const act=d.installments.filter(p=>['Reminded','Due','Overdue','Late','Partially paid'].includes(p.status));
       const held=d.deposits.filter(x=>['Held','Partially refunded'].includes(x.status));
       const fresh=state.enquiries.filter(x=>leadStage(x.status)==='New').length;
       // sidebar counts
@@ -1186,13 +1270,13 @@
       // stats
       $('#m-villas').textContent=d.villas.length;$('#m-villas-sub').textContent=`${d.villas.filter(v=>v.status==='Available').length} available`;
       $('#m-stays').textContent=active.length;$('#m-checkouts').textContent=`${active.filter(t=>t.checkOut>=today).length} upcoming check-outs`;
-      $('#m-payments').textContent=act.length;const od=act.filter(p=>['Overdue','Late'].includes(p.status)).length;const mo=$('#m-overdue');mo.textContent=`${od} overdue`;mo.className=od?'sub warn':'sub';
+      $('#m-payments').textContent=act.length;const od=act.filter(p=>['Overdue','Late'].includes(p.status)||(p.status==='Partially paid'&&p.dueDate<today)).length;const mo=$('#m-overdue');mo.textContent=`${od} overdue`;mo.className=od?'sub warn':'sub';
       $('#m-deposits').textContent=held.length;const rd=held.filter(x=>x.refundableAmount>0&&x.refundDueDate&&x.refundDueDate<=today).length;const mr=$('#m-refunds');mr.textContent=`${rd} refunds due · ${d.deposits.filter(x=>x.status==='Awaiting collection').length} awaiting collection`;mr.className=rd?'sub warn':'sub';
       $('#m-tasks').textContent=state.tasks.length;$('#m-high').textContent=`${state.tasks.filter(t=>t.priority==='High').length} high priority`;
       $('#m-enquiries').textContent=fresh;
       // overview lists
       $('#ov-payments').innerHTML=d.installments.filter(p=>p.status!=='Paid').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,6).map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
-        return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(paymentPurpose(p))}</strong><small>${esc(t.guestName||p.period||'—')} · Follow-up ${fdate(p.followUpDate)} · Due ${fdate(p.dueDate)} · ${money(p.amount,p.currency)}</small></div>${badge(p.status)}</div>`}).join('')||'<div class="empty">No upcoming payments.</div>';
+        return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(paymentPurpose(p))}</strong><small>${esc(t.guestName||p.period||'—')} · Follow-up ${fdate(p.followUpDate)} · Due ${fdate(p.dueDate)} · ${money(p.remainingAmount??p.amount,p.currency)} left</small></div>${badge(p.status)}</div>`}).join('')||'<div class="empty">No upcoming payments.</div>';
       $('#ov-refunds').innerHTML=held.filter(x=>x.refundableAmount>0).sort((a,b)=>(a.refundDueDate||'').localeCompare(b.refundDueDate||'')).slice(0,6).map(x=>{const t=S[x.tenancyId]||{},v=V[x.villaId]||{};
         return`<div class="list-row"><div><strong>${esc(v.name||'Villa')} — ${esc(depositPurpose(x))}</strong><small>${esc(t.guestName||'Guest')} · Refund ${money(x.refundableAmount,x.currency)} by ${fdate(x.refundDueDate)}</small></div>${badge(x.status)}</div>`}).join('')||'<div class="empty">No security deposits awaiting refund.</div>';
       $('#ov-enquiries').innerHTML=state.enquiries.slice(0,6).map(x=>`<div class="list-row"><div><strong>${esc(x.name||'—')}</strong><small>${esc((x.message||'').slice(0,80))}${(x.message||'').length>80?'…':''}</small></div><small style="white-space:nowrap;color:var(--muted)">${fdate(x.createdAt)}</small></div>`).join('')||'<div class="empty">No enquiries yet.</div>';
@@ -1228,15 +1312,15 @@
       // payments table (with filter)
       const pf=state._payFilter||'';
       const plist=d.installments.slice().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).filter(p=>
-        !pf||(pf==='unpaid'&&p.status!=='Paid')||(pf==='overdue'&&['Overdue','Late'].includes(p.status))||(pf==='payout'&&p.status==='Paid'&&!['Sent','Not applicable'].includes(p.ownerPayoutStatus||'')));
+        !pf||(pf==='unpaid'&&p.status!=='Paid')||(pf==='overdue'&&(['Overdue','Late'].includes(p.status)||(p.status==='Partially paid'&&p.dueDate<today)))||(pf==='payout'&&p.status==='Paid'&&!['Sent','Not applicable'].includes(p.ownerPayoutStatus||'')));
       $('#t-payments').innerHTML=plist.map(p=>{const t=S[p.tenancyId]||{},v=V[p.villaId]||{};
         return`<tr><td><strong>${esc(paymentPurpose(p))}</strong><span class="sub">${esc(p.code||p.period||'—')} · ${p.installmentNumber||'?'} of ${p.installmentTotal||'?'}</span></td>
         <td>${esc(v.name||'—')}<span class="sub">${esc(t.guestName||'')}</span></td>
-        <td>${money(p.amount,p.currency)}${p.lateFee?`<span class="sub">+ late fee ${money(p.lateFee,p.currency)}</span>`:''}</td>
+        <td>${money(p.amount,p.currency)}<span class="sub">${money(p.receivedAmount||0,p.currency)} received · ${money(p.remainingAmount??p.amount,p.currency)} left${p.receiptCount?` · ${p.receiptCount} receipt${p.receiptCount===1?'':'s'}`:''}</span>${p.lateFee?`<span class="sub">+ late fee ${money(p.lateFee,p.currency)}</span>`:''}</td>
         <td>${fdate(p.followUpDate)}</td><td>${fdate(p.dueDate)}<span class="sub">${p.gracePeriodDays||0}-day grace</span></td>
         <td>${badge(p.status)}${p.paidDate?`<span class="sub">paid ${fdate(p.paidDate)}</span>`:''}</td>
         <td>${flink(p.proofUrl,'Proof')}</td>
-        <td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Mark paid</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button><button class="btn danger sm" data-del="installments:${esc(p.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No payments match this filter.</td></tr>';
+        <td><div class="row-actions">${p.status!=='Paid'?`<button class="btn sm" data-pay="${esc(p.id)}">Record payment</button>`:''}<button class="btn secondary sm" data-edit="installments:${esc(p.id)}">Edit</button><button class="btn danger sm" data-del="installments:${esc(p.id)}">Delete</button></div></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No payments match this filter.</td></tr>';
       // finance 12-month chart
       (()=>{const now=new Date();const months=[];for(let i=11;i>=0;i-=1){const dt=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`,lbl:dt.toLocaleDateString('en-GB',{month:'short'})})}
         const currency=$('#fin-currency').value;

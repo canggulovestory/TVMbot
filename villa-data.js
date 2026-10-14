@@ -151,6 +151,7 @@ function validateRecord(collection, record, existing) {
 
 function syncPaidLedger(store, collection, record) {
   if (!['installments', 'invoices', 'payables'].includes(collection) || record.status !== 'Paid') return null;
+  if (collection === 'installments' && store.transactions.some(t => String(t.sourceId || '').startsWith(`receipt:${record.id}:`))) return null;
   const sourceId = collection === 'installments' ? record.id : `${collection === 'invoices' ? 'invoice' : 'payable'}:${record.id}`;
   const existing = store.transactions.find(t => t.sourceId === sourceId);
   const purpose = record.purpose || (/reservation|(?:^|[-_])RES(?:[-_]|$)/i.test(`${record.period || ''} ${record.code || ''}`) ? 'Reservation deposit (non-refundable)' : 'Rent installment');
@@ -186,6 +187,10 @@ function saveRecord(store, collection, input) {
     if (id && index < 0) conflict('Record no longer exists. Refresh before saving.');
     if (collection === 'transactions' && (existing.sourceId || input.sourceId)) conflict('Edit the linked payment source, not its automatic finance entry.');
     const record = normalize(collection, input, existing);
+    if (collection === 'installments' && existing.id && store.transactions.some(t => String(t.sourceId || '').startsWith(`receipt:${existing.id}:`))) {
+      if (['amount', 'currency', 'villaId', 'tenancyId'].some(field => record[field] !== existing[field])) conflict('This installment has receipts. Keep its amount, currency and links unchanged.');
+      if (record.status !== existing.status) conflict('Payment status follows recorded receipts. Add a receipt to change it.');
+    }
     if (existing.id && ['installments', 'invoices', 'payables'].includes(collection) && record.status !== 'Paid' && store.transactions.some(t => [existing.id, `invoice:${existing.id}`, `payable:${existing.id}`].includes(t.sourceId))) conflict('This record has settled ledger history. Reconcile it as paid before editing.');
     validateRecord(collection, record, existing);
     if (['installments', 'invoices', 'payables'].includes(collection) && record.status === 'Paid') record.paidDate ||= now.slice(0, 10);
@@ -200,6 +205,36 @@ function saveRecord(store, collection, input) {
 
 async function upsert(collection, input) {
   return mutate(store => saveRecord(store, collection, input));
+}
+
+async function recordInstallmentReceipt(input) {
+  return mutate(store => {
+    const installment = store.installments.find(p => p.id === clean(input.id, 80));
+    if (!installment) conflict('Installment not found.');
+    const key = clean(input.key, 80);
+    if (!/^[a-zA-Z0-9-]{8,80}$/.test(key)) conflict('Receipt request key is required.');
+    const sourceId = `receipt:${installment.id}:${key}`;
+    const previous = store.transactions.find(t => t.sourceId === sourceId);
+    if (previous) return { installment, transaction: previous, duplicate: true };
+    if (installment.status === 'Paid') conflict('This installment is already paid.');
+    if (store.transactions.some(t => t.sourceId === installment.id)) conflict('This installment was already settled in full.');
+    const scale = (installment.currency || 'IDR') === 'IDR' ? 1 : 100;
+    const entered = Number(input.amount);
+    if (!Number.isFinite(entered) || entered <= 0 || Math.abs(entered * scale - Math.round(entered * scale)) > 1e-7) conflict('Enter a positive amount in the payment currency.');
+    const valueMinor = Math.round(entered * scale), value = valueMinor / scale;
+    const paidDate = clean(input.date, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(paidDate) || !parseDate(paidDate)) conflict('Enter a valid receipt date.');
+    const paidMinor = store.transactions.filter(t => String(t.sourceId || '').startsWith(`receipt:${installment.id}:`)).reduce((sum, t) => sum + Math.round(Number(t.amount || 0) * scale), 0);
+    const remainingMinor = Math.round(Number(installment.amount || 0) * scale) - paidMinor;
+    if (valueMinor > remainingMinor) conflict('Receipt exceeds the remaining installment balance.');
+    const now = new Date().toISOString();
+    const transaction = { id: newId('transactions'), code: installment.code || installment.id, villaId: installment.villaId || '', tenancyId: installment.tenancyId || '', type: 'Income', category: /reservation/i.test(installment.purpose || '') ? 'Reservation deposit' : 'Rent', description: `${installment.purpose || 'Rent installment'} received — ${installment.period || installment.code || 'installment'}`, amount: value, currency: installment.currency || 'IDR', date: paidDate, paymentMethod: clean(input.paymentMethod, 100), proofUrl: normalizeUrl(input.proofUrl), notes: '', sourceId, createdAt: now, updatedAt: now };
+    store.transactions.unshift(transaction);
+    installment.status = valueMinor === remainingMinor ? 'Paid' : 'Partially paid';
+    if (installment.status === 'Paid') installment.paidDate = paidDate;
+    installment.updatedAt = now;
+    return { installment, transaction, duplicate: false };
+  });
 }
 
 async function saveReferenceLink({ villaId, title, url, userKey }) {
@@ -296,7 +331,7 @@ async function createTenancyBundle(input) {
 
   const shouldGenerateSchedule = (isNew && input.generateSchedule !== false && input.generateSchedule !== 'false') || input.generateSchedule === true || input.generateSchedule === 'true';
   const previous = store.installments.filter(item => item.tenancyId === tenancy.id);
-  if (shouldGenerateSchedule && previous.some(p => p.status !== 'Paid' && store.transactions.some(t => t.sourceId === p.id))) conflict('This schedule contains linked settled history. Reconcile the paid records before regeneration.');
+  if (shouldGenerateSchedule && previous.some(p => p.status !== 'Paid' && store.transactions.some(t => t.sourceId === p.id || String(t.sourceId || '').startsWith(`receipt:${p.id}:`)))) conflict('This schedule contains linked payment history. Keep the existing schedule and edit future payments individually.');
   if (shouldGenerateSchedule) for (const paid of previous.filter(p => p.status === 'Paid')) {
     const index = paid.installmentNumber - 1;
     if (!Number.isInteger(index) || index < 0 || index >= count || paid.amount !== amountFor(index) || paid.dueDate !== addMonths(firstDueDate, index * step) || paid.currency !== (tenancy.currency || 'IDR') || paid.villaId !== tenancy.villaId || previous.filter(p => p.installmentNumber === paid.installmentNumber).length !== 1) conflict('This settled schedule cannot be regenerated safely. Keep it and edit individual unpaid obligations instead.');
@@ -368,7 +403,7 @@ function enrich(store) {
     tenancies: store.tenancies.map(item => ({ ...item, lengthOfStay: stayLength(item.checkIn, item.checkOut) })),
     installments: store.installments.map(item => {
       let status = item.status || 'Scheduled';
-      if (!['Paid', 'Late'].includes(status) && item.dueDate) {
+      if (!['Paid', 'Late', 'Partially paid'].includes(status) && item.dueDate) {
         const graceEnd = addDays(item.dueDate, Number(item.gracePeriodDays || 0));
         const escalationDate = addDays(item.dueDate, 7);
         if (now >= escalationDate) status = 'Late';
@@ -376,7 +411,9 @@ function enrich(store) {
         else if (now >= item.dueDate) status = 'Due';
         else if (item.followUpDate && now >= item.followUpDate) status = 'Reminded';
       }
-      return { ...item, status };
+      const receipts = store.transactions.filter(t => t.sourceId === item.id || String(t.sourceId || '').startsWith(`receipt:${item.id}:`));
+      const receivedAmount = receipts.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      return { ...item, status, receivedAmount, receiptCount: receipts.length, remainingAmount: Math.max(0, Number(item.amount || 0) - receivedAmount) };
     }),
     deposits: store.deposits.map(depositBalance),
   };
@@ -480,7 +517,7 @@ async function remove(collection, id) {
     if (index < 0) return null;
     const record = store[collection][index];
     if (collection === 'transactions' && record.sourceId) conflict('This finance entry has a linked payment source. Preserve its history and correct the source instead.');
-    if (['installments', 'invoices', 'payables'].includes(collection) && (record.status === 'Paid' || store.transactions.some(t => [id, `invoice:${id}`, `payable:${id}`].includes(t.sourceId)))) conflict('Cannot delete a paid record with financial history.');
+    if (['installments', 'invoices', 'payables'].includes(collection) && (record.status === 'Paid' || store.transactions.some(t => [id, `invoice:${id}`, `payable:${id}`].includes(t.sourceId) || (collection === 'installments' && String(t.sourceId || '').startsWith(`receipt:${id}:`))))) conflict('Cannot delete a payment record with financial history.');
     if (collection === 'deposits' && record.status !== 'Awaiting collection') conflict('Cannot delete a collected deposit and its refund history.');
     if (collection === 'tenancies' && ['installments', 'deposits', 'documents', 'transactions'].some(c => store[c].some(r => r.tenancyId === id))) conflict('This stay has linked history. Cancel the stay instead of deleting it; review its unpaid obligations separately.');
     // Protect villas with linked history — orphaned stays/finance would be unreachable.
@@ -503,4 +540,4 @@ async function remove(collection, id) {
   });
 }
 
-module.exports = { init, getAll, getActionSummary, upsert, saveReferenceLink, remove, recordPaymentIncome, markInvoicePaid, markPayablePaid, createTenancyBundle, stayLength, addDays, addMonths };
+module.exports = { init, getAll, getActionSummary, upsert, recordInstallmentReceipt, saveReferenceLink, remove, recordPaymentIncome, markInvoicePaid, markPayablePaid, createTenancyBundle, stayLength, addDays, addMonths };

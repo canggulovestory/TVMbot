@@ -606,6 +606,17 @@ async function handleAdminApi(req, res, url) {
     audit.add(session.user, 'marked legacy payment paid', clean(body.id, 80));
     return sendJson(res, 200, { ok: true });
   }
+  if (url.pathname === '/api/admin/installments/receipt' && req.method === 'POST') {
+    const body = await readBody(req);
+    try {
+      const result = await villaData.recordInstallmentReceipt(body);
+      audit.add(session.user, result.duplicate ? 'replayed installment receipt' : 'recorded installment receipt', result.installment.code || result.installment.id);
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (error.statusCode === 409) return sendJson(res, 409, { error: error.message });
+      throw error;
+    }
+  }
   const RECORD_TYPES = ['villas', 'tenancies', 'installments', 'deposits', 'documents', 'transactions', 'invoices', 'payables', 'villaTasks'];
   if (url.pathname === '/api/admin/records' && req.method === 'POST') {
     const body = await readBody(req);
@@ -840,7 +851,7 @@ async function contractActor(req) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
-    if (['/api/ui/currency.js','/api/ui/web-chat.js'].includes(url.pathname) && req.method === 'GET') {
+    if (['/api/ui/currency.js','/api/ui/web-chat.js','/api/ui/portfolio.js'].includes(url.pathname) && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
       return res.end(await fs.readFile(path.join(ADMIN_DIR, path.basename(url.pathname))));
     }
