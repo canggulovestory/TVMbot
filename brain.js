@@ -20,7 +20,7 @@ function init({authenticateWeb}={}) {
   const finance=require('./vendor/finance/finance-host.cjs').loadFinanceHost('/etc/zuzu-finance/telegram.json');
   protectedChat=require('./operations-chat').createOperationsChat({
     chat:require('./isolated-chat').createChat({...config.hermes,financeDefinitions:finance?.definitions||{}}),channels,finance,
-    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?{...require('./reminder-tools').createReminderTools(assistant,user.key),...require('./memory-tools').createMemoryTools(assistant,user.key),...require('./sdr-tools').createSdrTools(require('./sdr'),user.key,require('./google-workspace').createEmailDraft)}:{};},
+    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?{...require('./reminder-tools').createReminderTools(assistant,user.key),...require('./memory-tools').createMemoryTools(assistant,user.key),...require('./sdr-tools').createSdrTools(require('./sdr'),user.key,require('./google-workspace').createEmailDraft),...require('./drive-tools').createDriveTools(require('./google-workspace'),user.key)}:{};},
     turns:require('./protected-turns').createTurns('/var/lib/zuzu-operations/chat-runs'),
   });
 }

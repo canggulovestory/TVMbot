@@ -17,6 +17,7 @@ const SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.compose',
   'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/calendar.events',
 ];
@@ -247,4 +248,50 @@ async function saveGmailAttachmentToDrive({ messageId, attachmentId }) {
   return uploadPrivateFile({ name: attachment.name, mimeType: attachment.mimeType, buffer });
 }
 
-module.exports = { init, status, buildAuthorizationUrl, completeAuthorization, gmailInbox, createEmailDraft, calendarUpcoming, createCalendarHold, uploadPrivateFile, saveGmailAttachmentToDrive, SCOPES, requiredScopes };
+async function driveSearch({ q = '', folderId = '' } = {}) {
+  const auth = await accessToken();
+  const clauses = ['trashed = false'];
+  const term = String(q || '').replace(/['\\]/g, ' ').trim().slice(0, 80);
+  if (term) clauses.push(`(name contains '${term}' or fullText contains '${term}')`);
+  if (folderId) {
+    if (!/^[\w-]{10,80}$/.test(folderId)) throw new Error('Invalid folder id');
+    clauses.push(`'${folderId}' in parents`);
+  }
+  const query = new URLSearchParams({ q: clauses.join(' and '), pageSize: '40', orderBy: 'modifiedTime desc', fields: 'files(id,name,mimeType,modifiedTime,parents)', supportsAllDrives: 'true', includeItemsFromAllDrives: 'true' });
+  const result = await googleFetch(`https://www.googleapis.com/drive/v3/files?${query}`, { headers: { Authorization: `Bearer ${auth.token}` } });
+  return (result.files || []).map(f => ({ id: f.id, name: f.name, type: f.mimeType === 'application/vnd.google-apps.folder' ? 'folder' : f.mimeType, modified: f.modifiedTime }));
+}
+
+/** Text of one Drive file: Google Docs/Sheets exported, PDFs through pdftotext. Read-only. */
+async function driveReadText(fileId) {
+  if (!/^[\w-]{10,80}$/.test(String(fileId || ''))) throw new Error('Invalid file id');
+  const auth = await accessToken();
+  const headers = { Authorization: `Bearer ${auth.token}` };
+  const meta = await googleFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,mimeType,size&supportsAllDrives=true`, { headers });
+  const limit = 20000;
+  const exportAs = { 'application/vnd.google-apps.document': 'text/plain', 'application/vnd.google-apps.spreadsheet': 'text/csv', 'application/vnd.google-apps.presentation': 'text/plain' }[meta.mimeType];
+  let text;
+  if (exportAs) {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=${encodeURIComponent(exportAs)}`, { headers });
+    if (!res.ok) throw new Error(`Drive export failed (${res.status})`);
+    text = await res.text();
+  } else if (meta.mimeType === 'application/pdf' || /^text\//.test(meta.mimeType)) {
+    if (Number(meta.size || 0) > 25 * 1024 * 1024) throw new Error('File is larger than 25 MB');
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, { headers });
+    if (!res.ok) throw new Error(`Drive download failed (${res.status})`);
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (meta.mimeType === 'application/pdf') {
+      const { execFile } = require('node:child_process');
+      text = await new Promise((resolve, reject) => {
+        const child = execFile('pdftotext', ['-layout', '-q', '-', '-'], { maxBuffer: 8 * 1024 * 1024, timeout: 60000 }, (error, stdout) => error ? reject(new Error('PDF text extraction failed')) : resolve(stdout));
+        child.stdin.end(buffer);
+      });
+    } else text = buffer.toString('utf8');
+  } else {
+    return { name: meta.name, type: meta.mimeType, text: '', note: 'This file type cannot be read as text (for example a photo or Word file). Ask Afni to share it as PDF or Google Doc.' };
+  }
+  const clean = String(text || '').replace(/\u0000/g, '').trim();
+  return { name: meta.name, type: meta.mimeType, text: clean.slice(0, limit), truncated: clean.length > limit, note: clean ? '' : 'No text found (it may be a scanned image PDF).' };
+}
+
+module.exports = { init, status, driveSearch, driveReadText, buildAuthorizationUrl, completeAuthorization, gmailInbox, createEmailDraft, calendarUpcoming, createCalendarHold, uploadPrivateFile, saveGmailAttachmentToDrive, SCOPES, requiredScopes };
