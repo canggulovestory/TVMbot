@@ -20,7 +20,7 @@ function init({authenticateWeb}={}) {
   const finance=require('./vendor/finance/finance-host.cjs').loadFinanceHost('/etc/zuzu-finance/telegram.json');
   protectedChat=require('./operations-chat').createOperationsChat({
     chat:require('./isolated-chat').createChat({...config.hermes,financeDefinitions:finance?.definitions||{}}),channels,finance,
-    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?require('./reminder-tools').createReminderTools(assistant,user.key):{};},
+    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?{...require('./reminder-tools').createReminderTools(assistant,user.key),...require('./memory-tools').createMemoryTools(assistant,user.key)}:{};},
     turns:require('./protected-turns').createTurns('/var/lib/zuzu-operations/chat-runs'),
   });
 }
@@ -140,12 +140,12 @@ const dialogueQueues = new Map();
 function withDialogue(scope, text, work) {
   const task = (dialogueQueues.get(scope) || Promise.resolve()).then(async () => {
     const previous = recentDialogue.get(scope);
-    const history = previous && Date.now() - previous.at < 4 * 60 * 60 * 1000 ? previous.turns : [];
+    const history = previous && Date.now() - previous.at < 7 * 24 * 60 * 60 * 1000 ? previous.turns : [];
     const reply = await work(history);
     if (reply && !/temporarily unavailable|couldn.t answer|Operation interrupted|I could not finish that reply|I could not reach the saved records|I lost confirmation/i.test(reply)) recentDialogue.set(scope, { at: Date.now(), turns: [...history,
       { role: 'user', content: String(text || '').slice(0, 2000) },
       { role: 'assistant', content: String(reply).slice(0, 4000) },
-    ].slice(-12) });
+    ].slice(-20) });
     return reply;
   });
   const queued = task.catch(() => {});
