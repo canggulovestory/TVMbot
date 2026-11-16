@@ -12,6 +12,7 @@ const googleWorkspace = require('../google-workspace');
 const { createApprovals } = require('./telegram-approvals');
 
 let bot = null;
+let callbackHandler = null;
 let running = false;
 let botName = '';
 let lastError = '';
@@ -90,6 +91,11 @@ async function start() {
   const approvals = createApprovals(bot);
   bot.on('callback_query', query => {
     if (!brain.isAllowed({ telegramId: String(query.from?.id) })) return;
+    if (String(query.data || '').startsWith('rr:') && callbackHandler) {
+      callbackHandler(query).then(result => bot.answerCallbackQuery(query.id, { text: result?.text || 'Done.' }).catch(() => {}))
+        .catch(error => { console.error('[TG] Rent reminder action failed:', error.message); bot.answerCallbackQuery(query.id, { text: 'Failed, nothing was sent.' }).catch(() => {}); });
+      return;
+    }
     approvals.handle(query).catch(error => console.error('[TG] Approval delivery failed:', error.message));
   });
   const chatQueue = new Map();
@@ -187,4 +193,13 @@ function getStatus() {
   };
 }
 
-module.exports = { start, sendToChat, isRunning, getStatus, attachmentMeta };
+async function sendWithButtons(chatId, text, buttons = []) {
+  if (!bot || !running) return null;
+  return bot.sendMessage(chatId, String(text).slice(0, 4000), buttons.length ? { reply_markup: { inline_keyboard: buttons } } : {});
+}
+async function editCallbackMessage(query, text) {
+  if (!bot || !query.message) return;
+  await bot.editMessageText(String(text).slice(0, 4000), { chat_id: query.message.chat.id, message_id: query.message.message_id }).catch(() => {});
+}
+function onCallback(handler) { callbackHandler = handler; }
+module.exports = { start, sendToChat, sendWithButtons, editCallbackMessage, onCallback, isRunning, getStatus, attachmentMeta };

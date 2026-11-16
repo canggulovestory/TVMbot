@@ -1046,6 +1046,16 @@ async function boot() {
     await whatsapp.start();
     await telegram.start();
   }
+  const rentReminders = require('./rent-reminders').createRentReminders({
+    dataDir: DATA_DIR, villaData, ownerTelegramId: brain.USERS.afni.telegramId,
+    sendButtons: telegram.sendWithButtons, editMessage: telegram.editCallbackMessage,
+    sendWhatsApp: whatsapp.sendToPhone, createCalendarHold: googleWorkspace.createCalendarHold,
+  });
+  telegram.onCallback(rentReminders.handleCallback);
+  cron.schedule('30 8 * * *', async () => {
+    try { console.log('[Cron] rent reminders:', (await rentReminders.scan()).length); } catch (error) { console.error('[Cron] rent reminders failed:', error.message); }
+    try { console.log('[Cron] calendar events created:', await rentReminders.syncCalendar()); } catch (error) { console.error('[Cron] calendar sync failed:', error.message); }
+  }, { timezone: 'Asia/Makassar' });
   cron.schedule('0 9 * * *', sendMorningDMs, { timezone: 'Asia/Makassar' });
   cron.schedule('10 9 * * 1', sendWeeklyMarketingBrief, { timezone: 'Asia/Makassar' });
   cron.schedule('* * * * *', deliverDueReminders); // minute-level reminder delivery
