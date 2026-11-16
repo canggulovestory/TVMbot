@@ -958,7 +958,7 @@ async function sendMorningDMs() {
     try {
       const briefing = await brain.buildMorningDM(userKey);
       const villaActions = await villaData.getActionSummary();
-      const leadActions = userKey === 'afni' ? await leadActionSummary() : '';
+      const leadActions = userKey === 'afni' ? [await leadActionSummary(), await require('./sdr').digest().catch(() => '')].filter(Boolean).join('\n\n') : '';
       const message = [briefing, villaActions, leadActions].filter(Boolean).join('\n\n');
       if (!message) continue;
       const user = brain.USERS[userKey];
@@ -1037,6 +1037,7 @@ async function boot() {
   zuzuIntake.init(DATA_DIR);
   personalLife.init(DATA_DIR);
   assistant.init(DATA_DIR);
+  require('./sdr').init(DATA_DIR);
   audit.init(DATA_DIR);
   await authUsers.init(DATA_DIR);
   notion.init();
