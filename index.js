@@ -22,6 +22,7 @@ const audit = require('./audit');
 const brain = require('./brain');
 const villaData = require('./villa-data');
 const googleWorkspace = require('./google-workspace');
+const bankGmail = require('./bank-gmail');
 const zuzuIntake = require('./zuzu-intake');
 const personalLife = require('./personal-life');
 const webChatRuns = require('./web-chat-runs').createRuns();
@@ -123,6 +124,10 @@ function verifySession(token) {
 
 function googleOAuthState(session) {
   return signSession({ purpose: 'google-oauth', user: session.user, exp: Date.now() + 10 * 60 * 1000, nonce: crypto.randomUUID() });
+}
+
+function bankGmailOAuthState(session) {
+  return signSession({ purpose: 'bank-gmail-oauth', user: session.user, exp: Date.now() + 10 * 60 * 1000, nonce: crypto.randomUUID() });
 }
 
 function validGoogleOAuthState(state, session) {
@@ -464,6 +469,18 @@ async function handleAdminApi(req, res, url) {
   }
   if (url.pathname === '/api/admin/integrations/google/status' && req.method === 'GET') {
     return sendJson(res, 200, await googleWorkspace.status());
+  }
+  if (url.pathname === '/api/admin/integrations/bank-gmail/status' && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    return sendJson(res, 200, await bankGmail.status());
+  }
+  if (url.pathname === '/api/admin/integrations/bank-gmail/connect' && req.method === 'GET') {
+    if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
+    try {
+      return redirect(res, bankGmail.buildAuthorizationUrl(bankGmailOAuthState(session)));
+    } catch (error) {
+      return sendJson(res, 503, { error: error.message });
+    }
   }
   if (url.pathname === '/api/admin/integrations/google/connect' && req.method === 'GET') {
     if (!requireAdmin()) return sendJson(res, 403, { error: 'Admin only.' });
@@ -914,6 +931,17 @@ const server = http.createServer(async (req, res) => {
       if (url.searchParams.get('error')) {
         return integrationPage(res, 'Google connection was not completed', 'No Google data was connected. You can return to TVM Admin and try again.', 400);
       }
+      const bankState = verifySession(url.searchParams.get('state') || '');
+      if (bankState && bankState.purpose === 'bank-gmail-oauth' && (!session || bankState.user === session.user) && url.searchParams.get('code') && (!session || session.role === 'admin')) {
+        try {
+          const connected = await bankGmail.completeAuthorization(url.searchParams.get('code'));
+          audit.add(bankState.user, 'connected bank Gmail (read-only)', connected.email);
+          return integrationPage(res, 'Bank Gmail connected', `${connected.email} is connected read-only. Zuzu only reads mails from your banks and wallets. She cannot send, delete or change anything in this inbox.`);
+        } catch (error) {
+          console.error('[BankGmail] OAuth callback failed:', error.message);
+          return integrationPage(res, 'Bank Gmail connection failed', error.message, 400);
+        }
+      }
       const oauthState = validGoogleOAuthState(url.searchParams.get('state') || '', session);
       if (!oauthState || !url.searchParams.get('code') || (session && session.role !== 'admin')) {
         return integrationPage(res, 'Google connection is awaiting approval', 'Open Google connection from TVM Admin, then sign in as info@thevillamanagers.com.', 400);
@@ -1034,6 +1062,7 @@ async function boot() {
   await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
   villaData.init(DATA_DIR);
   googleWorkspace.init(DATA_DIR);
+  bankGmail.init(DATA_DIR);
   zuzuIntake.init(DATA_DIR);
   personalLife.init(DATA_DIR);
   assistant.init(DATA_DIR);
