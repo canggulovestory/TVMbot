@@ -14,7 +14,8 @@ Built by Binky for Afni, 21-11-2026. Read this before changing anything in `bank
 ## Afni's booking rules (source of truth)
 - Accounts in the financial app: **CIMB Niaga, BCA, Permata** only. Do **not** add new accounts.
 - Money normally flows **CIMB → BCA → others**.
-- **OVO, GoPay, ShopeePay, Jago and any other wallet/bank** → book on **BCA**, with the source in the note, e.g. `BCA (OVO)`, `BCA (Jago)`.
+- **All spending is funded CIMB → BCA** (Afni 21-11). So BCA, BCA credit card, Jago, OVO, GoPay, ShopeePay and any other wallet → book on **CIMB Niaga**, with the route in the note, e.g. `CIMB Niaga (via BCA)`, `CIMB Niaga (via Jago)`. Permata stays Permata.
+- Labels per counterparty/category: `data/bank-rules.json` (+ one-off `data/bank-overrides.json`), from Afni's answers.
 - Moves between Afni's own accounts (e.g. Permata → Jago, BCA paying the BCA credit card) are **internal transfers**, never income or cost.
 - Jago "Shared Pocket" mails duplicate the normal Jago mail → `secondary`, never counted.
 - Nothing is booked without Afni's tap: parsed items go to a **To review** list first; on ✅ the app books them.

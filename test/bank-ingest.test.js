@@ -60,14 +60,14 @@ const TABLE = {
   m_dkim: 'dkim',
 };
 
-test('rule mapping: Permata, CIMB, BCA notes for Jago/credit card/OVO, never LinkAI card', async () => {
+test('rule mapping: Permata, CIMB, CIMB-via notes for Jago/credit card/OVO, never LinkAI card', async () => {
   const { ingest, calls } = setup(TABLE);
   const r = await ingest.run({ since: '2026-11-21' });
   const by = Object.fromEntries(calls.prepare.map(c => [c.intent.description.split(' – ')[0] + '|' + c.intent.amount, c.intent]));
-  assert.strictEqual(by['BCA (Jago)|150000'].accountId, 'acc_bca');
-  assert.strictEqual(by['BCA (Jago)|150000'].description, 'BCA (Jago) – transfer to Tokopedia');
-  assert.strictEqual(by['BCA (credit card)|75000'].description, 'BCA (credit card) – Tokopedia');
-  assert.strictEqual(by['BCA (OVO)|20000'].accountId, 'acc_bca');
+  assert.strictEqual(by['CIMB Niaga (via Jago)|150000'].accountId, 'acc_cimb');
+  assert.strictEqual(by['CIMB Niaga (via Jago)|150000'].description, 'CIMB Niaga (via Jago) – transfer to Tokopedia');
+  assert.strictEqual(by['CIMB Niaga (via BCA credit card)|75000'].description, 'CIMB Niaga (via BCA credit card) – Tokopedia');
+  assert.strictEqual(by['CIMB Niaga (via OVO)|20000'].accountId, 'acc_cimb');
   assert.strictEqual(by['Permata|2000000'].accountId, 'acc_permata');
   assert.strictEqual(by['Permata|2000000'].kind, 'income');
   assert.strictEqual(by['CIMB Niaga|500000'].accountId, 'acc_cimb');
@@ -76,7 +76,7 @@ test('rule mapping: Permata, CIMB, BCA notes for Jago/credit card/OVO, never Lin
   assert.ok(calls.prepare.every(c => c.intent.currency === 'IDR' && /^\d+$/.test(c.intent.amount)));
   assert.strictEqual(r.prepared.length, 6);
   // fee included in an outgoing amount
-  assert.strictEqual(by['BCA|302500'].description, 'BCA – transfer to Budi (incl. 2,500 fee)');
+  assert.strictEqual(by['CIMB Niaga (via BCA)|302500'].description, 'CIMB Niaga (via BCA) – transfer to Budi (incl. 2,500 fee)');
 });
 
 test('internal skipped and counted; secondary silent; foreign listed; low/unknown need check', async () => {
@@ -93,7 +93,7 @@ test('internal skipped and counted; secondary silent; foreign listed; low/unknow
   assert.match(s, /Own transfers skipped: 1/);
   assert.match(s, /Needs manual entry \(foreign currency\): 1/);
   assert.match(s, /Needs check: 2/);
-  assert.match(s, /BCA \(credit card\) · out USD 12\.5 · Netflix/);
+  assert.match(s, /CIMB Niaga \(via BCA credit card\) · out USD 12\.5 · Netflix/);
   assert.doesNotMatch(s, /Pocket/);
 });
 
@@ -140,7 +140,7 @@ test('summary has no account numbers or references, lists links, caps at 25', as
   const s = bi.buildSummary(r);
   assert.doesNotMatch(s, /1234567890|REF123456789012|REF0001/);
   assert.match(s, /1\. 21 Nov · .* → https:\/\/financial-ten-inky\.vercel\.app\/\?financeProposal=p\d/);
-  assert.match(s, /BCA \(Jago\) · out 150,000 · Tokopedia →/);
+  assert.match(s, /CIMB Niaga \(via Jago\) · out 150,000 · Tokopedia →/);
 
   const many = {};
   for (let i = 0; i < 30; i++) many['m' + i] = tx({ bank: 'jago', counterparty: 'Shop ' + i, amount: 1000 + i });

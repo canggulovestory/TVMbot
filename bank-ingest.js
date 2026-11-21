@@ -7,8 +7,9 @@
  *
  * Afni's rules (source of truth, do not loosen):
  *  - Accounts: CIMB Niaga, BCA, Permata only. Never the LinkAI card, never create accounts.
- *  - Permata → Permata, CIMB → CIMB Niaga, everything else (BCA, BCA credit card, Jago, OVO, GoPay,
- *    ShopeePay, other) → BCA with the source in the description, e.g. "BCA (Jago) – transfer to X".
+ *  - Permata → Permata. Everything else (CIMB, BCA, BCA credit card, Jago, OVO, GoPay, ShopeePay, other)
+ *    → CIMB Niaga, because Afni funds all spending CIMB → BCA; the route goes in the description,
+ *    e.g. "CIMB Niaga (via Jago) – transfer to X" (Afni 21-11-2026, TG 58688/58698).
  *  - Internal transfers between her own accounts → never income/cost: skipped, counted as own transfers.
  *  - secondary (Jago Shared Pocket duplicates) → skipped silently.
  *  - Non-IDR card charges → not prepared, listed as "needs manual entry (foreign currency)".
@@ -61,9 +62,11 @@ function routeAccount(tx) {
   const bank = String(tx.bank || '').toLowerCase();
   if (bank === 'permata') return { account: 'permata', source: '' };
   if (bank === 'cimb' || bank === 'cimbniaga') return { account: 'cimb', source: '' };
-  if (bank === 'bca') return { account: 'bca', source: tx.accountHint === 'bca_credit_card' ? 'credit card' : '' };
+  // Afni 21-11 (TG 58688/58698): all spending is funded CIMB -> BCA, so BCA, BCA credit card, Jago and wallets
+  // are booked on CIMB Niaga with the payment route in the description, e.g. "CIMB Niaga (via BCA)".
+  if (bank === 'bca') return { account: 'cimb', source: tx.accountHint === 'bca_credit_card' ? 'BCA credit card' : 'BCA' };
   const label = SOURCE_LABELS[bank] || (bank ? scrub(bank.charAt(0).toUpperCase() + bank.slice(1)).replace(/[^\w .-]/g, '').slice(0, 20) || 'other' : 'other');
-  return { account: 'bca', source: label };
+  return { account: 'cimb', source: label };
 }
 
 function describe(tx, source) {
@@ -81,7 +84,7 @@ function describe(tx, source) {
     default: what = who;
   }
   const fee = tx.direction === 'out' && tx.fee > 0 ? ` (incl. ${fmtAmount(tx.fee)} fee)` : '';
-  const head = source ? `${ACCOUNT_NAMES.bca} (${source})` : null;
+  const head = source ? `${ACCOUNT_NAMES.cimb} (via ${source})` : null;
   return { head, text: `${what}${fee}`.slice(0, 200) };
 }
 
@@ -228,7 +231,7 @@ function createIngest({ gmail, parse, finance, stateFile, now = () => Date.now()
       if (refKey) seenRefsThisRun.add(refKey);
 
       const { account, source } = routeAccount(r);
-      const label = source ? `BCA (${source})` : ACCOUNT_NAMES[account];
+      const label = source ? `${ACCOUNT_NAMES.cimb} (via ${source})` : ACCOUNT_NAMES[account];
       const base = { id: msg.id, date: r.date, label, direction: r.direction, amount: r.amount, currency: r.currency, counterparty: scrub(r.counterparty) };
 
       // Order: foreign first (the parser caps non-IDR confidence at 0.7), then confidence, then internal,
