@@ -62,12 +62,14 @@ function routeAccount(tx) {
   if (bank === 'permata') return { account: 'permata', source: '' };
   if (bank === 'cimb' || bank === 'cimbniaga') return { account: 'cimb', source: '' };
   if (bank === 'bca') return { account: 'bca', source: tx.accountHint === 'bca_credit_card' ? 'credit card' : '' };
-  const label = SOURCE_LABELS[bank] || (bank ? bank.charAt(0).toUpperCase() + bank.slice(1) : 'other');
+  const label = SOURCE_LABELS[bank] || (bank ? scrub(bank.charAt(0).toUpperCase() + bank.slice(1)).replace(/[^\w .-]/g, '').slice(0, 20) || 'other' : 'other');
   return { account: 'bca', source: label };
 }
 
 function describe(tx, source) {
-  const who = scrub(tx.counterparty) || 'unknown';
+  let raw = String(tx.counterparty || '');
+  if (tx.reference && String(tx.reference).length >= 4) raw = raw.split(String(tx.reference)).join(' '); // exact reference never leaks
+  const who = scrub(raw.replace(/[\u0000-\u001f\u007f]/g, ' ')) || 'unknown';
   let what;
   switch (tx.kind) {
     case 'transfer': what = tx.direction === 'in' ? `transfer from ${who}` : `transfer to ${who}`; break;
@@ -88,6 +90,9 @@ function describe(tx, source) {
 function emptyState() { return { version: 1, processedIds: [], refs: [], lastRunAt: null }; }
 async function loadState(file) {
   try {
+    const st = await fs.lstat(file);
+    if (!st.isFile() || st.isSymbolicLink()) throw new Error('bank-ingest state must be a regular file');
+    if (st.mode & 0o077) await fs.chmod(file, 0o600);
     const s = JSON.parse(await fs.readFile(file, 'utf8'));
     return { ...emptyState(), ...s, processedIds: Array.isArray(s.processedIds) ? s.processedIds : [], refs: Array.isArray(s.refs) ? s.refs : [] };
   } catch (e) { if (e.code === 'ENOENT') return emptyState(); throw e; }
@@ -109,6 +114,35 @@ function messageIdFor(gmailId, taken) {
     if (!taken.has(id)) { taken.add(id); return id; }
     salt++;
   }
+}
+
+/** Canonical bank reference key (hashed; the reference itself never hits disk). */
+function refKeyOf(r) {
+  const ref = String(r.reference || '').normalize('NFKC').trim().toUpperCase().replace(/[\s-]+/g, '');
+  return ref ? sha(`${String(r.bank || '').toLowerCase()}:${ref}`) : '';
+}
+function validDate(ymd) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ''))) return false;
+  const t = Date.parse(ymd + 'T00:00:00Z');
+  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === ymd;
+}
+function amountString(n) {
+  const v = Math.round(n * 100) / 100;
+  const s = Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0$/, '');
+  return /^[0-9]{1,14}(\.[0-9]{1,2})?$/.test(s) && /[1-9]/.test(s) ? s : '';
+}
+/** Simple O_EXCL run lock; a lock older than 30 min is treated as stale. */
+async function withLock(file, fn) {
+  const lock = file + '.lock';
+  try { await fs.writeFile(lock, String(process.pid), { flag: 'wx', mode: 0o600 }); }
+  catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    const st = await fs.stat(lock).catch(() => null);
+    if (st && Date.now() - st.mtimeMs < 30 * 60e3) throw new Error('bank-ingest is already running');
+    await fs.rm(lock, { force: true });
+    await fs.writeFile(lock, String(process.pid), { flag: 'wx', mode: 0o600 });
+  }
+  try { return await fn(); } finally { await fs.rm(lock, { force: true }); }
 }
 
 // ---------------------------------------------------------------- core
@@ -134,7 +168,9 @@ function createIngest({ gmail, parse, finance, stateFile, now = () => Date.now()
     return ids;
   }
 
-  async function run({ since, dryRun = false } = {}) {
+  async function run(opts = {}) { return opts.dryRun ? runInner(opts) : withLock(stateFile, () => runInner(opts)); }
+
+  async function runInner({ since, dryRun = false } = {}) {
     const state = await loadState(stateFile);
     const processed = new Set(state.processedIds);
     const refs = new Set(state.refs);
@@ -187,7 +223,7 @@ function createIngest({ gmail, parse, finance, stateFile, now = () => Date.now()
       }
       if (r.secondary) { out.counts.secondary++; mark(msg.id); continue; }
 
-      const refKey = r.reference ? sha(`${r.bank}:${r.reference}`) : '';
+      const refKey = refKeyOf(r);
       if (refKey && (refs.has(refKey) || seenRefsThisRun.has(refKey))) { out.counts.duplicateRef++; mark(msg.id); continue; }
       if (refKey) seenRefsThisRun.add(refKey);
 
@@ -195,20 +231,27 @@ function createIngest({ gmail, parse, finance, stateFile, now = () => Date.now()
       const label = source ? `BCA (${source})` : ACCOUNT_NAMES[account];
       const base = { id: msg.id, date: r.date, label, direction: r.direction, amount: r.amount, currency: r.currency, counterparty: scrub(r.counterparty) };
 
-      if (r.internal) { out.ownTransfers.push(base); mark(msg.id, refKey); continue; }
+      // Order: foreign first (the parser caps non-IDR confidence at 0.7), then confidence, then internal,
+      // so a doubtful "own transfer" is shown for checking instead of silently skipped.
       if (r.currency !== 'IDR') { out.foreign.push(base); mark(msg.id, refKey); continue; }
-      if (!(r.confidence >= MIN_CONFIDENCE)) { out.needsCheck.push({ ...base, reason: 'low_confidence' }); mark(msg.id, refKey); continue; }
+      if (/linkai|acc_cash/i.test(String(r.accountHint || ''))) { out.needsCheck.push({ ...base, reason: 'linkai_card' }); mark(msg.id, refKey); continue; }
+      const amount = Number(r.amount), fee = Number(r.fee || 0);
+      const sane = (r.direction === 'in' || r.direction === 'out') && Number.isFinite(amount) && amount > 0 && Number.isFinite(fee) && fee >= 0 && validDate(r.date);
+      if (!sane || !(r.confidence >= MIN_CONFIDENCE)) { out.needsCheck.push({ ...base, reason: sane ? 'low_confidence' : 'invalid_fields' }); mark(msg.id, refKey); continue; }
+      if (r.internal) { out.ownTransfers.push(base); mark(msg.id, refKey); continue; }
 
-      const total = r.direction === 'out' ? r.amount + (r.fee || 0) : r.amount;
-      const d = describe(r, source);
+      const total = r.direction === 'out' ? amount + fee : amount;
+      const amountStr = amountString(total);
+      if (!amountStr) { out.needsCheck.push({ ...base, reason: 'invalid_fields' }); mark(msg.id, refKey); continue; }
+      const d = describe({ ...r, fee }, source);
       const description = `${d.head || ACCOUNT_NAMES[account]} – ${d.text}`;
       const item = { ...base, amount: total, description };
 
-      if (!tools) { tools = finance(messageIdFor(`accounts:${nowMs}`, taken)); accountIds = await resolveAccounts(tools); }
+      if (!tools) { tools = finance(messageIdFor(`accounts:${nowMs}`, new Set())); accountIds = await resolveAccounts(tools); }
       const accountId = accountIds[account];
       if (!accountId) { out.needsCheck.push({ ...base, reason: 'account_not_found' }); continue; }
 
-      const intent = { kind: r.direction === 'in' ? 'income' : 'expense', amount: String(Math.round(total)), currency: 'IDR', date: r.date, accountId, description };
+      const intent = { kind: r.direction === 'in' ? 'income' : 'expense', amount: amountStr, currency: 'IDR', date: r.date, accountId, description };
       item.intent = intent;
       if (dryRun) { out.prepared.push(item); continue; }
 

@@ -165,3 +165,29 @@ test('scrub removes account-like numbers but keeps names', () => {
   assert.strictEqual(bi.scrub('PT Maju 1234-5678-9012'), 'PT Maju');
   assert.strictEqual(bi.scrub('Tokopedia'), 'Tokopedia');
 });
+
+test('codex review: doubtful own transfer, bad fields and LinkAI hint go to needs check; string amounts add up', async () => {
+  const t = {
+    a: tx({ bank: 'jago', counterparty: 'Afni', amount: 1000, internal: true, confidence: 0.75 }),
+    b: tx({ bank: 'jago', counterparty: 'X', amount: 1000, direction: 'sideways' }),
+    c: tx({ bank: 'jago', counterparty: 'X', amount: 1000, date: '2026-02-31' }),
+    d: tx({ bank: 'bca', accountHint: 'linkai_card', counterparty: 'X', amount: 1000 }),
+    e: tx({ bank: 'permata', counterparty: 'Y', amount: '10000', fee: '500', reference: 'AB12CD34' }),
+  };
+  const s = setup(t);
+  const r = await s.ingest.run({ since: '2026-11-21' });
+  assert.strictEqual(r.ownTransfers.length, 0);
+  assert.strictEqual(r.needsCheck.length, 4);
+  assert.strictEqual(s.calls.prepare.length, 1);
+  assert.strictEqual(s.calls.prepare[0].intent.amount, '10500');
+});
+
+test('exact reference is stripped from the description; concurrent run is refused', async () => {
+  const t = { a: tx({ bank: 'permata', counterparty: 'Shop AB12CD34', amount: 100, reference: 'AB12CD34' }) };
+  const s = setup(t);
+  fs.writeFileSync(s.stateFile + '.lock', '1');
+  await assert.rejects(s.ingest.run({ since: '2026-11-21' }), /already running/);
+  fs.rmSync(s.stateFile + '.lock');
+  await s.ingest.run({ since: '2026-11-21' });
+  assert.strictEqual(s.calls.prepare[0].intent.description, 'Permata – transfer to Shop');
+});
