@@ -32,3 +32,18 @@ test('part payment counts as cash while only the remainder stays due', () => {
   assert.equal(result.overdue,60);
   assert.equal(result.rows[0].remaining,60);
 });
+
+test('table totals sum only displayed rows and keep currencies separate', () => {
+  const {totalRows} = require('../admin/portfolio');
+  const rows = [
+    {displayCurrency:'IDR',monthly:10,contract:100,received:40,remaining:60},
+    {displayCurrency:'IDR',monthly:20,contract:200,received:200,remaining:0},
+    {displayCurrency:'USD',monthly:5,contract:50,received:10,remaining:40}
+  ];
+  assert.deepEqual(totalRows(rows), [
+    {currency:'IDR',monthly:30,contract:300,received:240,remaining:60},
+    {currency:'USD',monthly:5,contract:50,received:10,remaining:40}
+  ]);
+  assert.deepEqual(totalRows(rows.slice(1,2)), [{currency:'IDR',monthly:20,contract:200,received:200,remaining:0}]);
+  assert.deepEqual(totalRows([]), []);
+});

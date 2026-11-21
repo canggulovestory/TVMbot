@@ -29,5 +29,15 @@
     const unpaid = eligible.filter(p => p.status !== 'Paid');
     return {rows, villas: villas.length, occupied: rows.filter(r => r.current).length, monthly: rows.reduce((sum, r) => sum + r.monthly, 0), contract: eligible.reduce((sum, p) => sum + amount(p.amount), 0), received: totalReceived, outstanding: unpaid.reduce((sum, p) => sum + amount(p.remainingAmount ?? p.amount), 0), overdue: unpaid.filter(p => p.dueDate && p.dueDate < today).reduce((sum, p) => sum + amount(p.remainingAmount ?? p.amount), 0), upcoming: unpaid.filter(p => p.dueDate && p.dueDate >= today && p.dueDate <= until).reduce((sum, p) => sum + amount(p.remainingAmount ?? p.amount), 0), expiring: rows.filter(r => r.expiring).length, otherCurrencies: [...new Set(installments.map(p => p.currency || 'IDR').filter(c => c !== currency))]};
   }
-  return {summarize,baliToday};
+  function totalRows(rows) {
+    const totals = new Map();
+    for (const row of rows) {
+      const currency = row.displayCurrency || 'IDR';
+      if (!totals.has(currency)) totals.set(currency, {currency, monthly:0, contract:0, received:0, remaining:0});
+      const total = totals.get(currency);
+      for (const key of ['monthly','contract','received','remaining']) total[key] += amount(row[key]);
+    }
+    return [...totals.values()];
+  }
+  return {summarize,baliToday,totalRows};
 });
