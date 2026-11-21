@@ -1,0 +1,6 @@
+{
+ "domain": "bca.co.id",
+ "subject": "Credit Card Transaction Notification",
+ "date": "Tue, 17 Nov 2026 18:19:02 +0700 (WIB)",
+ "text": "Yth. Pemegang Kartu Kredit BCA,\nTerima kasih telah bertransaksi menggunakan Kartu Kredit BCA:\nNomor Customer\n:\n0000111122223333\nNomor Kartu\n:\n400000XXXX0000\nMerchant / ATM\n:\nEXAMPLE.COM/BILL\nJenis Transaksi\n:\nDOMESTIK\nOtentikasi\n:\nTRANSAKSI DENGAN PIN\nPada Tanggal\n:\n17-11-2026 23:30:00 WIB\nSejumlah\n:\nUSD 12,5\nSelalu jaga keamanan fisik kartu dan data pribadi Anda."
+}

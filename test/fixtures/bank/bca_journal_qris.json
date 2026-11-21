@@ -1,0 +1,6 @@
+{
+ "domain": "bca.co.id",
+ "subject": "Internet Transaction Journal",
+ "date": "Wed, 18 Nov 2026 20:04:48 +0700 (WIB)",
+ "text": "Hello TESTA BUDI SANTOSO,\nYou just made a transaction through myBCA.\nHere are the details of your transaction :\nStatus\n:\nSuccessful\nTransaction Date\n:\n08 Nov 2026 03:48:00\nTransaction Type\n:\nQRIS Payment\nPayment to\n:\nKAFE CONTOH\nMerchant Location\n:\nBADUNG, 80361, ID\nAcquirer\n:\nBANK CONTOH\nMerchant PAN\n:\n0000000000000000000\nTerminal ID\n:\n00000000\nSource of Fund\n:\nTAHAPAN - 1234****56\nCustomer PAN\n:\n0000000000000000000\nTotal Payment\n:\nIDR 185,000.00\nRRN\n:\n000000000\nReference No.\n:\n00000000000000000000QRS0000000000\nPlease save this email as your transaction reference.\nIf you do not recognize this transaction, immediately contact Halo BCA at 1500888.\nBest Regards,\nPT Bank Central Asia Tbk"
+}

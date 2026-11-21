@@ -125,4 +125,103 @@ async function listBankMessages({ extra = 'newer_than:90d', max = 500 } = {}) {
   return out;
 }
 
-module.exports = { init, status, buildAuthorizationUrl, completeAuthorization, listBankMessages, bankQuery, BANK_SENDERS, SCOPES };
+/** Message ids only, still forced through bankQuery(). */
+async function listBankMessageIds({ extra = 'newer_than:30d', max = 500 } = {}, tok) {
+  const t = tok || await accessToken();
+  const H = { Authorization: `Bearer ${t}` };
+  const ids = []; let pageToken = '';
+  do {
+    const q = new URLSearchParams({ q: bankQuery(extra), maxResults: '100' }); if (pageToken) q.set('pageToken', pageToken);
+    const r = await gfetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?${q}`, { headers: H });
+    ids.push(...(r.messages || []).map(m => m.id)); pageToken = r.nextPageToken || '';
+  } while (pageToken && ids.length < max);
+  return ids.slice(0, max);
+}
+
+// ---- Message text (in memory only) -------------------------------------------------
+
+function b64url(s) { return Buffer.from(String(s || '').replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'); }
+const NAMED_ENTITIES = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", rsquo: "'", lsquo: "'", ndash: '-', mdash: '-', hellip: '...' };
+function decodeEntities(s) {
+  return String(s).replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&([a-z]+);/gi, (m, n) => (n.toLowerCase() in NAMED_ENTITIES ? NAMED_ENTITIES[n.toLowerCase()] : m));
+}
+function cleanLines(s) {
+  return String(s || '').replace(/\r/g, '').replace(/ /g, ' ').split('\n')
+    .map(l => l.replace(/[ \t]+/g, ' ').trim()).filter(Boolean).join('\n');
+}
+/** HTML → plain text, one visual block per line; table cells separated by " | ". */
+function htmlToText(html) {
+  const stripped = String(html || '')
+    .replace(/<(script|style|head|title)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|li|h[1-6]|table|tbody|thead|section|center)>/gi, '\n')
+    .replace(/<\/(td|th)>/gi, ' | ')
+    .replace(/<[^>]+>/g, ' ');
+  // decode twice: some banks double-encode (&amp;#64; → &#64; → @)
+  return cleanLines(decodeEntities(decodeEntities(stripped)))
+    .split('\n').map(l => l.replace(/(\s*\|\s*)+$/, '').replace(/^(\s*\|\s*)+/, '').replace(/(\s*\|\s*){2,}/g, ' | ').trim())
+    .filter(Boolean).join('\n');
+}
+function collectParts(part, acc = { plain: [], html: [] }) {
+  if (!part) return acc;
+  const mt = String(part.mimeType || '').toLowerCase();
+  if (part.body?.data && mt === 'text/plain') acc.plain.push(b64url(part.body.data));
+  else if (part.body?.data && mt === 'text/html') acc.html.push(b64url(part.body.data));
+  for (const p of part.parts || []) collectParts(p, acc);
+  return acc;
+}
+/** Plain text of a Gmail payload: HTML stripped to text (bank mails are HTML-first), else text/plain. */
+function payloadText(payload) {
+  const { plain, html } = collectParts(payload);
+  if (html.length) return htmlToText(html.join('\n'));
+  return cleanLines(plain.join('\n'));
+}
+/**
+ * True only if Google's own Authentication-Results header (authserv-id mx.google.com)
+ * shows dkim=pass with a signing domain equal to (or a parent of) the From domain.
+ */
+function dkimPassFor(headers, fromDomain) {
+  const dom = String(fromDomain || '').toLowerCase();
+  if (!dom) return false;
+  const results = (headers || []).filter(h => String(h.name).toLowerCase() === 'authentication-results')
+    .map(h => String(h.value || '')).filter(v => /^\s*mx\.google\.com\s*;/i.test(v));
+  for (const v of results) {
+    for (const clause of v.split(';')) {
+      const m = clause.match(/\bdkim=(\w+)\b[\s\S]*?\bheader\.(?:i|d)=([^\s;]+)/i);
+      if (!m || m[1].toLowerCase() !== 'pass') continue;
+      const d = m[2].toLowerCase().replace(/^.*@/, '');
+      if (d && (dom === d || dom.endsWith('.' + d))) return true;
+    }
+  }
+  return false;
+}
+function bankDomainOf(fromHeader) {
+  const f = String(fromHeader || '');
+  const domain = ((f.match(/<[^<>@\s]+@([\w.-]+)>\s*$/) || f.match(/@([\w.-]+)/) || [])[1] || '').toLowerCase();
+  const bank = BANK_SENDERS.find(d => domain === d || domain.endsWith('.' + d));
+  return { domain, bank: bank || '' };
+}
+/** Pure: Gmail format=full message → parser input. Throws (code) on non-bank sender or no DKIM pass. */
+function messageFromPayload(m) {
+  const headers = m.payload?.headers || [];
+  const h = {};
+  for (const x of headers) { const k = String(x.name).toLowerCase(); if (!(k in h)) h[k] = x.value; }
+  const { domain, bank } = bankDomainOf(h.from);
+  if (!bank) { const e = new Error('not_bank_sender'); e.code = 'not_bank_sender'; throw e; }
+  if (!dkimPassFor(headers, domain)) { const e = new Error('dkim_not_pass'); e.code = 'dkim_not_pass'; throw e; }
+  return { id: m.id, domain: bank, fromDomain: domain, subject: h.subject || '', date: h.date || '', internalDate: Number(m.internalDate || 0), text: payloadText(m.payload) };
+}
+/** Fetch one bank message's text IN MEMORY ONLY (never written to disk). */
+async function getBankMessageText(id, tok) {
+  const t = tok || await accessToken();
+  const m = await gfetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(id)}?format=full`, { headers: { Authorization: `Bearer ${t}` } });
+  return messageFromPayload(m);
+}
+
+module.exports = {
+  init, status, buildAuthorizationUrl, completeAuthorization, listBankMessages, listBankMessageIds, bankQuery, BANK_SENDERS, SCOPES,
+  accessToken, getBankMessageText, messageFromPayload, dkimPassFor, htmlToText, payloadText,
+};

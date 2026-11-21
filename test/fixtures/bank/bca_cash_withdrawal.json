@@ -1,0 +1,6 @@
+{
+ "domain": "bca.co.id",
+ "subject": "Cash Withdrawal Successful",
+ "date": "Thu, 15 Oct 2026 12:55:28 +0700 (WIB)",
+ "text": "Hello TESTA BUDI SANTOSO,\nYou have just performed a transaction through myBCA.\nHere are the details of your transaction :\nStatus\n:\nSuccessful\nTransaction Date\n:\n15 Oct 2026 12:55:00\nTransfer Type\n:\nCardless - Withdraw Cash\nSource of Fund\n:\n1234xxxx56\nAmount\n:\nIDR 1,500,000.00\nPhone No.\n:\n0800xxxxxx00\nReference No.\n:\n00000000-0000-0000-0000-000000000000\nATM Code\n:\nWSID 000X0\nPlease save this email as your transaction reference.\nIf you do not recognize this transaction, immediately contact Halo BCA at 1500888.\nBest Regards,\nPT Bank Central Asia Tbk"
+}

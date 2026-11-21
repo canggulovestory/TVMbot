@@ -1,0 +1,6 @@
+{
+ "domain": "bca.co.id",
+ "subject": "Internet Transaction Journal",
+ "date": "Wed, 18 Nov 2026 20:04:48 +0700 (WIB)",
+ "text": "Hello TESTA BUDI SANTOSO,\nYou just made a transaction through myBCA.\nHere are the details of your transaction :\nStatus\n:\nSuccessful\nTransaction Date\n:\n18 Nov 2026 18:38:00\nTransfer Type\n:\nTransfer to BANK BRI\nSource of Fund\n:\n1234xxxx56\nBeneficiary Account\nBeneficiary Name\n:\nCONTOH PEGAWAI DUA\nBeneficiary Bank\n:\nBANK BRI\nBeneficiary Account No.\n:\n000011112222333\nAmount\n:\nIDR 10,000,000.00\nFee\n:\nIDR 2,500.00\nTransfer Method\n:\nBI FAST\nRemarks\n:\nSalary\nReference No.\n:\n00000000CENAIDJA000000000000\nPlease save this email as your transaction reference.\nIf you do not recognize this transaction, immediately contact Halo BCA at 1500888.\nBest Regards,\nPT Bank Central Asia Tbk"
+}
