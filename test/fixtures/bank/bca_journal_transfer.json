@@ -1,0 +1,6 @@
+{
+ "domain": "bca.co.id",
+ "subject": "Internet Transaction Journal",
+ "date": "Wed, 18 Nov 2026 20:04:48 +0700 (WIB)",
+ "text": "Hello TESTA BUDI SANTOSO,\nYou just made a transaction through myBCA.\nHere are the details of your transaction :\nStatus\n:\nSuccessful\nTransaction Date\n:\n18 Nov 2026 20:04:40\nTransfer Type\n:\nTransfer to BCA Account\nSource of Fund\n:\n1234xxxx56\nSource Currency\n:\nIDR - Indonesian Rupiah\nBeneficiary Account\n:\n9876543210\nTransfer Currency\n:\nIDR - Indonesian Rupiah\nBeneficiary Name\n:\nCONTOH PENERIMA SATU\nTransfer Amount\n:\nIDR 2,500,000.00\nRemarks\n:\n-\nReference No.\n:\n00000000000000000000TRF00000\nPlease save this email as your transaction reference.\nIf you do not recognize this transaction, immediately contact Halo BCA at 1500888.\nBest Regards,\nPT Bank Central Asia Tbk"
+}

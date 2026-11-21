@@ -20,7 +20,7 @@ function init({authenticateWeb}={}) {
   const finance=require('./vendor/finance/finance-host.cjs').loadFinanceHost('/etc/zuzu-finance/telegram.json');
   protectedChat=require('./operations-chat').createOperationsChat({
     chat:require('./isolated-chat').createChat({...config.hermes,financeDefinitions:finance?.definitions||{}}),channels,finance,
-    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?require('./reminder-tools').createReminderTools(assistant,user.key):{};},
+    reminders:message=>{const user=identifyUser({telegramId:String(message.from.id)});return user?{...require('./reminder-tools').createReminderTools(assistant,user.key),...require('./memory-tools').createMemoryTools(assistant,user.key),...require('./sdr-tools').createSdrTools(require('./sdr'),user.key,require('./google-workspace').createEmailDraft),...require('./drive-tools').createDriveTools(require('./google-workspace'),user.key)}:{};},
     turns:require('./protected-turns').createTurns('/var/lib/zuzu-operations/chat-runs'),
   });
 }
@@ -137,15 +137,47 @@ Organize her tasks by project name when listing.`;
 // Short-lived dialogue only; never retain/replay model tool-call transcripts.
 const recentDialogue = new Map();
 const dialogueQueues = new Map();
+// Persist the short dialogue window so a restart does not wipe it (Binky 21-11-2026).
+// Text turns only (no tool transcripts), root-only file, same 7-day / 20-turn window.
+const DIALOGUE_TTL = 7 * 24 * 60 * 60 * 1000;
+const dialogueFile = process.env.NODE_TEST_CONTEXT ? '' : require('path').join(process.env.DATA_DIR || require('path').join(__dirname, 'data'), 'dialogue.json');
+let dialogueSaveTimer = null;
+function loadDialogue() {
+  if (!dialogueFile) return;
+  try {
+    const saved = JSON.parse(require('fs').readFileSync(dialogueFile, 'utf8'));
+    for (const [scope, entry] of Object.entries(saved || {})) {
+      if (entry && Array.isArray(entry.turns) && Date.now() - Number(entry.at) < DIALOGUE_TTL) recentDialogue.set(scope, { at: Number(entry.at), turns: entry.turns.slice(-20) });
+    }
+  } catch (error) { if (error.code !== 'ENOENT') console.error('[DIALOGUE] load failed:', error.message); }
+}
+function saveDialogueSoon() {
+  if (!dialogueFile || dialogueSaveTimer) return;
+  dialogueSaveTimer = setTimeout(() => {
+    dialogueSaveTimer = null;
+    const fs = require('fs');
+    const out = {};
+    for (const [scope, entry] of recentDialogue) {
+      if (Date.now() - entry.at < DIALOGUE_TTL) out[scope] = entry; else recentDialogue.delete(scope);
+    }
+    try {
+      const tmp = dialogueFile + '.tmp';
+      fs.writeFileSync(tmp, JSON.stringify(out), { mode: 0o600 });
+      fs.renameSync(tmp, dialogueFile);
+    } catch (error) { console.error('[DIALOGUE] save failed:', error.message); }
+  }, 2000);
+  if (dialogueSaveTimer.unref) dialogueSaveTimer.unref();
+}
+loadDialogue();
 function withDialogue(scope, text, work) {
   const task = (dialogueQueues.get(scope) || Promise.resolve()).then(async () => {
     const previous = recentDialogue.get(scope);
-    const history = previous && Date.now() - previous.at < 4 * 60 * 60 * 1000 ? previous.turns : [];
+    const history = previous && Date.now() - previous.at < 7 * 24 * 60 * 60 * 1000 ? previous.turns : [];
     const reply = await work(history);
     if (reply && !/temporarily unavailable|couldn.t answer|Operation interrupted|I could not finish that reply|I could not reach the saved records|I lost confirmation/i.test(reply)) recentDialogue.set(scope, { at: Date.now(), turns: [...history,
       { role: 'user', content: String(text || '').slice(0, 2000) },
       { role: 'assistant', content: String(reply).slice(0, 4000) },
-    ].slice(-12) });
+    ].slice(-20) }), saveDialogueSoon();
     return reply;
   });
   const queued = task.catch(() => {});

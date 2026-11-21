@@ -181,7 +181,7 @@ async function remember(userKey, fact, options = {}) {
       category: options.category, tags: options.tags, source: options.source || 'explicit', confirmed: true,
     });
     store.memory[userKey].unshift(entry);
-    store.memory[userKey] = store.memory[userKey].slice(0, 100);
+    store.memory[userKey] = store.memory[userKey].slice(0, 400);
     return entry;
   });
 }

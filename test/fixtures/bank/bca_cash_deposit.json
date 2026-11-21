@@ -1,0 +1,6 @@
+{
+ "domain": "bca.co.id",
+ "subject": "Cash Deposit Successful",
+ "date": "Wed, 16 Sep 2026 09:10:38 +0700 (WIB)",
+ "text": "Hello TESTA BUDI SANTOSO,\nYou have just performed a transaction through myBCA.\nHere are the details of your transaction :\nStatus\n:\nSuccessful\nTransaction Date\n:\n16 Sep 2026 09:10:00\nTransfer Type\n:\nCardless - Deposit Cash\nBeneficiary Account\n:\n0000000000\nBeneficiary Name\n:\nTESTA BUDI SANTOSO\nAmount\n:\nIDR 20,000,000.00\nReference No.\n:\n00000000-0000-0000-0000-000000000001\nPlease save this email as your transaction reference.\nIf you do not recognize this transaction, immediately contact Halo BCA at 1500888.\nBest Regards,\nPT Bank Central Asia Tbk"
+}
